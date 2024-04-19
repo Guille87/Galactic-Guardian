@@ -90,7 +90,6 @@ class Juego:
         """
         Genera un nuevo enemigo en una posición aleatoria en la parte superior de la pantalla.
         """
-        # ToDo: Generar el primer enemigo a partir del segundo 3 del juego
         nuevo_enemigo = None  # Definir nuevo_enemigo con un valor predeterminado
         ancho_enemigo = 50
         alto_enemigo = 10
