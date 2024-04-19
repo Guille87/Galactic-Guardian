@@ -3,8 +3,8 @@ import random
 import pygame
 
 from efectos.destello import Destello
-from sprites.enemigo import EnemigoTipo1
-from sprites.enemigo import EnemigoTipo2
+from galactic_guardian.efectos.destello_constante import DestelloConstante
+from sprites.enemigo import EnemigoTipo1, EnemigoTipo2, EnemigoTipo3
 from sprites.explosion import Explosion
 from sprites.item import Item
 from sprites.jugador import Jugador
@@ -26,7 +26,7 @@ class Juego:
         # Definir efectos de sonido
         self.EFECTO_DISPARO = pygame.mixer.Sound('sonidos/laser-gun.wav')  # Efecto de sonido del disparo
         self.EFECTO_GOLPE = pygame.mixer.Sound('sonidos/hit.wav')  # Archivo de efecto de sonido de golpe
-        self.EFECTO_DISPARO.set_volume(0.2)
+        self.EFECTO_DISPARO.set_volume(0.1)
         self.EFECTO_GOLPE.set_volume(0.1)
 
         # Configuración de la pantalla
@@ -95,7 +95,7 @@ class Juego:
         y_enemigo = -alto_enemigo  # Genera el enemigo arriba de la pantalla
 
         # Elige aleatoriamente entre los dos tipos de enemigos
-        tipo_enemigo = random.choice([EnemigoTipo1, EnemigoTipo2])
+        tipo_enemigo = random.choice([EnemigoTipo1, EnemigoTipo2, EnemigoTipo3])
 
         # Determina la ruta de la imagen según el tipo de enemigo
         if tipo_enemigo == EnemigoTipo1:
@@ -103,9 +103,11 @@ class Juego:
             nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho)
         elif tipo_enemigo == EnemigoTipo2:
             ruta_imagen = 'imagenes/enemigos/enemigo2.png'
-            # Crear la lista de balas enemigas antes de pasarla como parámetro
-            lista_balas_enemigas = []
-            nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, lista_balas_enemigas, self.jugador)
+            nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.balas_enemigo, self.jugador)
+        elif tipo_enemigo == EnemigoTipo3:
+            ruta_imagen = 'imagenes/enemigos/enemigo3.png'
+            nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.balas_enemigo, self.jugador)
+
         return nuevo_enemigo
 
     def manejar_eventos(self):
@@ -297,16 +299,51 @@ class Juego:
         if self.jugador.vidas > 0:
             self.jugador.reducir_salud(1)
             if self.jugador.salud > 0:
-                destello = Destello(self.jugador)
-                self.all_sprites.add(destello)  # Añadir el destello al grupo de sprites
+                self.crear_destello()
             else:
-                explosion = Explosion(self.jugador.rect.center, self.explosion_images)
-                self.all_sprites.add(explosion)  # Añadir la explosión al grupo de sprites
-                self.jugador.rect.centerx = self.pantalla_ancho // 2  # Centrar la nave en el eje x
-                self.jugador.rect.bottom = self.pantalla_alto - 10  # Colocar la nave en la parte inferior de la pantalla
-                self.jugador.reducir_vidas(1)
-                if self.jugador.vidas > 0:
-                    self.jugador.aumentar_salud(5)
+                self.jugador_explota()
+                self.reposicionar_jugador()
+                self.reducir_vidas_y_aumentar_salud()
+
+    def crear_destello(self):
+        """
+        Crea un destello en la posición del jugador.
+        """
+        if not self.jugador.invulnerable:
+            destello = Destello(self.jugador)
+            self.all_sprites.add(destello)
+
+    def jugador_explota(self):
+        """
+        Realiza las acciones necesarias cuando el jugador explota.
+        """
+        explosion = Explosion(self.jugador.rect.center, self.explosion_images)
+        self.all_sprites.add(explosion)
+
+    def reposicionar_jugador(self):
+        """
+        Reposiciona al jugador en el centro inferior de la pantalla.
+        """
+        self.jugador.rect.centerx = self.pantalla_ancho // 2
+        self.jugador.rect.bottom = self.pantalla_alto - 10
+
+    def reducir_vidas_y_aumentar_salud(self):
+        """
+        Reduce una vida al jugador y aumenta su salud si quedan vidas restantes.
+        """
+        self.jugador.reducir_vidas(1)
+        self.jugador.invulnerable = True
+        self.jugador.tiempo_invulnerable = pygame.time.get_ticks() + 3000
+        self.crear_destello_constante()
+        if self.jugador.vidas > 0:
+            self.jugador.aumentar_salud(5)
+
+    def crear_destello_constante(self):
+        """
+        Crea un destello constante en la posición del jugador.
+        """
+        self.jugador.destello_constante = DestelloConstante(self.jugador)
+        self.all_sprites.add(self.jugador.destello_constante)
 
     def eliminar_colisiones_bala_enemigo(self):
         """
@@ -375,19 +412,20 @@ class Juego:
         """
         Actualiza la posición y comportamiento de los enemigos.
         """
-        tiempo_actual = pygame.time.get_ticks()
-
         for enemigo in self.enemigos:
             enemigo.movimiento_enemigo()
 
             if self.jugador.rect.colliderect(enemigo.rect):
                 self.colision_jugador_enemigo(enemigo)
 
-            if isinstance(enemigo, EnemigoTipo2) and tiempo_actual - enemigo.tiempo_ultimo_ataque > 2000:
+            if isinstance(enemigo, EnemigoTipo2):
                 nueva_bala_enemigo = enemigo.disparo_enemigo()
                 if nueva_bala_enemigo:
                     self.balas_enemigo.append(nueva_bala_enemigo)
-                    enemigo.tiempo_ultimo_ataque = tiempo_actual
+            if isinstance(enemigo, EnemigoTipo3):
+                nueva_bala_enemigo = enemigo.disparo_enemigo()
+                if nueva_bala_enemigo:
+                    self.balas_enemigo.append(nueva_bala_enemigo)
 
     def colision_jugador_enemigo(self, enemigo):
         """

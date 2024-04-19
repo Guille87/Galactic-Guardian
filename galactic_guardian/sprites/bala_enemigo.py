@@ -4,14 +4,15 @@ import pygame
 
 
 class BalaEnemigo(pygame.sprite.Sprite):
-    def __init__(self, imagen, x, y, direccion_x, direccion_y):
+    def __init__(self, imagen, x, y, direccion_x, direccion_y, velocidad, danio):
         super().__init__()
         self.image_original = pygame.image.load(imagen)
         self.image = self.image_original.copy()
         self.rect = self.image.get_rect(center=(x, y))
         self.direccion_x = direccion_x
         self.direccion_y = direccion_y
-        self.velocidad = 5
+        self.velocidad = velocidad
+        self.danio = danio
         self.radio = 16  # Radio de la hitbox circular
 
     def bala_enemigo(self):

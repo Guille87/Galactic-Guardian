@@ -57,6 +57,9 @@ class EnemigoBase(pygame.sprite.Sprite):
         elif isinstance(self, EnemigoTipo2) and random.random() < 0.10:
             nombre_imagen = random.choice(lista_objetos)
             item = Item(nombre_imagen, "objetos", nombre_imagen)
+        elif isinstance(self, EnemigoTipo2) and random.random() < 0.20:
+            nombre_imagen = random.choice(lista_objetos)
+            item = Item(nombre_imagen, "objetos", nombre_imagen)
         if item:
             item.set_posicion(self.rect.x, self.rect.y)
         return item
@@ -87,7 +90,7 @@ class EnemigoTipo2(EnemigoBase):
 
     def disparo_enemigo(self):
         tiempo_actual = pygame.time.get_ticks()
-        if tiempo_actual - self.tiempo_ultimo_ataque > 2000:  # 2000 milisegundos = 2 segundos
+        if tiempo_actual - self.tiempo_ultimo_ataque > 3000:  # 3000 milisegundos = 3 segundos
             # Calcular el vector de dirección hacia el jugador
             direccion_x = self.jugador.rect.centerx - self.rect.centerx
             direccion_y = self.jugador.rect.centery - self.rect.centery
@@ -98,7 +101,43 @@ class EnemigoTipo2(EnemigoBase):
             # Calcular el ángulo de rotación en grados
             angulo = math.degrees(math.atan2(-direccion_y, direccion_x))
             # Crear la bala en la posición del enemigo
-            bala_enemigo = BalaEnemigo('imagenes/balas/bala_enemigo.png', self.rect.centerx, self.rect.bottom, direccion_x, direccion_y)
+            bala_enemigo = BalaEnemigo('imagenes/balas/bala_enemigo.png', self.rect.centerx, self.rect.bottom, direccion_x, direccion_y,
+                                       velocidad=5, danio=1)
+            # Girar la bala en la dirección correcta
+            bala_enemigo.girar(angulo)
+
+            self.tiempo_ultimo_ataque = tiempo_actual  # Actualiza el tiempo del último ataque
+            return bala_enemigo
+        else:
+            return None
+
+
+class EnemigoTipo3(EnemigoBase):
+    def __init__(self, imagen, x, y, pantalla_ancho, lista_balas_enemigas, jugador, salud=3):
+        super().__init__(imagen, x, y, pantalla_ancho, salud=salud)
+        # Atributos específicos del tipo de enemigo 3
+        self.velocidad_x = random.uniform(-3, 3)
+        self.velocidad_y = random.uniform(3, 6)
+        self.lista_balas_enemigas = lista_balas_enemigas
+        self.jugador = jugador
+        self.tiempo_ultimo_ataque = 0
+        self.radio = 16  # Definir el radio de la hitbox circular
+
+    def disparo_enemigo(self):
+        tiempo_actual = pygame.time.get_ticks()
+        if tiempo_actual - self.tiempo_ultimo_ataque > 1500:
+            # Calcular el vector de dirección hacia el jugador
+            direccion_x = self.jugador.rect.centerx - self.rect.centerx
+            direccion_y = self.jugador.rect.centery - self.rect.centery
+            magnitud = math.sqrt(direccion_x ** 2 + direccion_y ** 2)
+            if magnitud != 0:
+                direccion_x /= magnitud
+                direccion_y /= magnitud
+            # Calcular el ángulo de rotación en grados
+            angulo = math.degrees(math.atan2(-direccion_y, direccion_x))
+            # Crear la bala en la posición del enemigo
+            bala_enemigo = BalaEnemigo('imagenes/balas/bala_enemigo2.png', self.rect.centerx, self.rect.bottom, direccion_x, direccion_y,
+                                       velocidad=7, danio=2)
             # Girar la bala en la dirección correcta
             bala_enemigo.girar(angulo)
 
