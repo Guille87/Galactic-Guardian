@@ -38,7 +38,13 @@ class Item(pygame.sprite.Sprite):
                 jugador.cadencia_disparo = jugador.cadencia_disparo_maxima
             print(f"cadencia actual: {jugador.cadencia_disparo}")
         elif self.tipo == "potenciador_danio.png":
+            if jugador.disparo_doble and not jugador.disparo_triple:
+                jugador.disparo_triple = True
+            if not jugador.disparo_doble and jugador.danio >= jugador.danio_maximo:
+                jugador.disparo_doble = True
             jugador.danio += 1
+            if jugador.danio >= jugador.danio_maximo:
+                jugador.danio = jugador.danio_maximo
             print(f"daño actual: {jugador.danio}")
         elif self.tipo == "potenciador_velocidad.png":
             jugador.velocidad += 0.25

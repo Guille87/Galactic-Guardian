@@ -26,13 +26,13 @@ class Bala(pygame.sprite.Sprite):
         """
         Comprueba si hay colisión entre la bala y otro objeto.
         """
-        # Calcular la distancia entre los centros de la bala y el objeto
-        distancia_x = self.rect.centerx - objeto.rect.centerx
-        distancia_y = self.rect.centery - objeto.rect.centery
-        distancia = math.sqrt(distancia_x ** 2 + distancia_y ** 2)
+        if objeto is not None:  # Verifica si objeto no es None
+            # Calcular la distancia entre los centros de la bala y el objeto
+            distancia_x = self.rect.centerx - objeto.rect.centerx
+            distancia_y = self.rect.centery - objeto.rect.centery
+            distancia = math.sqrt(distancia_x ** 2 + distancia_y ** 2)
 
-        # Si la distancia es menor que la suma de los radios de las hitboxes circulares, hay colisión
-        if distancia < self.radio + objeto.radio:
-            return True
-        else:
-            return False
+            # Si la distancia es menor que la suma de los radios de las hitboxes circulares, hay colisión
+            if distancia < self.radio + objeto.radio:
+                return True
+        return False

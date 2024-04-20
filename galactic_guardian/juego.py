@@ -15,6 +15,8 @@ from ui.boton import Boton
 class Juego:
     def __init__(self, pantalla_ancho, pantalla_alto, volumen_musica, volumen_efectos):
 
+        self.volumen_musica = volumen_musica
+
         self.all_sprites = pygame.sprite.Group()
 
         # Rangos para la generación de enemigos
@@ -43,8 +45,8 @@ class Juego:
         self.pos_y_fondo2 = -self.pantalla_alto  # Iniciar la segunda imagen arriba de la pantalla
 
         # Inicializar música de fondo
-        pygame.mixer.music.load('musica/Space Heroes.ogg')  # Archivo de música de fondo
-        pygame.mixer.music.set_volume(volumen_musica)  # Establecer volumen de la música de fondo
+        pygame.mixer.music.load('musica/SkyFire.ogg')  # Archivo de música de fondo
+        pygame.mixer.music.set_volume(self.volumen_musica)  # Establecer volumen de la música de fondo
         pygame.mixer.music.play(-1)  # Reproducir música de fondo en bucle
 
         # Ajustes icono
@@ -58,10 +60,10 @@ class Juego:
         # Lista para almacenar las balas
         self.balas = []
 
-        # Lista para almacenar las balas
+        # Lista para almacenar las balas de los enemigos
         self.balas_enemigo = []
 
-        # Creamos un diccionario para almacenar el estado de golpe de cada enemigo
+        # Diccionario para almacenar el estado de golpe de cada enemigo
         self.enemigos_golpeados = []
 
         # Cargamos las imágenes de la explosión para la animación
@@ -86,31 +88,48 @@ class Juego:
         # Inicializa el jugador
         self.jugador = Jugador('imagenes/jugador.png', self.pantalla_ancho, self.pantalla_alto, self.all_sprites)
 
+        # Obtener el tiempo en milisegundos en el que comienza el juego
+        self.inicio_juego = pygame.time.get_ticks()
+
     def generar_enemigo(self):
         """
         Genera un nuevo enemigo en una posición aleatoria en la parte superior de la pantalla.
         """
-        nuevo_enemigo = None  # Definir nuevo_enemigo con un valor predeterminado
-        ancho_enemigo = 50
-        alto_enemigo = 10
-        x_enemigo = random.randint(0, self.pantalla_ancho - ancho_enemigo)
-        y_enemigo = -alto_enemigo  # Genera el enemigo arriba de la pantalla
+        tiempo_transcurrido = pygame.time.get_ticks() - self.inicio_juego  # Calcular el tiempo transcurrido en milisegundos
+        tiempo_espera = 2000  # 2 segundos en milisegundos
 
-        # Elige aleatoriamente entre los dos tipos de enemigos
-        tipo_enemigo = random.choice([EnemigoTipo1, EnemigoTipo2, EnemigoTipo3])
+        if tiempo_transcurrido >= tiempo_espera:
+            ancho_enemigo = 50
+            alto_enemigo = 10
+            x_enemigo = random.randint(50, self.pantalla_ancho - ancho_enemigo - 50)
+            y_enemigo = -alto_enemigo  # Genera el enemigo arriba de la pantalla
 
-        # Determina la ruta de la imagen según el tipo de enemigo
-        if tipo_enemigo == EnemigoTipo1:
-            ruta_imagen = 'imagenes/enemigos/enemigo1.png'
-            nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho)
-        elif tipo_enemigo == EnemigoTipo2:
-            ruta_imagen = 'imagenes/enemigos/enemigo2.png'
-            nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.balas_enemigo, self.jugador)
-        elif tipo_enemigo == EnemigoTipo3:
-            ruta_imagen = 'imagenes/enemigos/enemigo3.png'
-            nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.balas_enemigo, self.jugador)
+            # Elige el tipo de enemigo según el tiempo transcurrido
+            if tiempo_transcurrido >= 30000:  # Después de 30 segundos en milisegundos
+                tipo_enemigo = random.choice([EnemigoTipo1, EnemigoTipo2, EnemigoTipo3])
+                if tipo_enemigo == EnemigoTipo1:
+                    ruta_imagen = 'imagenes/enemigos/enemigo1.png'
+                    nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho)
+                elif tipo_enemigo == EnemigoTipo2:
+                    ruta_imagen = 'imagenes/enemigos/enemigo2.png'
+                    nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.balas_enemigo, self.jugador)
+                else:
+                    ruta_imagen = 'imagenes/enemigos/enemigo3.png'
+                    nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.balas_enemigo, self.jugador)
+            elif tiempo_transcurrido >= 15000:  # Después de 15 segundos en milisegundos
+                tipo_enemigo = random.choice([EnemigoTipo1, EnemigoTipo2])
+                if tipo_enemigo == EnemigoTipo1:
+                    ruta_imagen = 'imagenes/enemigos/enemigo1.png'
+                    nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho)
+                else:
+                    ruta_imagen = 'imagenes/enemigos/enemigo2.png'
+                    nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.balas_enemigo, self.jugador)
+            else:
+                tipo_enemigo = EnemigoTipo1
+                ruta_imagen = 'imagenes/enemigos/enemigo1.png'
+                nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho)
 
-        return nuevo_enemigo
+            return nuevo_enemigo
 
     def manejar_eventos(self):
         """
@@ -199,17 +218,28 @@ class Juego:
         self.tiempo_proximo_enemigo += tiempo_pausado
         self.jugador.tiempo_invulnerable += tiempo_pausado  # Actualizar el tiempo de invulnerabilidad del jugador
         for enemigo in self.enemigos:
-            if isinstance(enemigo, EnemigoTipo2):
+            if isinstance(enemigo, EnemigoTipo2) or isinstance(enemigo, EnemigoTipo3):
                 enemigo.tiempo_ultimo_ataque += tiempo_pausado
 
     def _disparar(self):
         """
         Maneja la lógica de disparo del jugador.
         """
-        nueva_bala = self.jugador.disparar()
-        if nueva_bala:
-            self.balas.append(nueva_bala)
+        # Llama a la función disparar del jugador para obtener las nuevas balas
+        nueva_bala1, nueva_bala2, nueva_bala3 = self.jugador.disparar()
+
+        # Verifica si hay una nueva bala y la agrega a la lista de balas
+        if nueva_bala1:
+            self.balas.append(nueva_bala1)
             self.EFECTO_DISPARO.play()
+
+        # Verifica si hay una segunda nueva bala y la agrega a la lista de balas
+        if nueva_bala2:
+            self.balas.append(nueva_bala2)
+
+        # Verifica si hay una tercera nueva bala y la agrega a la lista de balas
+        if nueva_bala3:
+            self.balas.append(nueva_bala3)
 
     def actualizar(self):
         """
@@ -232,10 +262,11 @@ class Juego:
         """
         Elimina los elementos (balas, enemigos y objetos) que están fuera de la pantalla.
         """
-        self.balas = [bala for bala in self.balas if not self.fuera_de_pantalla(bala.rect)]
-        self.enemigos = [enemigo for enemigo in self.enemigos if not self.fuera_de_pantalla(enemigo.rect)]
-        self.balas_enemigo = [bala_enemiga for bala_enemiga in self.balas_enemigo if not self.fuera_de_pantalla(bala_enemiga.rect)]
-        self.all_sprites = pygame.sprite.Group([item for item in self.all_sprites if not self.fuera_de_pantalla(item.rect)])
+        self.balas = [bala for bala in self.balas if not (bala is not None and self.fuera_de_pantalla(bala.rect))]
+        self.enemigos = [enemigo for enemigo in self.enemigos if not (enemigo is not None and self.fuera_de_pantalla(enemigo.rect))]
+        self.balas_enemigo = [bala_enemiga for bala_enemiga in self.balas_enemigo if
+                              not (bala_enemiga is not None and self.fuera_de_pantalla(bala_enemiga.rect))]
+        self.all_sprites = pygame.sprite.Group([item for item in self.all_sprites if not (item is not None and self.fuera_de_pantalla(item.rect))])
 
     def fuera_de_pantalla(self, rect):
         """
@@ -274,11 +305,12 @@ class Juego:
         Procesa la colisión entre una bala y un enemigo.
 
         Args:
-            bala: Bala del enemigo.
+            bala: Bala del jugador.
             enemigo: Enemigo colisionado.
         """
         balas_a_eliminar = [bala, enemigo]
-        enemigo.take_damage(bala.danio, self.jugador)  # # Reducir la salud del enemigo según el daño de la bala
+        # Reducir la salud del enemigo según el daño de la bala del jugador
+        enemigo.take_damage(bala.danio, self.jugador)
         if enemigo.salud <= 0:
             self.enemigos.remove(enemigo)
             explosion = Explosion(enemigo.rect.center, self.explosion_images)
@@ -292,14 +324,13 @@ class Juego:
     def manejar_impacto_jugador(self):
         """
         Maneja el impacto en el jugador.
-        Si el jugador tiene vidas restantes, reduce su salud en 1.
+        Si el jugador tiene vidas restantes.
         Si la salud del jugador es mayor que 0, crea un destello en la posición del jugador.
         Si la salud del jugador llega a 0, crea una explosión en la posición del jugador,
         reposiciona al jugador en el centro de la parte inferior de la pantalla,
         reduce una vida y, si quedan vidas restantes, aumenta la salud del jugador en 5.
         """
         if self.jugador.vidas > 0:
-            self.jugador.reducir_salud(1)
             if self.jugador.salud > 0:
                 self.crear_destello()
             else:
@@ -338,7 +369,7 @@ class Juego:
         self.jugador.tiempo_invulnerable = pygame.time.get_ticks() + 3000
         self.crear_destello_constante()
         if self.jugador.vidas > 0:
-            self.jugador.aumentar_salud(5)
+            self.jugador.aumentar_salud(self.jugador.salud_maxima)
 
     def crear_destello_constante(self):
         """
@@ -359,6 +390,7 @@ class Juego:
             bala_enemiga.bala_enemigo()
             if bala_enemiga.comprobar_colision(self.jugador):
                 self.eliminar_elementos([bala_enemiga])
+                self.jugador.reducir_salud(bala_enemiga.danio)
                 self.manejar_impacto_jugador()
                 self.EFECTO_GOLPE.play()
             elif self.fuera_de_pantalla(bala_enemiga.rect):
@@ -416,19 +448,20 @@ class Juego:
         Actualiza la posición y comportamiento de los enemigos.
         """
         for enemigo in self.enemigos:
-            enemigo.movimiento_enemigo()
+            if enemigo is not None:  # Verificar si enemigo no es None
+                enemigo.movimiento_enemigo()
 
-            if self.jugador.rect.colliderect(enemigo.rect):
-                self.colision_jugador_enemigo(enemigo)
+                if self.jugador.rect.colliderect(enemigo.rect):
+                    self.colision_jugador_enemigo(enemigo)
 
-            if isinstance(enemigo, EnemigoTipo2):
-                nueva_bala_enemigo = enemigo.disparo_enemigo()
-                if nueva_bala_enemigo:
-                    self.balas_enemigo.append(nueva_bala_enemigo)
-            if isinstance(enemigo, EnemigoTipo3):
-                nueva_bala_enemigo = enemigo.disparo_enemigo()
-                if nueva_bala_enemigo:
-                    self.balas_enemigo.append(nueva_bala_enemigo)
+                if isinstance(enemigo, EnemigoTipo2):
+                    nueva_bala_enemigo = enemigo.disparo_enemigo()
+                    if nueva_bala_enemigo:
+                        self.balas_enemigo.append(nueva_bala_enemigo)
+                if isinstance(enemigo, EnemigoTipo3):
+                    nueva_bala_enemigo = enemigo.disparo_enemigo()
+                    if nueva_bala_enemigo:
+                        self.balas_enemigo.append(nueva_bala_enemigo)
 
     def colision_jugador_enemigo(self, enemigo):
         """
@@ -439,6 +472,7 @@ class Juego:
         """
         enemigo_golpeado = (enemigo.rect, False)
         if enemigo_golpeado not in self.enemigos_golpeados:
+            self.jugador.reducir_salud(1)
             self.EFECTO_GOLPE.play()
             self.enemigos_golpeados.append(enemigo_golpeado)
             self.manejar_impacto_jugador()
@@ -474,14 +508,8 @@ class Juego:
         Muestra el mensaje de "Game Over" y la opción de "Reintentar".
         """
         pygame.mixer.music.load('musica/Defeated (Game Over Tune).ogg')  # Archivo de música de fondo
-        pygame.mixer.music.set_volume(0.5)  # Establecer volumen de la música de fondo
+        pygame.mixer.music.set_volume(self.volumen_musica)  # Establecer volumen de la música de fondo
         pygame.mixer.music.play(-1)  # Reproducir música de fondo en bucle
-
-        self.all_sprites.empty()  # Eliminar todos los sprites
-        font_game_over = pygame.font.SysFont(None, 72)  # Fuente y tamaño del texto
-        texto_game_over = font_game_over.render("Game Over", True, (255, 255, 255))  # Texto, antialiasing y color
-        texto_rect = texto_game_over.get_rect(center=(self.pantalla_ancho // 2, self.pantalla_alto // 2))  # Centrar el texto
-        self.pantalla.blit(texto_game_over, texto_rect)  # Mostrar el texto "Game Over"
 
         # Cargar la fuente para el botón "Reintentar"
         font_reintentar = pygame.font.Font(None, 36)
@@ -508,7 +536,6 @@ class Juego:
         """
         Reinicia el juego.
         """
-
         # Reiniciar todos los valores del juego a sus estados iniciales
         self.jugador = Jugador('imagenes/jugador.png', self.pantalla_ancho, self.pantalla_alto, self.all_sprites)
         self.enemigos = []
@@ -516,8 +543,9 @@ class Juego:
         self.balas_enemigo = []
         self.enemigos_golpeados = []
         self.tiempo_proximo_enemigo = 0
-        pygame.mixer.music.load('musica/Space Heroes.ogg')
-        pygame.mixer.music.set_volume(0.5)
+        self.inicio_juego = pygame.time.get_ticks()
+        pygame.mixer.music.load('musica/SkyFire.ogg')
+        pygame.mixer.music.set_volume(self.volumen_musica)
         pygame.mixer.music.play(-1)
 
         # Continuar ejecutando el juego
@@ -529,7 +557,7 @@ class Juego:
         """
         # Calcular la posición inicial de la barra de salud
         barra_x = self.jugador.rect.centerx - 25  # Centrar el rectángulo en relación con la barra de salud
-        barra_y = self.jugador.rect.bottom + 10  # Ajustar la posición vertical para que esté encima de la nave
+        barra_y = self.jugador.rect.bottom + 10  # Ajustar la posición vertical para que esté debajo de la nave
 
         # Dibujar las barras verticales de la barra de salud
         for i in range(self.jugador.salud_maxima):
@@ -562,12 +590,13 @@ class Juego:
         self.all_sprites.draw(self.pantalla)
 
         for enemigo in self.enemigos:
-            if self.pausado:
-                enemigo_image_gris = enemigo.image.copy()
-                enemigo_image_gris.fill((128, 128, 128), special_flags=pygame.BLEND_RGB_MULT)
-                self.pantalla.blit(enemigo_image_gris, enemigo.rect)
-            else:
-                self.pantalla.blit(enemigo.image, enemigo.rect)  # Dibujar enemigos
+            if enemigo is not None:  # Verifica si enemigo no es None
+                if self.pausado:
+                    enemigo_image_gris = enemigo.image.copy()
+                    enemigo_image_gris.fill((128, 128, 128), special_flags=pygame.BLEND_RGB_MULT)
+                    self.pantalla.blit(enemigo_image_gris, enemigo.rect)
+                else:
+                    self.pantalla.blit(enemigo.image, enemigo.rect)  # Dibujar enemigos
 
         for bala in self.balas:
             if self.pausado:
@@ -608,7 +637,6 @@ class Juego:
             # Mostrar texto de vidas
             color_texto_vidas = (128, 128, 128)  # Color gris si el juego está pausado
         else:
-            # Dibujar al jugador solo si sus vidas es mayor que 0
             self.pantalla.blit(self.jugador.image, self.jugador.rect)
             # Mostrar texto de vidas
             color_texto_vidas = (255, 255, 255)  # Color blanco si el juego está en curso

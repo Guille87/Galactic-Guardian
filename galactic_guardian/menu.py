@@ -22,7 +22,7 @@ def mostrar_menu(pantalla):
     volumen_musica, volumen_efectos = configuracion.cargar_configuracion()
 
     # Inicializar música de fondo
-    pygame.mixer.music.load('musica/Space Heroes.ogg')  # Archivo de música de fondo
+    pygame.mixer.music.load('musica/SkyFire.ogg')  # Archivo de música de fondo
     pygame.mixer.music.set_volume(volumen_musica)  # Establecer volumen de la música de fondo
     pygame.mixer.music.play(-1)  # Reproducir música de fondo en bucle
 
@@ -32,7 +32,6 @@ def mostrar_menu(pantalla):
     # Ajustes icono
     icono = pygame.image.load('imagenes/favicon.png')
     pygame.display.set_icon(icono)
-    pygame.display.set_caption("GalacticGuardian")
 
     # Definir las propiedades del botón "Jugar"
     boton_ancho = 200
@@ -41,7 +40,7 @@ def mostrar_menu(pantalla):
     texto_color = (255, 255, 255)  # Blanco
     font = pygame.font.Font(None, 36)
 
-    # Crear una superficie para el "Jugar" botón con transparencia
+    # Crear una superficie para el botón "Jugar" con transparencia
     boton_jugar_surface = pygame.Surface((boton_ancho, boton_alto), pygame.SRCALPHA)
     pygame.draw.rect(boton_jugar_surface, boton_color, boton_jugar_surface.get_rect(), border_radius=10)  # Dibujar el botón "Jugar" en la superficie
 
@@ -50,7 +49,7 @@ def mostrar_menu(pantalla):
 
     # Crear el texto del título del juego
     titulo_font = pygame.font.Font(None, 76)
-    titulo_surface = titulo_font.render("GalacticGuardian", True, texto_color)
+    titulo_surface = titulo_font.render("Galactic Guardian", True, texto_color)
     titulo_rect = titulo_surface.get_rect(center=(pantalla.get_width() // 2, 150))  # Centrar en la parte superior de la pantalla
 
     # Definir las propiedades del botón "Opciones"
@@ -67,6 +66,8 @@ def mostrar_menu(pantalla):
     boton_opciones_rect = boton_opciones_surface.get_rect(centerx=pantalla.get_rect().centerx, y=boton_jugar_rect.bottom + 20)
 
     while True:
+        pygame.display.set_caption("Galactic Guardian")
+
         volumen_musica, volumen_efectos = configuracion.cargar_configuracion()
 
         pygame.mixer.music.set_volume(volumen_musica)  # Establecer volumen de la música de fondo
@@ -118,20 +119,36 @@ def mostrar_opciones(pantalla, volumen_musica, volumen_efectos):
     pygame.display.set_caption("Opciones")
 
     manager = pygame_gui.UIManager((600, 800))
-    fondo = pygame.Surface((600, 800))
-    fondo.fill((30, 30, 30))
 
-    fondo_rect = fondo.get_rect()
+    # Cargar la imagen de fondo
+    fondo = pygame.image.load("imagenes/fondo1.png").convert_alpha()
 
     texto_font = pygame.font.Font(None, 36)
     texto_surface = texto_font.render("Opciones", True, (255, 255, 255))
     texto_rect = texto_surface.get_rect(center=(300, 50))
 
+    # Definir el texto de los controles
+    controles_texto = ["CONTROLES",
+                       "Moverse: W A S D o flechas de dirección",
+                       "Disparar: Barra espaciadora o botón izquierdo del ratón",
+                       "Pausar: Escape o P"]
+
+    # Definir la fuente para el texto de los controles
+    texto_font_controles = pygame.font.Font(None, 26)
+    texto_color = (255, 255, 0)
+
+    # Crear superficies de texto para los controles
+    controles_surfaces = [texto_font_controles.render(texto, True, texto_color) for texto in controles_texto]
+
+    # Obtener los rectángulos de las superficies de texto
+    controles_rects = [texto_surface.get_rect(topleft=(50, 450 + i * 40)) for i, texto_surface in enumerate(controles_surfaces)]
+
     # Crear control deslizante para la música
     musica_slider = pygame_gui.elements.ui_horizontal_slider.UIHorizontalSlider(relative_rect=pygame.Rect((50, 150), (500, 50)),
                                                                                 start_value=0.5,
                                                                                 value_range=(0, 1),
-                                                                                manager=manager)
+                                                                                manager=manager,
+                                                                                click_increment=0.1)
 
     musica_texto_surface = texto_font.render("Música:", True, (255, 255, 255))
     musica_texto_rect = musica_texto_surface.get_rect(topleft=(50, 120))
@@ -140,7 +157,8 @@ def mostrar_opciones(pantalla, volumen_musica, volumen_efectos):
     efectos_slider = pygame_gui.elements.ui_horizontal_slider.UIHorizontalSlider(relative_rect=pygame.Rect((50, 250), (500, 50)),
                                                                                  start_value=0.5,
                                                                                  value_range=(0, 1),
-                                                                                 manager=manager)
+                                                                                 manager=manager,
+                                                                                 click_increment=0.1)
 
     # Crear botón de guardar
     boton_guardar = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((50, 350), (200, 50)),
@@ -190,7 +208,7 @@ def mostrar_opciones(pantalla, volumen_musica, volumen_efectos):
                         if not sonido_reproduciendose:
                             sonido_reproduciendose = True
                             # Reproducir el efecto de sonido
-                            efecto_cambio_volumen = pygame.mixer.Sound('sonidos/hit.wav')
+                            efecto_cambio_volumen = pygame.mixer.Sound('sonidos/laser-gun.wav')
                             efecto_cambio_volumen.set_volume(volumen_efectos)
                             efecto_cambio_volumen.play()
                             # Obtener la duración del sonido de cambio de volumen
@@ -213,10 +231,14 @@ def mostrar_opciones(pantalla, volumen_musica, volumen_efectos):
 
         manager.update(tiempo_delta)
 
-        pantalla.blit(fondo, fondo_rect)
+        pantalla.blit(fondo, (0, 0))
         pantalla.blit(texto_surface, texto_rect)
         pantalla.blit(musica_texto_surface, musica_texto_rect)
         pantalla.blit(efectos_texto_surface, efectos_texto_rect)
+
+        # Dibujar los controles en la pantalla
+        for control_surface, control_rect in zip(controles_surfaces, controles_rects):
+            pantalla.blit(control_surface, control_rect)
 
         manager.draw_ui(pantalla)
 

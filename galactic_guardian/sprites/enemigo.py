@@ -28,14 +28,6 @@ class EnemigoBase(pygame.sprite.Sprite):
         if self.rect.left < 0 or self.rect.right > self.pantalla_ancho:
             self.velocidad_x *= -1  # Invierte la dirección horizontal si alcanza un borde
 
-            # Cambia aleatoriamente la velocidad horizontal
-            if random.random() < 0.01:
-                self.velocidad_x = random.uniform(-1, 1)
-
-            # Cambia aleatoriamente la velocidad vertical
-            if random.random() < 0.01:
-                self.velocidad_y = random.uniform(1, 3)
-
     def take_damage(self, damage, jugador):
         self.salud -= damage
         if self.salud <= 0:
@@ -51,17 +43,20 @@ class EnemigoBase(pygame.sprite.Sprite):
             lista_objetos.remove("potenciador_velocidad.png")
         if jugador.cadencia_disparo == jugador.cadencia_disparo_maxima:
             lista_objetos.remove("potenciador_cadencia.png")
-        if isinstance(self, EnemigoTipo1) and random.random() < 0.05:
-            nombre_imagen = random.choice(lista_objetos)  # Selecciona aleatoriamente un nombre de imagen de la lista
-            item = Item(nombre_imagen, "objetos", nombre_imagen)
-        elif isinstance(self, EnemigoTipo2) and random.random() < 0.10:
-            nombre_imagen = random.choice(lista_objetos)
-            item = Item(nombre_imagen, "objetos", nombre_imagen)
-        elif isinstance(self, EnemigoTipo2) and random.random() < 0.20:
-            nombre_imagen = random.choice(lista_objetos)
-            item = Item(nombre_imagen, "objetos", nombre_imagen)
-        if item:
-            item.set_posicion(self.rect.x, self.rect.y)
+        if jugador.disparo_triple:
+            lista_objetos.remove("potenciador_danio.png")
+        if lista_objetos:
+            if isinstance(self, EnemigoTipo1) and random.random() < 0.05:
+                nombre_imagen = random.choice(lista_objetos)  # Selecciona aleatoriamente un nombre de imagen de la lista
+                item = Item(nombre_imagen, "objetos", nombre_imagen)
+            elif isinstance(self, EnemigoTipo2) and random.random() < 0.1:
+                nombre_imagen = random.choice(lista_objetos)
+                item = Item(nombre_imagen, "objetos", nombre_imagen)
+            elif isinstance(self, EnemigoTipo2) and random.random() < 0.2:
+                nombre_imagen = random.choice(lista_objetos)
+                item = Item(nombre_imagen, "objetos", nombre_imagen)
+            if item:
+                item.set_posicion(self.rect.x, self.rect.y)
         return item
 
     def aumentar_vida(self, cantidad):
@@ -72,7 +67,7 @@ class EnemigoTipo1(EnemigoBase):
     def __init__(self, imagen, x, y, pantalla_ancho, salud=1):
         super().__init__(imagen, x, y, pantalla_ancho, salud=salud)
         # Atributos específicos del tipo de enemigo 1
-        self.velocidad_x = random.uniform(-1, 1)
+        self.velocidad_x = random.uniform(-3, 3)
         self.velocidad_y = random.uniform(1, 4)
         self.radio = 16  # Definir el radio de la hitbox circular
 
@@ -81,7 +76,7 @@ class EnemigoTipo2(EnemigoBase):
     def __init__(self, imagen, x, y, pantalla_ancho, lista_balas_enemigas, jugador, salud=2):
         super().__init__(imagen, x, y, pantalla_ancho, salud=salud)
         # Atributos específicos del tipo de enemigo 2
-        self.velocidad_x = random.uniform(-2, 2)
+        self.velocidad_x = random.uniform(-3, 3)
         self.velocidad_y = random.uniform(2, 4)
         self.lista_balas_enemigas = lista_balas_enemigas  # Guarda la referencia a la lista de balas enemigas
         self.jugador = jugador  # Guarda la referencia al jugador

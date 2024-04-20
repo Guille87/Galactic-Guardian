@@ -15,17 +15,20 @@ class Jugador(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.imagen_original, (50, 50))
         self.rect = self.image.get_rect(centerx=pantalla_ancho // 2, bottom=pantalla_alto - 10)
         self.danio = 1  # Cantidad de daño que inflige la nave del jugador
+        self.danio_maximo = 3  # Cantidad de daño máximo que puede infligir la nave del jugador
         self.vidas = 2  # Establece las vidas iniciales del jugador
         self.salud = 3  # Establece la salud inicial del jugador
-        self.salud_maxima = 5  # Establece la salud inicial del jugador
-        self.velocidad = 4
-        self.velocidad_maxima = 6
+        self.salud_maxima = 5  # Establece la salud máxima del jugador
+        self.velocidad = 4  # Establece la velocidad de la nave del jugador
+        self.velocidad_maxima = 6  # Establece la velocidad máxima de la nave del jugador
         self.cadencia_disparo = 350  # Cadencia de disparo en milisegundos
-        self.cadencia_disparo_maxima = 150
+        self.cadencia_disparo_maxima = 150  # Cadencia de disparo máxima en milisegundos
         self.ultimo_disparo = pygame.time.get_ticks()  # Tiempo del último disparo
+        self.disparo_doble = False  # Atributo para rastrear el disparo doble
+        self.disparo_triple = False  # Atributo para rastrear el disparo triple
         self.radio = 16  # Definir el radio de la hitbox circular
-        self.invulnerable = False  # Agregar atributo para rastrear la invulnerabilidad
-        self.tiempo_invulnerable = None
+        self.invulnerable = False  # Atributo para rastrear la invulnerabilidad
+        self.tiempo_invulnerable = 0
         self.destello_constante = None
         self.all_sprites = all_sprites  # Guardar una referencia al grupo de sprites
 
@@ -54,25 +57,64 @@ class Jugador(pygame.sprite.Sprite):
 
     def disparar(self):
         tiempo_actual = pygame.time.get_ticks()
-        if tiempo_actual - self.ultimo_disparo > self.cadencia_disparo:
-            # Calcular el ángulo de rotación en grados
-            angulo = math.degrees(math.atan2(45, 0))
-            nueva_bala = Bala('imagenes/balas/bala_jugador1.png', self.rect.centerx, self.rect.top + 10, self.danio)
-            self.ultimo_disparo = tiempo_actual  # Actualizar tiempo del último disparo
 
-            # Girar la bala en la dirección correcta
-            nueva_bala.girar(angulo)
-            return nueva_bala
+        # Si el jugador tiene el poder de disparo triple, dispara tres balas
+        if self.disparo_triple:
+            if tiempo_actual - self.ultimo_disparo > self.cadencia_disparo:
+                angulo1 = math.degrees(math.atan2(45, 0))
+                angulo2 = math.degrees(math.atan2(45, 0))
+                angulo3 = math.degrees(math.atan2(45, 0))
+
+                nueva_bala1 = Bala('imagenes/balas/bala_jugador1.png', self.rect.centerx - 15, self.rect.top + 10, self.danio)
+                nueva_bala2 = Bala('imagenes/balas/bala_jugador1.png', self.rect.centerx, self.rect.top + 10, self.danio)
+                nueva_bala3 = Bala('imagenes/balas/bala_jugador1.png', self.rect.centerx + 15, self.rect.top + 10, self.danio)
+
+                nueva_bala1.girar(angulo1)
+                nueva_bala2.girar(angulo2)
+                nueva_bala3.girar(angulo3)
+
+                self.ultimo_disparo = tiempo_actual
+                return nueva_bala1, nueva_bala2, nueva_bala3
+
+        # Si el jugador tiene el poder de disparo doble, dispara dos balas
+        elif self.disparo_doble:
+            if tiempo_actual - self.ultimo_disparo > self.cadencia_disparo:
+                angulo1 = math.degrees(math.atan2(45, 0))
+                angulo2 = math.degrees(math.atan2(45, 0))
+
+                nueva_bala1 = Bala('imagenes/balas/bala_jugador1.png', self.rect.centerx - 10, self.rect.top + 10, self.danio)
+                nueva_bala2 = Bala('imagenes/balas/bala_jugador1.png', self.rect.centerx + 10, self.rect.top + 10, self.danio)
+
+                nueva_bala1.girar(angulo1)
+                nueva_bala2.girar(angulo2)
+
+                self.ultimo_disparo = tiempo_actual
+                return nueva_bala1, nueva_bala2, None
+
+        # Si no tiene mejoras de disparo, dispara una sola bala
         else:
-            return None
+            if tiempo_actual - self.ultimo_disparo > self.cadencia_disparo:
+                # Calcular el ángulo de rotación en grados
+                angulo = math.degrees(math.atan2(45, 0))
 
-    def reducir_salud(self, cantidad):
+                # Crear la bala
+                nueva_bala1 = Bala('imagenes/balas/bala_jugador1.png', self.rect.centerx, self.rect.top + 10, self.danio)
+
+                # Gira la bala en la dirección correcta
+                nueva_bala1.girar(angulo)
+
+                # Actualizar el tiempo del último disparo
+                self.ultimo_disparo = tiempo_actual
+                return nueva_bala1, None, None
+        return None, None, None   # Devuelve None para todos los tipos de balas si no se dispara
+
+    def reducir_salud(self, damage):
         """
         Reduce la salud del jugador.
-        :param cantidad: Cantidad de salud que se va a reducir.
+        :param damage: Cantidad de salud que se va a reducir.
         """
         if not self.invulnerable:  # Verificar si la nave es vulnerable
-            self.salud -= cantidad
+            self.salud -= damage
             if self.salud <= 0 < self.vidas:
                 self.salud = 0  # Evita que la salud sea negativa
                 self.invulnerable = True  # Hacer la nave invulnerable
