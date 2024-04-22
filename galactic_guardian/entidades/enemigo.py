@@ -2,9 +2,14 @@ import math
 import random
 
 import pygame
-
+import os
 from .bala_enemigo import BalaEnemigo
 from .item import Item
+from ..resources.resource_manager import ResourceManager
+
+
+# Crear una instancia global de ResourceManager
+resource_manager = ResourceManager()
 
 
 class EnemigoBase(pygame.sprite.Sprite):
@@ -34,6 +39,15 @@ class EnemigoBase(pygame.sprite.Sprite):
             self.die(jugador)
 
     def die(self, jugador):
+        # Obtener las rutas de las imágenes de los objetos del ResourceManager
+        ruta_potenciador_danio = resource_manager.get_image_path("potenciador_danio")
+        ruta_potenciador_cadencia = resource_manager.get_image_path("potenciador_cadencia")
+        ruta_potenciador_velocidad = resource_manager.get_image_path("potenciador_velocidad")
+        ruta_curacion = resource_manager.get_image_path("curacion")
+
+        # Lista de rutas de las imágenes de los objetos
+        lista_rutas_objetos = [ruta_potenciador_danio, ruta_potenciador_cadencia, ruta_potenciador_velocidad, ruta_curacion]
+
         # Lista de nombres de los archivos de imagen de los objetos
         lista_objetos = ["potenciador_danio.png", "potenciador_cadencia.png", "potenciador_velocidad.png", "curacion.png"]
         item = None
@@ -46,15 +60,19 @@ class EnemigoBase(pygame.sprite.Sprite):
         if jugador.disparo_triple:
             lista_objetos.remove("potenciador_danio.png")
         if lista_objetos:
-            if isinstance(self, EnemigoTipo1) and random.random() < 0.05:
+            ruta_imagen_base = random.choice(lista_rutas_objetos)  # Selecciona una ruta base aleatoria de la lista
+            if isinstance(self, EnemigoTipo1) and random.random() < 0.55:
                 nombre_imagen = random.choice(lista_objetos)  # Selecciona aleatoriamente un nombre de imagen de la lista
-                item = Item(nombre_imagen, "objetos", nombre_imagen)
-            elif isinstance(self, EnemigoTipo2) and random.random() < 0.1:
+                ruta_imagen = os.path.join(ruta_imagen_base, nombre_imagen)
+                item = Item(nombre_imagen, ruta_imagen)
+            elif isinstance(self, EnemigoTipo2) and random.random() < 0.51:
                 nombre_imagen = random.choice(lista_objetos)
-                item = Item(nombre_imagen, "objetos", nombre_imagen)
-            elif isinstance(self, EnemigoTipo2) and random.random() < 0.2:
+                ruta_imagen = os.path.join(ruta_imagen_base, nombre_imagen)
+                item = Item(nombre_imagen, ruta_imagen)
+            elif isinstance(self, EnemigoTipo2) and random.random() < 0.52:
                 nombre_imagen = random.choice(lista_objetos)
-                item = Item(nombre_imagen, "objetos", nombre_imagen)
+                ruta_imagen = os.path.join(ruta_imagen_base, nombre_imagen)
+                item = Item(nombre_imagen, ruta_imagen)
             if item:
                 item.set_posicion(self.rect.x, self.rect.y)
         return item
@@ -95,8 +113,12 @@ class EnemigoTipo2(EnemigoBase):
                 direccion_y /= magnitud
             # Calcular el ángulo de rotación en grados
             angulo = math.degrees(math.atan2(-direccion_y, direccion_x))
+
+            # Construir la ruta a la imagen de la bala del enemigo
+            ruta_imagen_bala_enemigo = resource_manager.get_image_path("bala_enemigo")
+
             # Crear la bala en la posición del enemigo
-            bala_enemigo = BalaEnemigo('imagenes/balas/bala_enemigo.png', self.rect.centerx, self.rect.bottom, direccion_x, direccion_y,
+            bala_enemigo = BalaEnemigo(ruta_imagen_bala_enemigo, self.rect.centerx, self.rect.bottom, direccion_x, direccion_y,
                                        velocidad=5, danio=1)
             # Girar la bala en la dirección correcta
             bala_enemigo.girar(angulo)
@@ -130,8 +152,12 @@ class EnemigoTipo3(EnemigoBase):
                 direccion_y /= magnitud
             # Calcular el ángulo de rotación en grados
             angulo = math.degrees(math.atan2(-direccion_y, direccion_x))
+
+            # Construir la ruta a la imagen de la bala del enemigo
+            ruta_imagen_bala_enemigo = resource_manager.get_image_path("bala_enemigo2")
+
             # Crear la bala en la posición del enemigo
-            bala_enemigo = BalaEnemigo('imagenes/balas/bala_enemigo2.png', self.rect.centerx, self.rect.bottom, direccion_x, direccion_y,
+            bala_enemigo = BalaEnemigo(ruta_imagen_bala_enemigo, self.rect.centerx, self.rect.bottom, direccion_x, direccion_y,
                                        velocidad=7, danio=2)
             # Girar la bala en la dirección correcta
             bala_enemigo.girar(angulo)

@@ -2,18 +2,23 @@ import time
 
 import pygame
 import pygame_gui
-from galactic_guardian import configuracion
+
+from galactic_guardian.juego import configuracion
+from galactic_guardian.resources.resource_manager import ResourceManager
+from galactic_guardian.juego.juego_principal import Juego
+from galactic_guardian.ui.boton import Boton
+
+
+# Instancia global de ResourceManager
+resource_manager = ResourceManager()
 
 
 def crear_pantalla():
-    # Inicializa Pygame
-    pygame.init()
-
     # Configuración de la pantalla
     pantalla_ancho = 600
     pantalla_alto = 800
     pantalla = pygame.display.set_mode((pantalla_ancho, pantalla_alto))
-    pygame.display.set_caption("Menú")
+    pygame.display.set_caption("Galactic Guardian")
     return pantalla
 
 
@@ -21,17 +26,18 @@ def mostrar_menu(pantalla):
     # Cargar la configuración de música y sonido
     volumen_musica, volumen_efectos = configuracion.cargar_configuracion()
 
-    # Inicializar música de fondo
-    pygame.mixer.music.load('musica/SkyFire.ogg')  # Archivo de música de fondo
-    pygame.mixer.music.set_volume(volumen_musica)  # Establecer volumen de la música de fondo
-    pygame.mixer.music.play(-1)  # Reproducir música de fondo en bucle
+    # Iniciar música de fondo si aún no se ha iniciado
+    if not resource_manager.is_music_playing("skyfire_theme"):
+        resource_manager.play_music("skyfire_theme", loops=-1)
+        resource_manager.set_music_volume("skyfire_theme", volumen_musica)
 
-    # Cargar la imagen de fondo
-    fondo = pygame.image.load("imagenes/fondo1.png").convert_alpha()
+    # Obtener la imagen de fondo
+    fondo = resource_manager.get_image("imagen_fondo1")
 
-    # Ajustes icono
-    icono = pygame.image.load('imagenes/favicon.png')
-    pygame.display.set_icon(icono)
+    # Crear el texto del título del juego
+    titulo_font = pygame.font.Font(None, 76)
+    titulo_surface = titulo_font.render("Galactic Guardian", True, (255, 255, 255))
+    titulo_rect = titulo_surface.get_rect(center=(pantalla.get_width() // 2, 150))  # Centrar en la parte superior de la pantalla
 
     # Definir las propiedades del botón "Jugar"
     boton_ancho = 200
@@ -40,58 +46,33 @@ def mostrar_menu(pantalla):
     texto_color = (255, 255, 255)  # Blanco
     font = pygame.font.Font(None, 36)
 
-    # Crear una superficie para el botón "Jugar" con transparencia
-    boton_jugar_surface = pygame.Surface((boton_ancho, boton_alto), pygame.SRCALPHA)
-    pygame.draw.rect(boton_jugar_surface, boton_color, boton_jugar_surface.get_rect(), border_radius=10)  # Dibujar el botón "Jugar" en la superficie
-
-    # Crear el rectángulo del botón "Jugar" y centrarlo en la pantalla
-    boton_jugar_rect = boton_jugar_surface.get_rect(centerx=pantalla.get_rect().centerx, y=350)
-
-    # Crear el texto del título del juego
-    titulo_font = pygame.font.Font(None, 76)
-    titulo_surface = titulo_font.render("Galactic Guardian", True, texto_color)
-    titulo_rect = titulo_surface.get_rect(center=(pantalla.get_width() // 2, 150))  # Centrar en la parte superior de la pantalla
+    # Crear el botón "Jugar"
+    boton_jugar = Boton("Jugar", boton_color, texto_color, pantalla.get_rect().centerx, 350, boton_ancho, boton_alto, radio_borde=10)
 
     # Definir las propiedades del botón "Opciones"
     boton_opciones_ancho = 200
     boton_opciones_alto = 50
     boton_opciones_color = (0, 0, 255, 128)  # Azul brillante y semitransparente
 
-    # Crear una superficie para el botón "Opciones" con transparencia
-    boton_opciones_surface = pygame.Surface((boton_opciones_ancho, boton_opciones_alto), pygame.SRCALPHA)
-    pygame.draw.rect(boton_opciones_surface, boton_opciones_color, boton_opciones_surface.get_rect(),
-                     border_radius=10)  # Dibujar el botón "Opciones" en la superficie
-
-    # Crear el rectángulo del botón "Opciones" y centrarlo horizontalmente en la pantalla debajo del botón "Jugar"
-    boton_opciones_rect = boton_opciones_surface.get_rect(centerx=pantalla.get_rect().centerx, y=boton_jugar_rect.bottom + 20)
+    # Crear el botón "Opciones"
+    boton_opciones = Boton("Opciones", boton_opciones_color, texto_color, pantalla.get_rect().centerx, boton_jugar.rect.bottom + 20, boton_opciones_ancho,
+                           boton_opciones_alto, radio_borde=10)
 
     while True:
         pygame.display.set_caption("Galactic Guardian")
 
         volumen_musica, volumen_efectos = configuracion.cargar_configuracion()
 
-        pygame.mixer.music.set_volume(volumen_musica)  # Establecer volumen de la música de fondo
+        resource_manager.set_music_volume("skyfire_theme", volumen_musica)
 
         pantalla.blit(fondo, (0, 0))  # Dibujar la imagen de fondo en toda la pantalla
 
         # Dibujar el título del juego en la pantalla
         pantalla.blit(titulo_surface, titulo_rect)
 
-        # Dibujar el botón en la pantalla
-        pantalla.blit(boton_jugar_surface, boton_jugar_rect)
-
-        # Crear el texto "Jugar" y centrarlo en el botón
-        texto_surface = font.render("Jugar", True, texto_color)
-        texto_rect = texto_surface.get_rect(center=boton_jugar_rect.center)
-        pantalla.blit(texto_surface, texto_rect)
-
-        # Dibujar el botón "Opciones" en la pantalla
-        pantalla.blit(boton_opciones_surface, boton_opciones_rect)
-
-        # Crear el texto "Opciones" y centrarlo en el botón
-        texto_opciones_surface = font.render("Opciones", True, texto_color)
-        texto_opciones_rect = texto_opciones_surface.get_rect(center=boton_opciones_rect.center)
-        pantalla.blit(texto_opciones_surface, texto_opciones_rect)
+        # Dibujar los botones en la pantalla
+        boton_jugar.dibujar(pantalla, font)
+        boton_opciones.dibujar(pantalla, font)
 
         # Manejar eventos de usuario, como clics de mouse o pulsaciones de teclas
         for event in pygame.event.get():
@@ -100,9 +81,10 @@ def mostrar_menu(pantalla):
                 quit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    if boton_jugar_rect.collidepoint(event.pos):
+                    pass
+                    if boton_jugar.clic_en_boton(event.pos):
                         iniciar_juego(pantalla.get_width(), pantalla.get_height(), volumen_musica, volumen_efectos)
-                    elif boton_opciones_rect.collidepoint(event.pos):
+                    elif boton_opciones.clic_en_boton(event.pos):
                         mostrar_opciones(pantalla, volumen_musica, volumen_efectos)
 
         # Actualizar la pantalla
@@ -110,7 +92,9 @@ def mostrar_menu(pantalla):
 
 
 def iniciar_juego(pantalla_ancho, pantalla_alto, volumen_musica, volumen_efectos):
-    from juego import Juego
+    # Detener la música antes de salir de menu.py
+    if resource_manager.is_music_playing("skyfire_theme"):
+        resource_manager.stop_music("skyfire_theme")
     juego = Juego(pantalla_ancho, pantalla_alto, volumen_musica, volumen_efectos)
     juego.ejecutar()
 
@@ -121,7 +105,7 @@ def mostrar_opciones(pantalla, volumen_musica, volumen_efectos):
     manager = pygame_gui.UIManager((600, 800))
 
     # Cargar la imagen de fondo
-    fondo = pygame.image.load("imagenes/fondo1.png").convert_alpha()
+    fondo = resource_manager.get_image("imagen_fondo1")
 
     texto_font = pygame.font.Font(None, 36)
     texto_surface = texto_font.render("Opciones", True, (255, 255, 255))
@@ -145,7 +129,7 @@ def mostrar_opciones(pantalla, volumen_musica, volumen_efectos):
 
     # Crear control deslizante para la música
     musica_slider = pygame_gui.elements.ui_horizontal_slider.UIHorizontalSlider(relative_rect=pygame.Rect((50, 150), (500, 50)),
-                                                                                start_value=0.5,
+                                                                                start_value=volumen_musica,
                                                                                 value_range=(0, 1),
                                                                                 manager=manager,
                                                                                 click_increment=0.1)
@@ -155,7 +139,7 @@ def mostrar_opciones(pantalla, volumen_musica, volumen_efectos):
 
     # Crear control deslizante para los efectos de sonido
     efectos_slider = pygame_gui.elements.ui_horizontal_slider.UIHorizontalSlider(relative_rect=pygame.Rect((50, 250), (500, 50)),
-                                                                                 start_value=0.5,
+                                                                                 start_value=volumen_efectos,
                                                                                  value_range=(0, 1),
                                                                                  manager=manager,
                                                                                  click_increment=0.1)
@@ -173,10 +157,10 @@ def mostrar_opciones(pantalla, volumen_musica, volumen_efectos):
     efectos_texto_surface = texto_font.render("Efectos de Sonido:", True, (255, 255, 255))
     efectos_texto_rect = efectos_texto_surface.get_rect(topleft=(50, 220))
 
-    # Definir efectos de sonido
-    efecto_disparo = pygame.mixer.Sound('sonidos/laser-gun.wav')  # Efecto de sonido del disparo
-    efecto_golpe = pygame.mixer.Sound('sonidos/hit.wav')  # Archivo de efecto de sonido de golpe
-    efecto_item = pygame.mixer.Sound('sonidos/item-take.wav')  # Efecto de sonido del objeto
+    # Construir las rutas a los efectos de sonido
+    efecto_disparo = resource_manager.get_sound("laser_gun")
+    efecto_golpe = resource_manager.get_sound("hit")
+    efecto_item = resource_manager.get_sound("item_take")
 
     # Lista de efectos de sonido
     efectos_sonido = [efecto_disparo, efecto_golpe, efecto_item]
@@ -198,7 +182,7 @@ def mostrar_opciones(pantalla, volumen_musica, volumen_efectos):
                 if event.user_type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
                     if event.ui_element == musica_slider:
                         volumen_musica = event.value
-                        pygame.mixer.music.set_volume(volumen_musica)  # Actualizar el volumen de la música
+                        resource_manager.set_music_volume("skyfire_theme", volumen_musica)
                     elif event.ui_element == efectos_slider:
                         volumen_efectos = event.value
                         # Iterar sobre los efectos de sonido y actualizar su volumen
@@ -208,7 +192,7 @@ def mostrar_opciones(pantalla, volumen_musica, volumen_efectos):
                         if not sonido_reproduciendose:
                             sonido_reproduciendose = True
                             # Reproducir el efecto de sonido
-                            efecto_cambio_volumen = pygame.mixer.Sound('sonidos/laser-gun.wav')
+                            efecto_cambio_volumen = resource_manager.get_sound("laser_gun")
                             efecto_cambio_volumen.set_volume(volumen_efectos)
                             efecto_cambio_volumen.play()
                             # Obtener la duración del sonido de cambio de volumen

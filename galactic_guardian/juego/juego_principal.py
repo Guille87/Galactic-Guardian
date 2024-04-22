@@ -2,14 +2,19 @@ import random
 
 import pygame
 
-from efectos.destello import Destello
-from galactic_guardian import menu
+from galactic_guardian.efectos.destello import Destello
 from galactic_guardian.efectos.destello_constante import DestelloConstante
-from sprites.enemigo import EnemigoTipo1, EnemigoTipo2, EnemigoTipo3
-from sprites.explosion import Explosion
-from sprites.item import Item
-from sprites.jugador import Jugador
-from ui.boton import Boton
+from galactic_guardian.entidades.enemigo import EnemigoTipo1, EnemigoTipo2, EnemigoTipo3
+from galactic_guardian.entidades.explosion import Explosion
+from galactic_guardian.entidades.item import Item
+from galactic_guardian.entidades.jugador import Jugador
+from galactic_guardian.juego import menu
+from galactic_guardian.resources.resource_manager import ResourceManager
+from galactic_guardian.ui.boton import Boton
+
+
+# Instancia global de ResourceManager
+resource_manager = ResourceManager()
 
 
 class Juego:
@@ -24,10 +29,10 @@ class Juego:
         self.MAX_TIEMPO_GENERACION = 1000
         self.tiempo_proximo_enemigo = 0
 
-        # Definir efectos de sonido
-        self.EFECTO_DISPARO = pygame.mixer.Sound('sonidos/laser-gun.wav')  # Efecto de sonido del disparo
-        self.EFECTO_GOLPE = pygame.mixer.Sound('sonidos/hit.wav')  # Archivo de efecto de sonido de golpe
-        self.EFECTO_ITEM = pygame.mixer.Sound('sonidos/item-take.wav')  # Efecto de sonido del objeto
+        # Obtener los efectos de sonido del ResourceManager
+        self.EFECTO_DISPARO = resource_manager.get_sound("laser_gun")
+        self.EFECTO_GOLPE = resource_manager.get_sound("hit")
+        self.EFECTO_ITEM = resource_manager.get_sound("item_take")
 
         # Establecer los volúmenes de los efectos de sonido
         self.EFECTO_DISPARO.set_volume(volumen_efectos)
@@ -39,20 +44,15 @@ class Juego:
         self.pantalla = menu.crear_pantalla()  # Crea la ventana del juego
 
         # Cargar imagen del fondo
-        self.fondo_imagen1 = pygame.image.load('imagenes/fondo1.png')
-        self.fondo_imagen2 = pygame.image.load('imagenes/fondo2.png')
+        self.fondo_imagen1 = resource_manager.get_image("imagen_fondo1")
+        self.fondo_imagen2 = resource_manager.get_image("imagen_fondo2")
         self.pos_y_fondo1 = 0
         self.pos_y_fondo2 = -self.pantalla_alto  # Iniciar la segunda imagen arriba de la pantalla
 
-        # Inicializar música de fondo
-        pygame.mixer.music.load('musica/SkyFire.ogg')  # Archivo de música de fondo
-        pygame.mixer.music.set_volume(self.volumen_musica)  # Establecer volumen de la música de fondo
-        pygame.mixer.music.play(-1)  # Reproducir música de fondo en bucle
-
-        # Ajustes icono
-        icono = pygame.image.load('imagenes/favicon.png')
-        pygame.display.set_icon(icono)
-        pygame.display.set_caption("GalacticGuardian")
+        # Iniciar música de fondo si aún no se ha iniciado
+        if not resource_manager.is_music_playing("skyfire_theme"):
+            resource_manager.play_music("skyfire_theme", loops=-1)
+            resource_manager.set_music_volume("skyfire_theme", volumen_musica)
 
         # Lista para almacenar los enemigos
         self.enemigos = []
@@ -66,12 +66,8 @@ class Juego:
         # Diccionario para almacenar el estado de golpe de cada enemigo
         self.enemigos_golpeados = []
 
-        # Cargamos las imágenes de la explosión para la animación
-        self.explosion_images = []
-        for i in range(1, 12):
-            # Cargamos cada imagen de explosión y las añadimos a la lista
-            img = pygame.image.load(f"imagenes/explosion/Explosion1_{i}.png").convert_alpha()
-            self.explosion_images.append(img)
+        # Obtener las imágenes de explosión del ResourceManager
+        self.explosion_images = [resource_manager.get_image(f"explosion_{i}") for i in range(1, 12)]
 
         # Configuración del reloj para limitar la velocidad de fotogramas (FPS)
         self.reloj = pygame.time.Clock()
@@ -85,8 +81,11 @@ class Juego:
         # Tiempo en el que se pausó el juego
         self.tiempo_pausa = None
 
+        # Obtener la imagen del jugador del ResourceManager
+        self.ruta_imagen_jugador = resource_manager.get_image_path("jugador")
+
         # Inicializa el jugador
-        self.jugador = Jugador('imagenes/jugador.png', self.pantalla_ancho, self.pantalla_alto, self.all_sprites)
+        self.jugador = Jugador(self.ruta_imagen_jugador, self.pantalla_ancho, self.pantalla_alto, self.all_sprites)
 
         # Obtener el tiempo en milisegundos en el que comienza el juego
         self.inicio_juego = pygame.time.get_ticks()
@@ -104,29 +103,34 @@ class Juego:
             x_enemigo = random.randint(50, self.pantalla_ancho - ancho_enemigo - 50)
             y_enemigo = -alto_enemigo  # Genera el enemigo arriba de la pantalla
 
+            # Construir la ruta al directorio de las imágenes de los enemigos
+            ruta_enemigo1 = resource_manager.get_image_path("enemigo1")
+            ruta_enemigo2 = resource_manager.get_image_path("enemigo2")
+            ruta_enemigo3 = resource_manager.get_image_path("enemigo3")
+
             # Elige el tipo de enemigo según el tiempo transcurrido
             if tiempo_transcurrido >= 30000:  # Después de 30 segundos en milisegundos
                 tipo_enemigo = random.choice([EnemigoTipo1, EnemigoTipo2, EnemigoTipo3])
                 if tipo_enemigo == EnemigoTipo1:
-                    ruta_imagen = 'imagenes/enemigos/enemigo1.png'
+                    ruta_imagen = ruta_enemigo1
                     nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho)
                 elif tipo_enemigo == EnemigoTipo2:
-                    ruta_imagen = 'imagenes/enemigos/enemigo2.png'
+                    ruta_imagen = ruta_enemigo2
                     nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.balas_enemigo, self.jugador)
                 else:
-                    ruta_imagen = 'imagenes/enemigos/enemigo3.png'
+                    ruta_imagen = ruta_enemigo3
                     nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.balas_enemigo, self.jugador)
             elif tiempo_transcurrido >= 15000:  # Después de 15 segundos en milisegundos
                 tipo_enemigo = random.choice([EnemigoTipo1, EnemigoTipo2])
                 if tipo_enemigo == EnemigoTipo1:
-                    ruta_imagen = 'imagenes/enemigos/enemigo1.png'
+                    ruta_imagen = ruta_enemigo1
                     nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho)
                 else:
-                    ruta_imagen = 'imagenes/enemigos/enemigo2.png'
+                    ruta_imagen = ruta_enemigo2
                     nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.balas_enemigo, self.jugador)
             else:
                 tipo_enemigo = EnemigoTipo1
-                ruta_imagen = 'imagenes/enemigos/enemigo1.png'
+                ruta_imagen = ruta_enemigo1
                 nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho)
 
             return nuevo_enemigo
@@ -314,7 +318,7 @@ class Juego:
         if enemigo.salud <= 0:
             self.enemigos.remove(enemigo)
             explosion = Explosion(enemigo.rect.center, self.explosion_images)
-            self.all_sprites.add(explosion)  # Añadir la explosión al grupo de sprites
+            self.all_sprites.add(explosion)  # Añadir la explosión al grupo de entidades
             objeto = enemigo.die(self.jugador)  # Crear un objeto cuando el enemigo muere
             if objeto:
                 self.all_sprites.add(objeto)
@@ -479,7 +483,7 @@ class Juego:
         enemigo.salud -= 1
         if enemigo.salud <= 0:
             explosion = Explosion(enemigo.rect.center, self.explosion_images)
-            self.all_sprites.add(explosion)  # Añadir la explosión al grupo de sprites
+            self.all_sprites.add(explosion)  # Añadir la explosión al grupo de entidades
             self.enemigos.remove(enemigo)
 
     def mover_fondo(self):
@@ -497,28 +501,38 @@ class Juego:
         """
         Muestra el mensaje de "Game Over".
         """
-        self.all_sprites.empty()  # Eliminar todos los sprites
+        self.all_sprites.empty()  # Eliminar todas las entidades
         font_game_over = pygame.font.SysFont(None, 72)  # Fuente y tamaño del texto
         texto_game_over = font_game_over.render("Game Over", True, (255, 255, 255))  # Texto, antialiasing y color
-        texto_rect = texto_game_over.get_rect(center=(self.pantalla_ancho // 2, self.pantalla_alto // 2))  # Centrar el texto
+        texto_rect = texto_game_over.get_rect(center=(self.pantalla_ancho // 2, self.pantalla_alto // 2 - 150))  # Centrar el texto un poco más arriba
         self.pantalla.blit(texto_game_over, texto_rect)  # Mostrar el texto "Game Over"
 
     def juego_terminado(self):
         """
         Muestra el mensaje de "Game Over" y la opción de "Reintentar".
         """
-        pygame.mixer.music.load('musica/Defeated (Game Over Tune).ogg')  # Archivo de música de fondo
-        pygame.mixer.music.set_volume(self.volumen_musica)  # Establecer volumen de la música de fondo
-        pygame.mixer.music.play(-1)  # Reproducir música de fondo en bucle
+        # Detener música de fondo
+        resource_manager.stop_music("skyfire_theme")
+
+        # Iniciar música Game Over de fondo si aún no se ha iniciado
+        if not resource_manager.is_music_playing("defeated_tune"):
+            resource_manager.play_music("defeated_tune", loops=-1)
+            resource_manager.set_music_volume("defeated_tune", self.volumen_musica)
 
         # Cargar la fuente para el botón "Reintentar"
-        font_reintentar = pygame.font.Font(None, 36)
+        font = pygame.font.Font(None, 36)
 
         # Crear el botón "Reintentar"
-        boton_reintentar = Boton("Reintentar", (255, 255, 255), (0, 0, 0), 200, 450, 200, 50)
+        boton_reintentar = Boton("Reintentar", (255, 0, 0, 128), (255, 255, 255), 200, 400, 200, 50,
+                                 radio_borde=10)
+
+        # Crear el botón "Salir"
+        boton_salir = Boton("Salir", (255, 0, 255, 128), (255, 255, 255), 200, 470, 200, 50,
+                            radio_borde=10)
 
         # Dibujar el botón en la pantalla
-        boton_reintentar.dibujar(self.pantalla, font_reintentar)
+        boton_reintentar.dibujar(self.pantalla, font)
+        boton_salir.dibujar(self.pantalla, font)
 
         pygame.display.flip()  # Actualizar la pantalla
 
@@ -531,22 +545,43 @@ class Juego:
                     if boton_reintentar.clic_en_boton(evento.pos):
                         self.reiniciar_juego()  # Reiniciar el juego si el jugador hace clic en "Reintentar"
                         return True
+                    elif boton_salir.clic_en_boton(evento.pos):
+                        # Volver al menú principal si el jugador hace clic en "Salir"
+                        self.mostrar_menu_principal()
+                        return True
+
+    def mostrar_menu_principal(self):
+        """
+        Muestra el menú principal del juego.
+        """
+        # Detener música de Game Over
+        resource_manager.stop_music("defeated_tune")
+
+        # Iniciar música de fondo del menú si aún no se ha iniciado
+        if not resource_manager.is_music_playing("skyfire_theme"):
+            resource_manager.play_music("skyfire_theme", loops=-1)
+            resource_manager.set_music_volume("skyfire_theme", self.volumen_musica)
+
+        from galactic_guardian.juego.menu import mostrar_menu
+        mostrar_menu(self.pantalla)
 
     def reiniciar_juego(self):
         """
         Reinicia el juego.
         """
         # Reiniciar todos los valores del juego a sus estados iniciales
-        self.jugador = Jugador('imagenes/jugador.png', self.pantalla_ancho, self.pantalla_alto, self.all_sprites)
+        self.jugador = Jugador(self.ruta_imagen_jugador, self.pantalla_ancho, self.pantalla_alto, self.all_sprites)
         self.enemigos = []
         self.balas = []
         self.balas_enemigo = []
         self.enemigos_golpeados = []
         self.tiempo_proximo_enemigo = 0
         self.inicio_juego = pygame.time.get_ticks()
-        pygame.mixer.music.load('musica/SkyFire.ogg')
-        pygame.mixer.music.set_volume(self.volumen_musica)
-        pygame.mixer.music.play(-1)
+        # Detener música Game Over de fondo
+        resource_manager.stop_music("defeated_tune")
+        if not resource_manager.is_music_playing("skyfire_theme"):
+            resource_manager.play_music("skyfire_theme", loops=-1)
+            resource_manager.set_music_volume("skyfire_theme", self.volumen_musica)
 
         # Continuar ejecutando el juego
         self.ejecutar()
@@ -586,7 +621,7 @@ class Juego:
             self.mostrar_game_over()
             return  # Salir de la función si el juego ha terminado
 
-        # Dibujar todos los sprites en el grupo de sprites
+        # Dibujar todas las entidades en el grupo de entidades
         self.all_sprites.draw(self.pantalla)
 
         for enemigo in self.enemigos:
@@ -672,7 +707,7 @@ class Juego:
 
             # Actualizar el juego solo si el juego no está pausado
             self.actualizar()
-            self.all_sprites.update()  # Actualizar todos los sprites
+            self.all_sprites.update()  # Actualizar todas las entidades
             self.dibujar()
             self.reloj.tick(60)
 

@@ -1,9 +1,14 @@
 import math
-
+import os
 import pygame
 
 from .bala import Bala
 from galactic_guardian.efectos.destello_constante import DestelloConstante
+from galactic_guardian.resources.resource_manager import ResourceManager
+
+
+# Instancia global de ResourceManager
+resource_manager = ResourceManager()
 
 
 class Jugador(pygame.sprite.Sprite):
@@ -15,13 +20,13 @@ class Jugador(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.imagen_original, (50, 50))
         self.rect = self.image.get_rect(centerx=pantalla_ancho // 2, bottom=pantalla_alto - 10)
         self.danio = 1  # Cantidad de daño que inflige la nave del jugador
-        self.danio_maximo = 3  # Cantidad de daño máximo que puede infligir la nave del jugador
-        self.vidas = 2  # Establece las vidas iniciales del jugador
-        self.salud = 3  # Establece la salud inicial del jugador
-        self.salud_maxima = 5  # Establece la salud máxima del jugador
+        self.vidas = 1  # Establece las vidas iniciales del jugador
+        self.salud = 1  # Establece la salud inicial del jugador
         self.velocidad = 4  # Establece la velocidad de la nave del jugador
-        self.velocidad_maxima = 6  # Establece la velocidad máxima de la nave del jugador
         self.cadencia_disparo = 350  # Cadencia de disparo en milisegundos
+        self.danio_maximo = 3  # Cantidad de daño máximo que puede infligir la nave del jugador
+        self.salud_maxima = 5  # Establece la salud máxima del jugador
+        self.velocidad_maxima = 6  # Establece la velocidad máxima de la nave del jugador
         self.cadencia_disparo_maxima = 150  # Cadencia de disparo máxima en milisegundos
         self.ultimo_disparo = pygame.time.get_ticks()  # Tiempo del último disparo
         self.disparo_doble = False  # Atributo para rastrear el disparo doble
@@ -30,7 +35,7 @@ class Jugador(pygame.sprite.Sprite):
         self.invulnerable = False  # Atributo para rastrear la invulnerabilidad
         self.tiempo_invulnerable = 0
         self.destello_constante = None
-        self.all_sprites = all_sprites  # Guardar una referencia al grupo de sprites
+        self.all_sprites = all_sprites  # Guardar una referencia al grupo de entidades
 
     def mover(self, teclas_presionadas, pantalla_alto, pantalla_ancho):
         """
@@ -58,6 +63,9 @@ class Jugador(pygame.sprite.Sprite):
     def disparar(self):
         tiempo_actual = pygame.time.get_ticks()
 
+        # Construir la ruta a la imagen de la bala del jugador
+        ruta_imagen_bala1_jugador = resource_manager.get_image_path("bala_jugador1")
+
         # Si el jugador tiene el poder de disparo triple, dispara tres balas
         if self.disparo_triple:
             if tiempo_actual - self.ultimo_disparo > self.cadencia_disparo:
@@ -65,9 +73,9 @@ class Jugador(pygame.sprite.Sprite):
                 angulo2 = math.degrees(math.atan2(45, 0))
                 angulo3 = math.degrees(math.atan2(45, 0))
 
-                nueva_bala1 = Bala('imagenes/balas/bala_jugador1.png', self.rect.centerx - 15, self.rect.top + 10, self.danio)
-                nueva_bala2 = Bala('imagenes/balas/bala_jugador1.png', self.rect.centerx, self.rect.top + 10, self.danio)
-                nueva_bala3 = Bala('imagenes/balas/bala_jugador1.png', self.rect.centerx + 15, self.rect.top + 10, self.danio)
+                nueva_bala1 = Bala(ruta_imagen_bala1_jugador, self.rect.centerx - 15, self.rect.top + 10, self.danio)
+                nueva_bala2 = Bala(ruta_imagen_bala1_jugador, self.rect.centerx, self.rect.top + 10, self.danio)
+                nueva_bala3 = Bala(ruta_imagen_bala1_jugador, self.rect.centerx + 15, self.rect.top + 10, self.danio)
 
                 nueva_bala1.girar(angulo1)
                 nueva_bala2.girar(angulo2)
@@ -82,8 +90,8 @@ class Jugador(pygame.sprite.Sprite):
                 angulo1 = math.degrees(math.atan2(45, 0))
                 angulo2 = math.degrees(math.atan2(45, 0))
 
-                nueva_bala1 = Bala('imagenes/balas/bala_jugador1.png', self.rect.centerx - 10, self.rect.top + 10, self.danio)
-                nueva_bala2 = Bala('imagenes/balas/bala_jugador1.png', self.rect.centerx + 10, self.rect.top + 10, self.danio)
+                nueva_bala1 = Bala(ruta_imagen_bala1_jugador, self.rect.centerx - 10, self.rect.top + 10, self.danio)
+                nueva_bala2 = Bala(ruta_imagen_bala1_jugador, self.rect.centerx + 10, self.rect.top + 10, self.danio)
 
                 nueva_bala1.girar(angulo1)
                 nueva_bala2.girar(angulo2)
@@ -98,7 +106,7 @@ class Jugador(pygame.sprite.Sprite):
                 angulo = math.degrees(math.atan2(45, 0))
 
                 # Crear la bala
-                nueva_bala1 = Bala('imagenes/balas/bala_jugador1.png', self.rect.centerx, self.rect.top + 10, self.danio)
+                nueva_bala1 = Bala(ruta_imagen_bala1_jugador, self.rect.centerx, self.rect.top + 10, self.danio)
 
                 # Gira la bala en la dirección correcta
                 nueva_bala1.girar(angulo)
@@ -121,7 +129,7 @@ class Jugador(pygame.sprite.Sprite):
                 self.tiempo_invulnerable = pygame.time.get_ticks() + 3000
                 # Crear el destello constante alrededor del jugador
                 self.destello_constante = DestelloConstante(self)
-                # Agregar el destello constante al grupo de sprites
+                # Agregar el destello constante al grupo de entidades
                 self.all_sprites.add(self.destello_constante)
 
     def aumentar_salud(self, cantidad):
