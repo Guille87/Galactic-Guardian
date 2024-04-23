@@ -14,15 +14,19 @@ resource_manager = ResourceManager()
 
 
 def crear_pantalla():
-    # Configuración de la pantalla
+    """
+    Crear la pantalla del juego.
+    """
     pantalla_ancho = 600
     pantalla_alto = 800
     pantalla = pygame.display.set_mode((pantalla_ancho, pantalla_alto))
-    pygame.display.set_caption("Galactic Guardian")
     return pantalla
 
 
 def mostrar_menu(pantalla):
+    """
+    Mostrar el menú principal del juego.
+    """
     # Cargar la configuración de música y sonido
     volumen_musica, volumen_efectos = configuracion.cargar_configuracion()
 
@@ -81,7 +85,6 @@ def mostrar_menu(pantalla):
                 quit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    pass
                     if boton_jugar.clic_en_boton(event.pos):
                         iniciar_juego(pantalla.get_width(), pantalla.get_height(), volumen_musica, volumen_efectos)
                     elif boton_opciones.clic_en_boton(event.pos):
@@ -92,6 +95,9 @@ def mostrar_menu(pantalla):
 
 
 def iniciar_juego(pantalla_ancho, pantalla_alto, volumen_musica, volumen_efectos):
+    """
+    Iniciar el juego.
+    """
     # Detener la música antes de salir de menu.py
     if resource_manager.is_music_playing("skyfire_theme"):
         resource_manager.stop_music("skyfire_theme")
@@ -100,6 +106,9 @@ def iniciar_juego(pantalla_ancho, pantalla_alto, volumen_musica, volumen_efectos
 
 
 def mostrar_opciones(pantalla, volumen_musica, volumen_efectos):
+    """
+    Mostrar la pantalla de opciones.
+    """
     pygame.display.set_caption("Opciones")
 
     manager = pygame_gui.UIManager((600, 800))

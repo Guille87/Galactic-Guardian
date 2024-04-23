@@ -18,7 +18,7 @@ class Bala(pygame.sprite.Sprite):
         self.rect.y -= self.velocidad
 
     def girar(self, angulo):
-        # Girar la imagen de la bala
+        # Rotar la imagen de la bala
         self.image = pygame.transform.rotate(self.image, angulo)
         self.rect = self.image.get_rect(center=self.rect.center)
 
@@ -30,7 +30,7 @@ class Bala(pygame.sprite.Sprite):
             # Calcular la distancia entre los centros de la bala y el objeto
             distancia_x = self.rect.centerx - objeto.rect.centerx
             distancia_y = self.rect.centery - objeto.rect.centery
-            distancia = math.sqrt(distancia_x ** 2 + distancia_y ** 2)
+            distancia = math.hypot(distancia_x, distancia_y)
 
             # Si la distancia es menor que la suma de los radios de las hitboxes circulares, hay colisión
             if distancia < self.radio + objeto.radio:

@@ -21,6 +21,7 @@ class Juego:
     def __init__(self, pantalla_ancho, pantalla_alto, volumen_musica, volumen_efectos):
 
         self.volumen_musica = volumen_musica
+        self.volumen_efectos = volumen_efectos
 
         self.all_sprites = pygame.sprite.Group()
 
@@ -54,6 +55,9 @@ class Juego:
             resource_manager.play_music("skyfire_theme", loops=-1)
             resource_manager.set_music_volume("skyfire_theme", volumen_musica)
 
+        self.boton_opciones = None
+        self.boton_salir = None
+
         # Lista para almacenar los enemigos
         self.enemigos = []
 
@@ -63,8 +67,8 @@ class Juego:
         # Lista para almacenar las balas de los enemigos
         self.balas_enemigo = []
 
-        # Diccionario para almacenar el estado de golpe de cada enemigo
-        self.enemigos_golpeados = []
+        # Diccionario para mantener el tiempo de la última colisión con cada enemigo
+        self.enemigos_golpeados = {}
 
         # Obtener las imágenes de explosión del ResourceManager
         self.explosion_images = [resource_manager.get_image(f"explosion_{i}") for i in range(1, 12)]
@@ -79,7 +83,7 @@ class Juego:
         self.pausado = False  # Estado de pausa del juego
 
         # Tiempo en el que se pausó el juego
-        self.tiempo_pausa = None
+        self.tiempo_pausa = 0
 
         # Obtener la imagen del jugador del ResourceManager
         self.ruta_imagen_jugador = resource_manager.get_image_path("jugador")
@@ -89,6 +93,8 @@ class Juego:
 
         # Obtener el tiempo en milisegundos en el que comienza el juego
         self.inicio_juego = pygame.time.get_ticks()
+
+        self.tiempo_entre_enemigos = 0
 
     def generar_enemigo(self):
         """
@@ -107,6 +113,9 @@ class Juego:
             ruta_enemigo1 = resource_manager.get_image_path("enemigo1")
             ruta_enemigo2 = resource_manager.get_image_path("enemigo2")
             ruta_enemigo3 = resource_manager.get_image_path("enemigo3")
+
+            # Restar el tiempo entre enemigos que se ha acumulado durante la pausa
+            tiempo_transcurrido -= self.tiempo_entre_enemigos
 
             # Elige el tipo de enemigo según el tiempo transcurrido
             if tiempo_transcurrido >= 30000:  # Después de 30 segundos en milisegundos
@@ -148,6 +157,12 @@ class Juego:
                 self._manejar_tecla_soltada(evento.key)
             elif evento.type == pygame.MOUSEBUTTONDOWN:
                 self._manejar_click_presionado(evento.button)
+                if self.pausado:
+                    if evento.button == 1:
+                        if self.boton_opciones.clic_en_boton(evento.pos):
+                            self.mostrar_opciones_juego()
+                        elif self.boton_salir.clic_en_boton(evento.pos):
+                            self.mostrar_menu_principal()
             elif evento.type == pygame.MOUSEBUTTONUP:
                 self._manejar_click_soltado(evento.button)
 
@@ -164,10 +179,10 @@ class Juego:
     def _manejar_tecla_presionada(self, tecla):
         """
         Maneja el evento de tecla presionada.
-        Si se presiona la tecla de escape, pausa o reanuda el juego.
+        Si se presiona la tecla de escape o P, pausa o reanuda el juego.
         Si se presiona la tecla de espacio, activa el disparo si el juego no está pausado.
         """
-        if tecla == pygame.K_ESCAPE:
+        if tecla == pygame.K_ESCAPE or tecla == pygame.K_p:
             if not self.pausado:
                 self._pausar_juego()
             else:
@@ -220,6 +235,7 @@ class Juego:
         tiempo_actual = pygame.time.get_ticks()
         tiempo_pausado = tiempo_actual - self.tiempo_pausa
         self.tiempo_proximo_enemigo += tiempo_pausado
+        self.tiempo_entre_enemigos += tiempo_pausado
         self.jugador.tiempo_invulnerable += tiempo_pausado  # Actualizar el tiempo de invulnerabilidad del jugador
         for enemigo in self.enemigos:
             if isinstance(enemigo, EnemigoTipo2) or isinstance(enemigo, EnemigoTipo3):
@@ -230,20 +246,16 @@ class Juego:
         Maneja la lógica de disparo del jugador.
         """
         # Llama a la función disparar del jugador para obtener las nuevas balas
-        nueva_bala1, nueva_bala2, nueva_bala3 = self.jugador.disparar()
+        nuevas_balas = self.jugador.disparar()
 
-        # Verifica si hay una nueva bala y la agrega a la lista de balas
-        if nueva_bala1:
-            self.balas.append(nueva_bala1)
-            self.EFECTO_DISPARO.play()
-
-        # Verifica si hay una segunda nueva bala y la agrega a la lista de balas
-        if nueva_bala2:
-            self.balas.append(nueva_bala2)
-
-        # Verifica si hay una tercera nueva bala y la agrega a la lista de balas
-        if nueva_bala3:
-            self.balas.append(nueva_bala3)
+        primera_bala = True  # Bandera para verificar si ya se disparó la primera bala
+        # Verifica si hay nuevas balas y las agrega a la lista de balas
+        for bala in nuevas_balas:
+            if bala:
+                self.balas.append(bala)
+                if primera_bala:  # Reproduce el sonido solo para la primera bala
+                    self.EFECTO_DISPARO.play()
+                    primera_bala = False  # Cambia la bandera después del primer disparo
 
     def actualizar(self):
         """
@@ -318,7 +330,7 @@ class Juego:
         if enemigo.salud <= 0:
             self.enemigos.remove(enemigo)
             explosion = Explosion(enemigo.rect.center, self.explosion_images)
-            self.all_sprites.add(explosion)  # Añadir la explosión al grupo de entidades
+            self.all_sprites.add(explosion)  # Añadir la explosión al grupo de sprites
             objeto = enemigo.die(self.jugador)  # Crear un objeto cuando el enemigo muere
             if objeto:
                 self.all_sprites.add(objeto)
@@ -419,7 +431,7 @@ class Juego:
         Actualiza la posición del jugador en función de las teclas presionadas.
         """
         teclas_presionadas = pygame.key.get_pressed()
-        self.jugador.mover(teclas_presionadas, self.pantalla_alto, self.pantalla_ancho)
+        self.jugador.mover(teclas_presionadas, self.pantalla)
         self.detectar_colisiones_objetos()
 
     def detectar_colisiones_objetos(self):
@@ -474,16 +486,18 @@ class Juego:
         Args:
             enemigo: Enemigo colisionado.
         """
-        enemigo_golpeado = (enemigo.rect, False)
-        if enemigo_golpeado not in self.enemigos_golpeados:
+        # Verificar si ya ha pasado suficiente tiempo desde la última colisión con este enemigo
+        tiempo_actual = pygame.time.get_ticks()
+        tiempo_ultima_colision = self.enemigos_golpeados.get(enemigo, 0)
+        if tiempo_actual - tiempo_ultima_colision >= 2000:  # 2000 milisegundos = 2 segundos
             self.jugador.reducir_salud(1)
             self.EFECTO_GOLPE.play()
-            self.enemigos_golpeados.append(enemigo_golpeado)
+            self.enemigos_golpeados[enemigo] = tiempo_actual  # Registrar el tiempo de la última colisión
             self.manejar_impacto_jugador()
-        enemigo.salud -= 1
+            enemigo.salud -= 1
         if enemigo.salud <= 0:
             explosion = Explosion(enemigo.rect.center, self.explosion_images)
-            self.all_sprites.add(explosion)  # Añadir la explosión al grupo de entidades
+            self.all_sprites.add(explosion)  # Añadir la explosión al grupo de sprites
             self.enemigos.remove(enemigo)
 
     def mover_fondo(self):
@@ -501,7 +515,7 @@ class Juego:
         """
         Muestra el mensaje de "Game Over".
         """
-        self.all_sprites.empty()  # Eliminar todas las entidades
+        self.all_sprites.empty()  # Eliminar todos los sprites
         font_game_over = pygame.font.SysFont(None, 72)  # Fuente y tamaño del texto
         texto_game_over = font_game_over.render("Game Over", True, (255, 255, 255))  # Texto, antialiasing y color
         texto_rect = texto_game_over.get_rect(center=(self.pantalla_ancho // 2, self.pantalla_alto // 2 - 150))  # Centrar el texto un poco más arriba
@@ -519,16 +533,16 @@ class Juego:
             resource_manager.play_music("defeated_tune", loops=-1)
             resource_manager.set_music_volume("defeated_tune", self.volumen_musica)
 
-        # Cargar la fuente para el botón "Reintentar"
+        # Cargar la fuente para los botones
         font = pygame.font.Font(None, 36)
 
         # Crear el botón "Reintentar"
-        boton_reintentar = Boton("Reintentar", (255, 0, 0, 128), (255, 255, 255), 200, 400, 200, 50,
-                                 radio_borde=10)
+        boton_reintentar = Boton("Reintentar", (255, 0, 0, 128), (255, 255, 255), self.pantalla.get_rect().centerx, 400,
+                                 200, 50, radio_borde=10)
 
         # Crear el botón "Salir"
-        boton_salir = Boton("Salir", (255, 0, 255, 128), (255, 255, 255), 200, 470, 200, 50,
-                            radio_borde=10)
+        boton_salir = Boton("Salir", (255, 0, 255, 128), (255, 255, 255), self.pantalla.get_rect().centerx, 470,
+                            200, 50, radio_borde=10)
 
         # Dibujar el botón en la pantalla
         boton_reintentar.dibujar(self.pantalla, font)
@@ -565,6 +579,18 @@ class Juego:
         from galactic_guardian.juego.menu import mostrar_menu
         mostrar_menu(self.pantalla)
 
+    def mostrar_opciones_juego(self):
+        """
+        Muestra el menú principal del juego.
+        """
+        # Iniciar música de fondo del menú si aún no se ha iniciado
+        if not resource_manager.is_music_playing("skyfire_theme"):
+            resource_manager.play_music("skyfire_theme", loops=-1)
+            resource_manager.set_music_volume("skyfire_theme", self.volumen_musica)
+
+        from galactic_guardian.juego.menu import mostrar_opciones
+        mostrar_opciones(self.pantalla, self.volumen_musica, self.volumen_efectos)
+
     def reiniciar_juego(self):
         """
         Reinicia el juego.
@@ -574,7 +600,7 @@ class Juego:
         self.enemigos = []
         self.balas = []
         self.balas_enemigo = []
-        self.enemigos_golpeados = []
+        self.enemigos_golpeados = {}
         self.tiempo_proximo_enemigo = 0
         self.inicio_juego = pygame.time.get_ticks()
         # Detener música Game Over de fondo
@@ -613,82 +639,118 @@ class Juego:
         """
         Dibuja en la pantalla.
         """
-        # Blitgear la imagen de fondo en la pantalla
-        self.pantalla.blit(self.fondo_imagen1, (0, self.pos_y_fondo1))
-        self.pantalla.blit(self.fondo_imagen2, (0, self.pos_y_fondo2))
+        # Blitgear la imagen de fondo en la pantalla con un tono gris si el juego está pausado
+        if self.pausado:
+            self.dibujar_fondo_en_gris()
+        else:
+            self.pantalla.blit(self.fondo_imagen1, (0, self.pos_y_fondo1))
+            self.pantalla.blit(self.fondo_imagen2, (0, self.pos_y_fondo2))
 
         if self.jugador.vidas <= 0:
             self.mostrar_game_over()
             return  # Salir de la función si el juego ha terminado
 
-        # Dibujar todas las entidades en el grupo de entidades
+        # Dibujar todos los sprites en el grupo de sprites
         self.all_sprites.draw(self.pantalla)
 
-        for enemigo in self.enemigos:
-            if enemigo is not None:  # Verifica si enemigo no es None
-                if self.pausado:
-                    enemigo_image_gris = enemigo.image.copy()
-                    enemigo_image_gris.fill((128, 128, 128), special_flags=pygame.BLEND_RGB_MULT)
-                    self.pantalla.blit(enemigo_image_gris, enemigo.rect)
-                else:
-                    self.pantalla.blit(enemigo.image, enemigo.rect)  # Dibujar enemigos
+        # Dibujar balas y enemigos
+        self.dibujar_elementos(self.balas)
+        self.dibujar_elementos(self.balas_enemigo)
+        self.dibujar_elementos(self.enemigos)
 
-        for bala in self.balas:
-            if self.pausado:
-                # Convertir la imagen de la bala a escala de grises si el juego está pausado
-                bala_image_gris = bala.image.copy()
-                bala_image_gris.fill((128, 128, 128), special_flags=pygame.BLEND_RGB_MULT)
-                self.pantalla.blit(bala_image_gris, bala.rect)
-            else:
-                self.pantalla.blit(bala.image, bala.rect)  # Dibujar balas
-
-        for bala_enemiga in self.balas_enemigo:
-            if self.pausado:
-                # Convertir la imagen de la bala a escala de grises si el juego está pausado
-                bala_image_gris = bala_enemiga.image.copy()
-                bala_image_gris.fill((128, 128, 128), special_flags=pygame.BLEND_RGB_MULT)
-                self.pantalla.blit(bala_image_gris, bala_enemiga.rect)
-            else:
-                self.pantalla.blit(bala_enemiga.image, bala_enemiga.rect)  # Dibujar balas enemigas
-
+        # Dibujar jugador
         if self.pausado:
-            # Dibujar jugador con tono grisáceo si el juego está pausado
-            jugador_image_gris = self.jugador.image.copy()
-            jugador_image_gris.fill((128, 128, 128), special_flags=pygame.BLEND_RGB_MULT)
-            self.pantalla.blit(jugador_image_gris, self.jugador.rect)
-
-            # Dibujar rectángulo semitransparente sobre toda la pantalla
-            pantalla_sombreada = pygame.Surface((self.pantalla_ancho, self.pantalla_alto))
-            pantalla_sombreada.set_alpha(128)  # Establecer transparencia (0: completamente transparente, 255: completamente opaco)
-            pantalla_sombreada.fill((128, 128, 128))  # Rellenar con color negro
-            self.pantalla.blit(pantalla_sombreada, (0, 0))
-
-            # Mostrar texto de juego pausado en el centro de la pantalla
-            font = pygame.font.SysFont(None, 36)  # Fuente y tamaño del texto
-            texto = font.render("Juego Pausado", True, (255, 255, 255))  # Texto, antialiasing y color
-            texto_rect = texto.get_rect(center=(self.pantalla_ancho // 2, self.pantalla_alto // 2))  # Centrar el texto
-            self.pantalla.blit(texto, texto_rect)
-
-            # Mostrar texto de vidas
-            color_texto_vidas = (128, 128, 128)  # Color gris si el juego está pausado
+            self.dibujar_sprite_en_gris(self.jugador)
+            self.mostrar_texto_centralizado("Juego Pausado", (255, 255, 255))
+            self.dibujar_botones_pausa()
         else:
             self.pantalla.blit(self.jugador.image, self.jugador.rect)
-            # Mostrar texto de vidas
-            color_texto_vidas = (255, 255, 255)  # Color blanco si el juego está en curso
 
-        # Mostrar Vidas en la esquina superior izquierda
-        font = pygame.font.SysFont(None, 36)  # Fuente y tamaño del texto
-        texto_vidas = font.render(f"Vidas: {self.jugador.vidas}", True, color_texto_vidas)  # Texto, antialiasing y color
-        self.pantalla.blit(texto_vidas, (10, 10))  # Mostrar el texto en la posición (10, 10)
-
+        # Mostrar texto de vidas
+        color_texto_vidas = (128, 128, 128) if self.pausado else (255, 255, 255)
+        self.mostrar_texto("Vidas: ", self.jugador.vidas, (10, 10), color_texto_vidas)
         self.dibujar_barra_salud()
 
         # Mostrar FPS en la esquina superior derecha
+        self.mostrar_texto_fps()
+
+        pygame.display.flip()  # Actualiza la pantalla
+
+    def dibujar_botones_pausa(self):
+        # Definir los parámetros para los botones
+        ancho_boton = 150
+        alto_boton = 50
+        color_fondo_boton = (50, 50, 50)
+        color_texto_boton = (255, 255, 255)
+
+        # Calcular posiciones de los botones
+        centro_x = self.pantalla_ancho // 2
+        y_opciones = self.pantalla_alto // 2 + 50
+        y_salir = self.pantalla_alto // 2 + 120
+
+        # Crear botones
+        self.boton_opciones = Boton("Opciones", color_fondo_boton, color_texto_boton, centro_x, y_opciones, ancho_boton, alto_boton)
+        self.boton_salir = Boton("Salir", color_fondo_boton, color_texto_boton, centro_x, y_salir, ancho_boton, alto_boton)
+
+        # Dibujar botones
+        self.boton_opciones.dibujar(self.pantalla, pygame.font.SysFont(None, 30))
+        self.boton_salir.dibujar(self.pantalla, pygame.font.SysFont(None, 30))
+
+    def mostrar_texto_centralizado(self, texto, color):
+        """
+        Muestra un texto en el centro de la pantalla.
+        """
+        font = pygame.font.SysFont(None, 36)  # Fuente y tamaño del texto
+        texto_surface = font.render(texto, True, color)  # Texto, antialiasing y color
+        texto_rect = texto_surface.get_rect(center=(self.pantalla_ancho // 2, self.pantalla_alto // 2))
+        self.pantalla.blit(texto_surface, texto_rect)
+
+    def dibujar_fondo_en_gris(self):
+        """
+        Dibuja el fondo en la pantalla con un tono gris cuando el juego está pausado.
+        """
+        fondo_gris1 = self.fondo_imagen1.copy()
+        fondo_gris1.fill((128, 128, 128), special_flags=pygame.BLEND_RGB_MULT)
+        self.pantalla.blit(fondo_gris1, (0, self.pos_y_fondo1))
+
+        fondo_gris2 = self.fondo_imagen2.copy()
+        fondo_gris2.fill((128, 128, 128), special_flags=pygame.BLEND_RGB_MULT)
+        self.pantalla.blit(fondo_gris2, (0, self.pos_y_fondo2))
+
+    def dibujar_elementos(self, elementos):
+        """
+        Dibuja una lista de elementos en la pantalla.
+        """
+        for elemento in elementos:
+            if elemento is not None:
+                if self.pausado:
+                    self.dibujar_sprite_en_gris(elemento)
+                else:
+                    self.pantalla.blit(elemento.image, elemento.rect)
+
+    def dibujar_sprite_en_gris(self, sprite):
+        """
+        Dibuja un sprite con tono grisáceo en la pantalla.
+        """
+        sprite_image_gris = sprite.image.copy()
+        sprite_image_gris.fill((128, 128, 128), special_flags=pygame.BLEND_RGB_MULT)
+        self.pantalla.blit(sprite_image_gris, sprite.rect)
+
+    def mostrar_texto(self, texto_prefijo, valor, posicion, color):
+        """
+        Muestra un texto en la pantalla.
+        """
+        font = pygame.font.SysFont(None, 36)  # Fuente y tamaño del texto
+        texto = font.render(f"{texto_prefijo}{valor}", True, color)  # Texto, antialiasing y color
+        self.pantalla.blit(texto, posicion)
+
+    def mostrar_texto_fps(self):
+        """
+        Muestra el FPS en la pantalla.
+        """
         font_fps = pygame.font.SysFont(None, 24)  # Fuente y tamaño del texto
         texto_fps = font_fps.render(f"FPS: {int(self.reloj.get_fps())}", True, (255, 255, 255))  # Texto, antialiasing y color
         self.pantalla.blit(texto_fps, (self.pantalla_ancho - texto_fps.get_width() - 10, 10))  # Mostrar el texto en la esquina superior derecha
-
-        pygame.display.flip()  # Actualiza la pantalla
 
     def ejecutar(self):
         """
@@ -707,7 +769,7 @@ class Juego:
 
             # Actualizar el juego solo si el juego no está pausado
             self.actualizar()
-            self.all_sprites.update()  # Actualizar todas las entidades
+            self.all_sprites.update()  # Actualizar todos los sprites
             self.dibujar()
             self.reloj.tick(60)
 

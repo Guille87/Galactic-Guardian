@@ -1,5 +1,7 @@
 import configparser
 
+CONFIG_FILE = 'config.ini'
+
 
 def guardar_configuracion(volumen_musica, volumen_efectos):
     config = configparser.ConfigParser()
@@ -13,16 +15,14 @@ def guardar_configuracion(volumen_musica, volumen_efectos):
 
 def cargar_configuracion():
     config = configparser.ConfigParser()
-    config.read('config.ini')
 
-    if 'VOLUMEN' in config and 'musica' in config['VOLUMEN']:
-        volumen_musica = float(config['VOLUMEN']['musica'])
-    else:
-        volumen_musica = 0.5  # Valor predeterminado para la música
+    try:
+        config.read(CONFIG_FILE)
 
-    if 'VOLUMEN' in config and 'efectos' in config['VOLUMEN']:
-        volumen_efectos = float(config['VOLUMEN']['efectos'])
-    else:
-        volumen_efectos = 0.5  # Valor predeterminado para los efectos de sonido
+        volumen_musica = float(config.get('VOLUMEN', 'musica', fallback=0.5))
+        volumen_efectos = float(config.get('VOLUMEN', 'efectos', fallback=0.5))
+    except (configparser.Error, ValueError):
+        volumen_musica = 0.5
+        volumen_efectos = 0.5
 
     return volumen_musica, volumen_efectos

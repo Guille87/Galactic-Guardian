@@ -9,11 +9,19 @@ resource_manager = ResourceManager()
 
 
 class Item(pygame.sprite.Sprite):
-    def __init__(self, image_name, folder_name):
+    # Mapeo de efectos a funciones de jugador
+    EFECTOS = {
+        "curacion": lambda jugador: jugador.aumentar_salud(1),
+        "potenciador_cadencia": lambda jugador: jugador.modificar_cadencia(-25),
+        "potenciador_danio": lambda jugador: jugador.modificar_danio(1),
+        "potenciador_velocidad": lambda jugador: jugador.modificar_velocidad(0.25)
+    }
+
+    def __init__(self, image_name, folder_name, width=50, height=50):
         super().__init__()
         self.image_name = os.path.splitext(image_name)[0]
         self.folder_name = folder_name
-        self.load_image(50, 50)
+        self.load_image(width, height)
         self.speed = 1  # Velocidad de desplazamiento del objeto
 
     def load_image(self, width, height):
@@ -33,26 +41,5 @@ class Item(pygame.sprite.Sprite):
         self.rect.y = y
 
     def aplicar_efecto(self, jugador):
-        if self.image_name == "curacion":
-            jugador.aumentar_salud(1)
-            if jugador.salud > jugador.salud_maxima:
-                jugador.salud = jugador.salud_maxima
-        elif self.image_name == "potenciador_cadencia":
-            jugador.cadencia_disparo -= 25
-            if jugador.cadencia_disparo <= jugador.cadencia_disparo_maxima:
-                jugador.cadencia_disparo = jugador.cadencia_disparo_maxima
-            print(f"cadencia actual: {jugador.cadencia_disparo}")
-        elif self.image_name == "potenciador_danio":
-            if jugador.disparo_doble and not jugador.disparo_triple:
-                jugador.disparo_triple = True
-            if not jugador.disparo_doble and jugador.danio >= jugador.danio_maximo:
-                jugador.disparo_doble = True
-            jugador.danio += 1
-            if jugador.danio >= jugador.danio_maximo:
-                jugador.danio = jugador.danio_maximo
-            print(f"daño actual: {jugador.danio}")
-        elif self.image_name == "potenciador_velocidad":
-            jugador.velocidad += 0.25
-            if jugador.velocidad >= jugador.velocidad_maxima:
-                jugador.velocidad = jugador.velocidad_maxima
-            print(f"velocidad actual: {jugador.velocidad}")
+        if self.image_name in self.EFECTOS:
+            self.EFECTOS[self.image_name](jugador)
