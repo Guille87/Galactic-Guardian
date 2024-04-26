@@ -10,7 +10,6 @@ from galactic_guardian.entidades.explosion import Explosion
 from galactic_guardian.entidades.item import Item
 from galactic_guardian.entidades.jugador import Jugador
 from galactic_guardian.juego import menu
-from galactic_guardian.juego.clasificacion import SistemaClasificacion
 from galactic_guardian.resources.resource_manager import ResourceManager
 from galactic_guardian.ui.boton import Boton
 
@@ -27,6 +26,7 @@ class Juego:
         self.pantalla_alto = pantalla_alto
         self.puntuacion = 0
         self.nivel = 1
+        self.jefe = None
         self.jefe_generado = False
         self.jefe_derrotado = False
         self.enemigos_activos = 0
@@ -128,6 +128,7 @@ class Juego:
                         y_enemigo = -150  # Genera el jefe en la parte superior de la pantalla
                         nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.pantalla_alto, self.balas_enemigo,
                                                      self.jugador, self.nivel)
+                        self.jefe = nuevo_enemigo
                         self.jefe_generado = True  # Marca que el jefe ya ha sido generado
             elif tiempo_transcurrido >= 42000:  # Después de 42 segundos en milisegundos
                 tipo_enemigo = random.choice([EnemigoTipo1, EnemigoTipo2, EnemigoTipo3])
@@ -633,6 +634,7 @@ class Juego:
 
         puntuaciones_top = self.clasificacion.obtener_puntuaciones_top()
         if len(puntuaciones_top) < 10 or self.puntuacion > puntuaciones_top[-1][1]:
+            self.mostrar_game_over()
             # La puntuación del jugador está entre las 10 mejores o es superior a la última de las 10 mejores
             nombre_jugador = self.mostrar_cuadro_dialogo("Introduce tu nombre: ")
             self.clasificacion.agregar_puntuacion(nombre_jugador, self.puntuacion)
@@ -794,6 +796,8 @@ class Juego:
         color_texto_vidas = (128, 128, 128) if self.pausado else (255, 255, 255)
         self.mostrar_texto("Vidas: ", (10, 10), color_texto_vidas, self.jugador.vidas, font)
         self.dibujar_barra_salud()
+        if self.jefe_generado:
+            self.dibujar_barra_salud_jefe()
 
         # Mostrar puntuación
         self.mostrar_texto("Puntuación: ", (10, 40), color_texto_vidas, self.puntuacion, font)
@@ -944,6 +948,26 @@ class Juego:
 
         # Dibujar el rectángulo blanco alrededor de la barra de salud
         rectangulo_salud = pygame.Rect(barra_x, barra_y, self.jugador.salud_maxima * 10, 10)  # El ancho total de la barra de salud
+        pygame.draw.rect(self.pantalla, (255, 255, 255), rectangulo_salud, 1)  # Grosor del borde: 1
+
+    def dibujar_barra_salud_jefe(self):
+        """
+        Dibuja la barra de salud del jefe en la pantalla del juego.
+        """
+        # Calcular la posición inicial de la barra de salud del jefe
+        barra_x = self.jefe.rect.centerx - self.jefe.rect.width // 2  # Centrar el rectángulo en relación con el jefe
+        barra_y = self.jefe.rect.bottom - 210  # Posición vertical encima del jefe
+
+        # Calcular el ancho de la barra de salud del jefe en relación con su salud actual y máxima
+        ancho_barra = self.jefe.rect.width * (self.jefe.salud / self.jefe.salud_maxima)
+
+        # Dibujar el rectángulo rojo encima del jefe para la barra de salud
+        alto_barra = 15  # Altura fija de la barra de salud del jefe
+        barra_salud_rect = pygame.Rect(barra_x, barra_y, ancho_barra, alto_barra)
+        pygame.draw.rect(self.pantalla, (255, 0, 0), barra_salud_rect)
+
+        # Dibujar el rectángulo blanco alrededor de la barra de salud del jefe
+        rectangulo_salud = pygame.Rect(barra_x, barra_y, self.jefe.rect.width, alto_barra)
         pygame.draw.rect(self.pantalla, (255, 255, 255), rectangulo_salud, 1)  # Grosor del borde: 1
 
     def mostrar_texto_fps(self):

@@ -13,7 +13,7 @@ resource_manager = ResourceManager()
 
 
 class EnemigoBase(pygame.sprite.Sprite):
-    def __init__(self, imagen, x, y, pantalla_ancho, nivel, salud):
+    def __init__(self, imagen, x, y, pantalla_ancho, nivel, salud, salud_maxima):
         super().__init__()
         # Carga la imagen original de la nave enemiga
         self.imagen_original = pygame.image.load(imagen)
@@ -24,6 +24,7 @@ class EnemigoBase(pygame.sprite.Sprite):
         self.velocidad_y = random.uniform(2, 4)  # Velocidad vertical aleatoria
         self.pantalla_ancho = pantalla_ancho
         self.salud = salud * (2 ** nivel-1)  # Ajuste de la salud según el nivel
+        self.salud_maxima = salud_maxima * (2 ** nivel-1)  # Ajuste de la salud según el nivel
 
     def movimiento_enemigo(self):
         self.rect.y += self.velocidad_y
@@ -102,8 +103,8 @@ class EnemigoBase(pygame.sprite.Sprite):
 
 
 class EnemigoTipo1(EnemigoBase):
-    def __init__(self, imagen, x, y, pantalla_ancho, nivel, salud=1):
-        super().__init__(imagen, x, y, pantalla_ancho, nivel, salud=salud)
+    def __init__(self, imagen, x, y, pantalla_ancho, nivel, salud=1, salud_maxima=1):
+        super().__init__(imagen, x, y, pantalla_ancho, nivel, salud=salud, salud_maxima=salud_maxima)
         # Atributos específicos del tipo de enemigo 1
         self.velocidad_x = random.uniform(-3, 3)
         self.velocidad_y = random.uniform(1, 4)
@@ -111,15 +112,15 @@ class EnemigoTipo1(EnemigoBase):
 
 
 class EnemigoTipo2(EnemigoBase):
-    def __init__(self, imagen, x, y, pantalla_ancho, lista_balas_enemigas, jugador, nivel, salud=2):
-        super().__init__(imagen, x, y, pantalla_ancho, nivel, salud=salud)
+    def __init__(self, imagen, x, y, pantalla_ancho, lista_balas_enemigas, jugador, nivel, salud=2, salud_maxima=2):
+        super().__init__(imagen, x, y, pantalla_ancho, nivel, salud=salud, salud_maxima=salud_maxima)
         # Atributos específicos del tipo de enemigo 2
         self.velocidad_x = random.uniform(-3, 3)
         self.velocidad_y = random.uniform(2, 4)
         self.lista_balas_enemigas = lista_balas_enemigas  # Guarda la referencia a la lista de balas enemigas
         self.jugador = jugador  # Guarda la referencia al jugador
         self.danio = 2
-        self.velocidad_disparo = 7
+        self.velocidad_disparo = 4
         self.tiempo_ultimo_ataque = 0  # Inicializa el tiempo del último ataque
         self.tiempo_entre_disparos = 3000
         self.radio = 16  # Definir el radio de la hitbox circular
@@ -135,8 +136,8 @@ class EnemigoTipo2(EnemigoBase):
 
 
 class EnemigoTipo3(EnemigoBase):
-    def __init__(self, imagen, x, y, pantalla_ancho, lista_balas_enemigas, jugador, nivel, salud=3):
-        super().__init__(imagen, x, y, pantalla_ancho, nivel, salud=salud)
+    def __init__(self, imagen, x, y, pantalla_ancho, lista_balas_enemigas, jugador, nivel, salud=3, salud_maxima=3):
+        super().__init__(imagen, x, y, pantalla_ancho, nivel, salud=salud, salud_maxima=salud_maxima)
         # Atributos específicos del tipo de enemigo 3
         self.velocidad_x = random.uniform(-3, 3)
         self.velocidad_y = random.uniform(3, 6)
@@ -159,8 +160,8 @@ class EnemigoTipo3(EnemigoBase):
 
 
 class Jefe(EnemigoBase):
-    def __init__(self, imagen, x, y, pantalla_ancho, pantalla_alto, lista_balas_enemigas, jugador, nivel, salud=100, tamano=(200, 200)):
-        super().__init__(imagen, x, y, pantalla_ancho, nivel, salud=salud)
+    def __init__(self, imagen, x, y, pantalla_ancho, pantalla_alto, lista_balas_enemigas, jugador, nivel, salud=100, tamano=(200, 200), salud_maxima=100):
+        super().__init__(imagen, x, y, pantalla_ancho, nivel, salud=salud, salud_maxima=salud_maxima)
         # Carga la imagen del jefe con el tamaño deseado
         self.image = pygame.transform.scale(pygame.image.load(imagen), tamano)
         self.rect = self.image.get_rect(x=x, y=y)
