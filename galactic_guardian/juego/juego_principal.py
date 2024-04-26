@@ -1,100 +1,88 @@
 import random
 
 import pygame
+import pygame.freetype
 
 from galactic_guardian.efectos.destello import Destello
 from galactic_guardian.efectos.destello_constante import DestelloConstante
-from galactic_guardian.entidades.enemigo import EnemigoTipo1, EnemigoTipo2, EnemigoTipo3
+from galactic_guardian.entidades.enemigo import EnemigoTipo1, EnemigoTipo2, EnemigoTipo3, Jefe
 from galactic_guardian.entidades.explosion import Explosion
 from galactic_guardian.entidades.item import Item
 from galactic_guardian.entidades.jugador import Jugador
 from galactic_guardian.juego import menu
+from galactic_guardian.juego.clasificacion import SistemaClasificacion
 from galactic_guardian.resources.resource_manager import ResourceManager
 from galactic_guardian.ui.boton import Boton
-
 
 # Instancia global de ResourceManager
 resource_manager = ResourceManager()
 
 
 class Juego:
-    def __init__(self, pantalla_ancho, pantalla_alto, volumen_musica, volumen_efectos):
-
+    def __init__(self, pantalla_ancho, pantalla_alto, volumen_musica, volumen_efectos, clasificacion):
+        # Inicialización de variables
         self.volumen_musica = volumen_musica
         self.volumen_efectos = volumen_efectos
-
-        self.all_sprites = pygame.sprite.Group()
-
-        # Rangos para la generación de enemigos
-        self.MIN_TIEMPO_GENERACION = 200
-        self.MAX_TIEMPO_GENERACION = 1000
+        self.pantalla_ancho = pantalla_ancho
+        self.pantalla_alto = pantalla_alto
+        self.puntuacion = 0
+        self.nivel = 1
+        self.jefe_generado = False
+        self.jefe_derrotado = False
+        self.enemigos_activos = 0
+        self.enemigos_eliminados = 0
+        self.max_enemigos_para_objeto = 10
+        self.tiempo_espera_jefe = 5000
+        self.tiempo_inicio_espera_jefe = 0
+        self.disparando = False
+        self.pausado = False
+        self.tiempo_pausa = 0
         self.tiempo_proximo_enemigo = 0
+        self.tiempo_entre_enemigos = 0
+        self.MIN_TIEMPO_GENERACION = 800
+        self.MAX_TIEMPO_GENERACION = 1000
 
-        # Obtener los efectos de sonido del ResourceManager
+        self.clasificacion = clasificacion
+
+        # Inicialización de recursos
+        self.all_sprites = pygame.sprite.Group()
         self.EFECTO_DISPARO = resource_manager.get_sound("laser_gun")
         self.EFECTO_GOLPE = resource_manager.get_sound("hit")
         self.EFECTO_ITEM = resource_manager.get_sound("item_take")
-
-        # Establecer los volúmenes de los efectos de sonido
+        # Configuración de volúmenes
         self.EFECTO_DISPARO.set_volume(volumen_efectos)
         self.EFECTO_GOLPE.set_volume(volumen_efectos)
         self.EFECTO_ITEM.set_volume(volumen_efectos)
-
-        self.pantalla_ancho = pantalla_ancho
-        self.pantalla_alto = pantalla_alto
-        self.pantalla = menu.crear_pantalla()  # Crea la ventana del juego
-
-        # Cargar imagen del fondo
+        if not resource_manager.is_music_playing("rain_of_lasers"):
+            resource_manager.play_music("rain_of_lasers", loops=-1)
+            resource_manager.set_music_volume("rain_of_lasers", volumen_musica)
+        # Obtener imágenes
+        self.ruta_imagen_jugador = resource_manager.get_image_path("jugador")
         self.fondo_imagen1 = resource_manager.get_image("imagen_fondo1")
         self.fondo_imagen2 = resource_manager.get_image("imagen_fondo2")
-        self.pos_y_fondo1 = 0
-        self.pos_y_fondo2 = -self.pantalla_alto  # Iniciar la segunda imagen arriba de la pantalla
-
-        # Iniciar música de fondo si aún no se ha iniciado
-        if not resource_manager.is_music_playing("skyfire_theme"):
-            resource_manager.play_music("skyfire_theme", loops=-1)
-            resource_manager.set_music_volume("skyfire_theme", volumen_musica)
-
-        self.boton_opciones = None
-        self.boton_salir = None
-
-        # Lista para almacenar los enemigos
-        self.enemigos = []
-
-        # Lista para almacenar las balas
-        self.balas = []
-
-        # Lista para almacenar las balas de los enemigos
-        self.balas_enemigo = []
-
-        # Diccionario para mantener el tiempo de la última colisión con cada enemigo
-        self.enemigos_golpeados = {}
-
-        # Obtener las imágenes de explosión del ResourceManager
         self.explosion_images = [resource_manager.get_image(f"explosion_{i}") for i in range(1, 12)]
 
-        # Configuración del reloj para limitar la velocidad de fotogramas (FPS)
-        self.reloj = pygame.time.Clock()
+        # Inicialización de la pantalla
+        self.pantalla = menu.crear_pantalla()
 
-        # Bandera para indicar si la tecla de disparo está presionada
-        self.disparando = False
-
-        # Bandera para indicar si el juego está pausado
-        self.pausado = False  # Estado de pausa del juego
-
-        # Tiempo en el que se pausó el juego
-        self.tiempo_pausa = 0
-
-        # Obtener la imagen del jugador del ResourceManager
-        self.ruta_imagen_jugador = resource_manager.get_image_path("jugador")
-
-        # Inicializa el jugador
+        # Inicialización de botones
+        self.boton_opciones = None
+        self.boton_salir = None
+        # Inicialización de jugadores, enemigos, balas, etc.
         self.jugador = Jugador(self.ruta_imagen_jugador, self.pantalla_ancho, self.pantalla_alto, self.all_sprites)
 
-        # Obtener el tiempo en milisegundos en el que comienza el juego
+        self.enemigos = []
+        self.balas = []
+        self.balas_enemigo = []
+        # Inicialización de tiempo
         self.inicio_juego = pygame.time.get_ticks()
-
-        self.tiempo_entre_enemigos = 0
+        # Inicialización de posiciones de fondo
+        self.pos_y_fondo1 = 0
+        self.pos_y_fondo2 = -self.pantalla_alto
+        # Inicialización de diccionario de enemigos golpeados
+        self.enemigos_golpeados = {}
+        # Configuración del reloj
+        self.reloj = pygame.time.Clock()
 
     def generar_enemigo(self):
         """
@@ -102,6 +90,7 @@ class Juego:
         """
         tiempo_transcurrido = pygame.time.get_ticks() - self.inicio_juego  # Calcular el tiempo transcurrido en milisegundos
         tiempo_espera = 2000  # 2 segundos en milisegundos
+        nuevo_enemigo = None  # Inicializar como None
 
         if tiempo_transcurrido >= tiempo_espera:
             ancho_enemigo = 50
@@ -113,36 +102,102 @@ class Juego:
             ruta_enemigo1 = resource_manager.get_image_path("enemigo1")
             ruta_enemigo2 = resource_manager.get_image_path("enemigo2")
             ruta_enemigo3 = resource_manager.get_image_path("enemigo3")
+            ruta_enemigo_jefe = resource_manager.get_image_path("jefe1")
 
             # Restar el tiempo entre enemigos que se ha acumulado durante la pausa
             tiempo_transcurrido -= self.tiempo_entre_enemigos
 
             # Elige el tipo de enemigo según el tiempo transcurrido
-            if tiempo_transcurrido >= 30000:  # Después de 30 segundos en milisegundos
+            if tiempo_transcurrido >= 62000:  # Después de 62 segundos en milisegundos
+                if not self.jefe_generado and self.enemigos_activos == 0:
+                    # Detener música de fondo
+                    resource_manager.stop_music("rain_of_lasers")
+                    if not resource_manager.is_music_playing("deathmatch_theme"):
+                        resource_manager.play_music("deathmatch_theme", loops=-1)
+                        resource_manager.set_music_volume("deathmatch_theme", self.volumen_musica)
+                    # Inicia el temporizador para esperar antes de generar al jefe
+                    if self.tiempo_inicio_espera_jefe == 0:
+                        self.tiempo_inicio_espera_jefe = pygame.time.get_ticks()
+                    # Verifica si ha pasado el tiempo de espera para generar al jefe
+                    tiempo_transcurrido_jefe = pygame.time.get_ticks() - self.tiempo_inicio_espera_jefe
+                    if tiempo_transcurrido_jefe >= self.tiempo_espera_jefe:
+                        tipo_enemigo = Jefe
+                        ruta_imagen = ruta_enemigo_jefe
+                        # Calcular las coordenadas x e y del jefe
+                        x_enemigo = (self.pantalla_ancho - 200) // 2
+                        y_enemigo = -150  # Genera el jefe en la parte superior de la pantalla
+                        nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.pantalla_alto, self.balas_enemigo,
+                                                     self.jugador, self.nivel)
+                        self.jefe_generado = True  # Marca que el jefe ya ha sido generado
+            elif tiempo_transcurrido >= 42000:  # Después de 42 segundos en milisegundos
                 tipo_enemigo = random.choice([EnemigoTipo1, EnemigoTipo2, EnemigoTipo3])
                 if tipo_enemigo == EnemigoTipo1:
                     ruta_imagen = ruta_enemigo1
-                    nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho)
+                    nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.nivel)
                 elif tipo_enemigo == EnemigoTipo2:
                     ruta_imagen = ruta_enemigo2
-                    nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.balas_enemigo, self.jugador)
+                    nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.balas_enemigo, self.jugador, self.nivel)
                 else:
                     ruta_imagen = ruta_enemigo3
-                    nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.balas_enemigo, self.jugador)
-            elif tiempo_transcurrido >= 15000:  # Después de 15 segundos en milisegundos
+                    nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.balas_enemigo, self.jugador, self.nivel)
+            elif tiempo_transcurrido >= 22000:  # Después de 22 segundos en milisegundos
                 tipo_enemigo = random.choice([EnemigoTipo1, EnemigoTipo2])
                 if tipo_enemigo == EnemigoTipo1:
                     ruta_imagen = ruta_enemigo1
-                    nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho)
+                    nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.nivel)
                 else:
                     ruta_imagen = ruta_enemigo2
-                    nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.balas_enemigo, self.jugador)
+                    nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.balas_enemigo, self.jugador, self.nivel)
             else:
                 tipo_enemigo = EnemigoTipo1
                 ruta_imagen = ruta_enemigo1
-                nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho)
+                nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.nivel)
+
+            if nuevo_enemigo:
+                self.enemigos_activos += 1
 
             return nuevo_enemigo
+
+    def mostrar_confirmacion_salida(self):
+        # Crea un rectángulo para el fondo oscuro
+        fondo_oscuro = pygame.Surface((self.pantalla_ancho, self.pantalla_alto))
+        fondo_oscuro.set_alpha(200)  # Configura la transparencia
+        fondo_oscuro.fill((0, 0, 0))  # Color oscuro
+
+        # Dibuja el fondo oscuro en la pantalla
+        self.pantalla.blit(fondo_oscuro, (0, 0))
+
+        # Crea un rectángulo para el cuadro de diálogo
+        rectangulo_dialogo = pygame.Rect(50, 200, 500, 200)
+        pygame.draw.rect(self.pantalla, (255, 255, 255), rectangulo_dialogo)
+
+        # Dibuja el texto del cuadro de diálogo
+        font = pygame.font.SysFont(None, 36)
+        texto = font.render("¿Estás seguro de que deseas salir?", True, (0, 0, 0))
+        texto_rect = texto.get_rect(center=(rectangulo_dialogo.centerx, rectangulo_dialogo.centery - 50))
+        self.pantalla.blit(texto, texto_rect)
+
+        # Dibuja los botones "Sí" y "No"
+        boton_si = Boton("Sí", (50, 50, 50), (255, 255, 255), rectangulo_dialogo.centerx - 100, rectangulo_dialogo.bottom - 80,
+                         100, 50)
+        boton_no = Boton("No", (50, 50, 50), (255, 255, 255), rectangulo_dialogo.centerx + 110, rectangulo_dialogo.bottom - 80,
+                         100, 50)
+        boton_si.dibujar(self.pantalla, font)
+        boton_no.dibujar(self.pantalla, font)
+
+        # Actualiza la pantalla
+        pygame.display.flip()
+
+        # Espera la respuesta del usuario
+        while True:
+            for evento in pygame.event.get():
+                if evento.type == pygame.QUIT:
+                    pygame.quit()
+                elif evento.type == pygame.MOUSEBUTTONDOWN:
+                    if boton_si.clic_en_boton(evento.pos):
+                        self.mostrar_menu_principal()
+                    elif boton_no.clic_en_boton(evento.pos):
+                        return
 
     def manejar_eventos(self):
         """
@@ -162,7 +217,7 @@ class Juego:
                         if self.boton_opciones.clic_en_boton(evento.pos):
                             self.mostrar_opciones_juego()
                         elif self.boton_salir.clic_en_boton(evento.pos):
-                            self.mostrar_menu_principal()
+                            self.mostrar_confirmacion_salida()
             elif evento.type == pygame.MOUSEBUTTONUP:
                 self._manejar_click_soltado(evento.button)
 
@@ -240,6 +295,9 @@ class Juego:
         for enemigo in self.enemigos:
             if isinstance(enemigo, EnemigoTipo2) or isinstance(enemigo, EnemigoTipo3):
                 enemigo.tiempo_ultimo_ataque += tiempo_pausado
+            if isinstance(enemigo, Jefe):
+                enemigo.tiempo_ultimo_disparo += tiempo_pausado
+                enemigo.tiempo_ultimo_disparo_rapido += tiempo_pausado
 
     def _disparar(self):
         """
@@ -278,6 +336,14 @@ class Juego:
         """
         Elimina los elementos (balas, enemigos y objetos) que están fuera de la pantalla.
         """
+        enemigos_salidos = []  # Lista para almacenar los enemigos que han salido fuera de la pantalla
+        for enemigo in self.enemigos:
+            if enemigo and self.fuera_de_pantalla(enemigo.rect):
+                enemigos_salidos.append(enemigo)
+
+        # Reducir en 1 el contador de enemigos_activos por cada enemigo que ha salido de la pantalla
+        self.enemigos_activos -= len(enemigos_salidos)
+
         self.balas = [bala for bala in self.balas if not (bala is not None and self.fuera_de_pantalla(bala.rect))]
         self.enemigos = [enemigo for enemigo in self.enemigos if not (enemigo is not None and self.fuera_de_pantalla(enemigo.rect))]
         self.balas_enemigo = [bala_enemiga for bala_enemiga in self.balas_enemigo if
@@ -326,14 +392,34 @@ class Juego:
         """
         balas_a_eliminar = [bala, enemigo]
         # Reducir la salud del enemigo según el daño de la bala del jugador
-        enemigo.take_damage(bala.danio, self.jugador)
+        enemigo.take_damage(bala.danio)
         if enemigo.salud <= 0:
             self.enemigos.remove(enemigo)
+            # Incrementa el contador de enemigos eliminados
+            self.enemigos_eliminados += 1
             explosion = Explosion(enemigo.rect.center, self.explosion_images)
             self.all_sprites.add(explosion)  # Añadir la explosión al grupo de sprites
-            objeto = enemigo.die(self.jugador)  # Crear un objeto cuando el enemigo muere
-            if objeto:
-                self.all_sprites.add(objeto)
+            objeto = enemigo.die(self.jugador, self.enemigos_eliminados)  # Crear un objeto cuando el enemigo muere
+            if objeto is not None or self.enemigos_eliminados >= self.enemigos_eliminados:
+                if objeto is not None:
+                    self.all_sprites.add(objeto)
+                    # Restablece el contador de enemigos eliminados
+                    self.enemigos_eliminados = 0
+            # Aumentar la puntuación según el tipo de enemigo eliminado y el nivel actual
+            puntuacion_enemigo = 0
+            if isinstance(enemigo, EnemigoTipo1):
+                puntuacion_enemigo = 1
+            elif isinstance(enemigo, EnemigoTipo2):
+                puntuacion_enemigo = 2
+            elif isinstance(enemigo, EnemigoTipo3):
+                puntuacion_enemigo = 3
+            elif isinstance(enemigo, Jefe):
+                puntuacion_enemigo = 1000
+                self.jefe_derrotado = True
+                self.reiniciar_juego()
+            self.puntuacion += puntuacion_enemigo * self.nivel
+            # Decrementa el contador de enemigos en pantalla
+            self.enemigos_activos -= 1
         self.EFECTO_GOLPE.play()
         self.eliminar_elementos(balas_a_eliminar)
 
@@ -466,7 +552,7 @@ class Juego:
         for enemigo in self.enemigos:
             if enemigo is not None:  # Verificar si enemigo no es None
                 enemigo.movimiento_enemigo()
-
+                enemigo.update()
                 if self.jugador.rect.colliderect(enemigo.rect):
                     self.colision_jugador_enemigo(enemigo)
 
@@ -478,6 +564,13 @@ class Juego:
                     nueva_bala_enemigo = enemigo.disparo_enemigo()
                     if nueva_bala_enemigo:
                         self.balas_enemigo.append(nueva_bala_enemigo)
+                if isinstance(enemigo, Jefe):
+                    nueva_bala_enemigo1 = enemigo.disparo_jefe()
+                    nueva_bala_enemigo2 = enemigo.disparo_rapido()
+                    if nueva_bala_enemigo1:
+                        self.balas_enemigo.append(nueva_bala_enemigo1)
+                    if nueva_bala_enemigo2:
+                        self.balas_enemigo.append(nueva_bala_enemigo2)
 
     def colision_jugador_enemigo(self, enemigo):
         """
@@ -499,6 +592,10 @@ class Juego:
             explosion = Explosion(enemigo.rect.center, self.explosion_images)
             self.all_sprites.add(explosion)  # Añadir la explosión al grupo de sprites
             self.enemigos.remove(enemigo)
+            # Decrementa el contador de enemigos en pantalla
+            self.enemigos_activos -= 1
+            # Incrementa el contador de enemigos eliminados
+            self.enemigos_eliminados += 1
 
     def mover_fondo(self):
         """
@@ -523,15 +620,25 @@ class Juego:
 
     def juego_terminado(self):
         """
-        Muestra el mensaje de "Game Over" y la opción de "Reintentar".
+        Muestra el mensaje de "Game Over" y las opciones de "Reintentar" y "Salir".
         """
         # Detener música de fondo
-        resource_manager.stop_music("skyfire_theme")
+        resource_manager.stop_music("rain_of_lasers")
+        resource_manager.stop_music("deathmatch_theme")
 
         # Iniciar música Game Over de fondo si aún no se ha iniciado
         if not resource_manager.is_music_playing("defeated_tune"):
             resource_manager.play_music("defeated_tune", loops=-1)
             resource_manager.set_music_volume("defeated_tune", self.volumen_musica)
+
+        puntuaciones_top = self.clasificacion.obtener_puntuaciones_top()
+        if len(puntuaciones_top) < 10 or self.puntuacion > puntuaciones_top[-1][1]:
+            # La puntuación del jugador está entre las 10 mejores o es superior a la última de las 10 mejores
+            nombre_jugador = self.mostrar_cuadro_dialogo("Introduce tu nombre: ")
+            self.clasificacion.agregar_puntuacion(nombre_jugador, self.puntuacion)
+
+        # Actualizar la pantalla para borrar el texto "Introduce tu nombre"
+        self.pantalla.blit(self.fondo_imagen1, (0, 0))
 
         # Cargar la fuente para los botones
         font = pygame.font.Font(None, 36)
@@ -544,6 +651,7 @@ class Juego:
         boton_salir = Boton("Salir", (255, 0, 255, 128), (255, 255, 255), self.pantalla.get_rect().centerx, 470,
                             200, 50, radio_borde=10)
 
+        self.mostrar_game_over()
         # Dibujar el botón en la pantalla
         boton_reintentar.dibujar(self.pantalla, font)
         boton_salir.dibujar(self.pantalla, font)
@@ -564,11 +672,35 @@ class Juego:
                         self.mostrar_menu_principal()
                         return True
 
+    def mostrar_cuadro_dialogo(self, mensaje):
+        font_dialogo = pygame.freetype.SysFont(None, 24)
+        entrada = ""
+        ingresando = True
+        while ingresando:
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
+                        ingresando = False
+                    elif event.key == pygame.K_BACKSPACE:
+                        entrada = entrada[:-1]
+                    else:
+                        entrada += event.unicode
+
+            self.pantalla.blit(self.fondo_imagen1, (0, 0))
+            texto_surface, _ = font_dialogo.render(mensaje + entrada, (255, 255, 255))
+            self.pantalla.blit(texto_surface, ((self.pantalla.get_width() - texto_surface.get_width()) // 2,
+                                               (self.pantalla.get_height() - texto_surface.get_height()) // 2))
+            pygame.display.flip()
+
+        return entrada
+
     def mostrar_menu_principal(self):
         """
         Muestra el menú principal del juego.
         """
-        # Detener música de Game Over
+        # Detener música
+        resource_manager.stop_music("rain_of_lasers")
+        resource_manager.stop_music("deathmatch_theme")
         resource_manager.stop_music("defeated_tune")
 
         # Iniciar música de fondo del menú si aún no se ha iniciado
@@ -583,11 +715,6 @@ class Juego:
         """
         Muestra el menú principal del juego.
         """
-        # Iniciar música de fondo del menú si aún no se ha iniciado
-        if not resource_manager.is_music_playing("skyfire_theme"):
-            resource_manager.play_music("skyfire_theme", loops=-1)
-            resource_manager.set_music_volume("skyfire_theme", self.volumen_musica)
-
         from galactic_guardian.juego.menu import mostrar_opciones
         mostrar_opciones(self.pantalla, self.volumen_musica, self.volumen_efectos)
 
@@ -595,45 +722,42 @@ class Juego:
         """
         Reinicia el juego.
         """
+        if self.jefe_derrotado:
+            self.nivel += 1
+            self.jefe_derrotado = False
+            self.MIN_TIEMPO_GENERACION -= 200
+            self.MAX_TIEMPO_GENERACION -= 200
+            if self.MIN_TIEMPO_GENERACION <= 200:
+                self.MIN_TIEMPO_GENERACION = 200
+            if self.MAX_TIEMPO_GENERACION <= 200:
+                self.MAX_TIEMPO_GENERACION = 200
+            # Detener música Jefe
+            resource_manager.stop_music("deathmatch_theme")
+        else:
+            self.jugador = Jugador(self.ruta_imagen_jugador, self.pantalla_ancho, self.pantalla_alto, self.all_sprites)
+            self.MIN_TIEMPO_GENERACION = 800
+            self.MAX_TIEMPO_GENERACION = 1000
+            self.puntuacion = 0
+            self.balas = []
+            self.balas_enemigo = []
+            # Detener música Game Over
+            resource_manager.stop_music("defeated_tune")
+
         # Reiniciar todos los valores del juego a sus estados iniciales
-        self.jugador = Jugador(self.ruta_imagen_jugador, self.pantalla_ancho, self.pantalla_alto, self.all_sprites)
         self.enemigos = []
-        self.balas = []
-        self.balas_enemigo = []
         self.enemigos_golpeados = {}
         self.tiempo_proximo_enemigo = 0
+        self.jefe_generado = False
         self.inicio_juego = pygame.time.get_ticks()
-        # Detener música Game Over de fondo
-        resource_manager.stop_music("defeated_tune")
-        if not resource_manager.is_music_playing("skyfire_theme"):
-            resource_manager.play_music("skyfire_theme", loops=-1)
-            resource_manager.set_music_volume("skyfire_theme", self.volumen_musica)
+        self.enemigos_activos = 0
+        self.tiempo_inicio_espera_jefe = 0
+
+        if not resource_manager.is_music_playing("rain_of_lasers"):
+            resource_manager.play_music("rain_of_lasers", loops=-1)
+            resource_manager.set_music_volume("rain_of_lasers", self.volumen_musica)
 
         # Continuar ejecutando el juego
         self.ejecutar()
-
-    def dibujar_barra_salud(self):
-        """
-        Dibuja la barra de salud del jugador en la pantalla del juego.
-        """
-        # Calcular la posición inicial de la barra de salud
-        barra_x = self.jugador.rect.centerx - 25  # Centrar el rectángulo en relación con la barra de salud
-        barra_y = self.jugador.rect.bottom + 10  # Ajustar la posición vertical para que esté debajo de la nave
-
-        # Dibujar las barras verticales de la barra de salud
-        for i in range(self.jugador.salud_maxima):
-            if i < self.jugador.salud:  # Las barras de salud activas serán verdes
-                color = (0, 255, 0)
-            else:  # Las barras de salud inactivas serán grises
-                color = (150, 150, 150)
-
-            # Calcular la posición y el tamaño de cada barra de salud
-            barra_salud_rect = pygame.Rect(barra_x + i * 10, barra_y, 8, 10)
-            pygame.draw.rect(self.pantalla, color, barra_salud_rect)
-
-        # Dibujar el rectángulo blanco alrededor de la barra de salud
-        rectangulo_salud = pygame.Rect(barra_x, barra_y, self.jugador.salud_maxima * 10, 10)  # El ancho total de la barra de salud
-        pygame.draw.rect(self.pantalla, (255, 255, 255), rectangulo_salud, 1)  # Grosor del borde: 1
 
     def dibujar(self):
         """
@@ -647,7 +771,6 @@ class Juego:
             self.pantalla.blit(self.fondo_imagen2, (0, self.pos_y_fondo2))
 
         if self.jugador.vidas <= 0:
-            self.mostrar_game_over()
             return  # Salir de la función si el juego ha terminado
 
         # Dibujar todos los sprites en el grupo de sprites
@@ -667,20 +790,67 @@ class Juego:
             self.pantalla.blit(self.jugador.image, self.jugador.rect)
 
         # Mostrar texto de vidas
+        font = pygame.font.SysFont(None, 24)  # Fuente y tamaño del texto
         color_texto_vidas = (128, 128, 128) if self.pausado else (255, 255, 255)
-        self.mostrar_texto("Vidas: ", self.jugador.vidas, (10, 10), color_texto_vidas)
+        self.mostrar_texto("Vidas: ", (10, 10), color_texto_vidas, self.jugador.vidas, font)
         self.dibujar_barra_salud()
+
+        # Mostrar puntuación
+        self.mostrar_texto("Puntuación: ", (10, 40), color_texto_vidas, self.puntuacion, font)
+
+        # Define el diccionario de colores para cada atributo
+        colores_atributos = {
+            "Ataque": (255, 0, 0),  # Rojo
+            "Vel. Ataque": (0, 255, 0),  # Verde
+            "Velocidad": (0, 0, 255)  # Azul
+        }
+
+        # Mostrar texto y barras de atributos
+        self.mostrar_atributo("Ataque", self.jugador.danio, self.jugador.DANIO_MAXIMO, (10, 70), colores_atributos["Ataque"])
+        self.mostrar_atributo("Vel. Ataque", round(1 / (self.jugador.cadencia_disparo / 1000), 2),
+                              round(1 / (Jugador.CADENCIA_DISPARO_MAXIMA / 1000), 2), (10, 120), colores_atributos["Vel. Ataque"])
+
+        self.mostrar_atributo("Velocidad", self.jugador.velocidad, Jugador.VELOCIDAD_MAXIMA, (10, 170), colores_atributos["Velocidad"])
 
         # Mostrar FPS en la esquina superior derecha
         self.mostrar_texto_fps()
 
         pygame.display.flip()  # Actualiza la pantalla
 
+    def mostrar_atributo(self, nombre, valor, maximo, posicion, color):
+        """
+        Muestra un texto y una barra de atributo en la pantalla.
+        """
+        font = pygame.font.SysFont(None, 24)  # Fuente y tamaño del texto
+        texto = font.render(f"{nombre}: {valor}", True, (255, 255, 255))  # Texto, antialiasing y color
+        self.pantalla.blit(texto, posicion)
+
+        # Calcular el tamaño de la barra de atributo
+        ancho_barra = 100  # Ancho total de la barra
+        incremento = ancho_barra / float(maximo)  # Ancho de cada incremento en la barra
+
+        # Dibujar la barra de atributo completa con borde blanco
+        barra_rect = pygame.Rect(posicion[0], posicion[1] + 20, ancho_barra, 10)
+        pygame.draw.rect(self.pantalla, (255, 255, 255), barra_rect, 1)  # Borde blanco de la barra
+
+        # Calcular el ancho de la porción de la barra que representa el valor actual
+        ancho_valor = valor * incremento
+
+        # Dibujar la porción de la barra que representa el valor actual del atributo
+        barra_valor_rect = pygame.Rect(posicion[0], posicion[1] + 20, ancho_valor, 10)
+        pygame.draw.rect(self.pantalla, color, barra_valor_rect)  # Barra de atributo
+
+        # Dibujar las divisiones en la barra de atributo
+        for i in range(int(maximo) + 1):
+            x = posicion[0] + i * incremento
+            pygame.draw.line(self.pantalla, (255, 255, 255), (x, posicion[1] + 21), (x, posicion[1] + 29), 1)  # Barra vertical
+
     def dibujar_botones_pausa(self):
         # Definir los parámetros para los botones
         ancho_boton = 150
         alto_boton = 50
-        color_fondo_boton = (50, 50, 50)
+        color_fondo_boton_opciones = (0, 255, 255, 150)
+        color_fondo_boton_salir = (255, 0, 0, 150)
         color_texto_boton = (255, 255, 255)
 
         # Calcular posiciones de los botones
@@ -689,8 +859,9 @@ class Juego:
         y_salir = self.pantalla_alto // 2 + 120
 
         # Crear botones
-        self.boton_opciones = Boton("Opciones", color_fondo_boton, color_texto_boton, centro_x, y_opciones, ancho_boton, alto_boton)
-        self.boton_salir = Boton("Salir", color_fondo_boton, color_texto_boton, centro_x, y_salir, ancho_boton, alto_boton)
+        self.boton_opciones = Boton("Opciones", color_fondo_boton_opciones, color_texto_boton, centro_x, y_opciones, ancho_boton, alto_boton,
+                                    radio_borde=10)
+        self.boton_salir = Boton("Salir", color_fondo_boton_salir, color_texto_boton, centro_x, y_salir, ancho_boton, alto_boton, radio_borde=10)
 
         # Dibujar botones
         self.boton_opciones.dibujar(self.pantalla, pygame.font.SysFont(None, 30))
@@ -736,20 +907,52 @@ class Juego:
         sprite_image_gris.fill((128, 128, 128), special_flags=pygame.BLEND_RGB_MULT)
         self.pantalla.blit(sprite_image_gris, sprite.rect)
 
-    def mostrar_texto(self, texto_prefijo, valor, posicion, color):
+    def mostrar_texto(self, texto_prefijo, posicion, color, valor=None, fuente=None):
         """
         Muestra un texto en la pantalla.
         """
-        font = pygame.font.SysFont(None, 36)  # Fuente y tamaño del texto
-        texto = font.render(f"{texto_prefijo}{valor}", True, color)  # Texto, antialiasing y color
-        self.pantalla.blit(texto, posicion)
+        if fuente is None:
+            fuente = pygame.font.SysFont(None, 36)  # Fuente y tamaño del texto
+
+        # Si se pasa un valor, concatenarlo al texto prefijo
+        if valor is not None:
+            texto = f"{texto_prefijo}{valor}"
+        else:
+            texto = texto_prefijo
+
+        texto_renderizado = fuente.render(texto, True, color)  # Texto, antialiasing y color
+        self.pantalla.blit(texto_renderizado, posicion)
+
+    def dibujar_barra_salud(self):
+        """
+        Dibuja la barra de salud del jugador en la pantalla del juego.
+        """
+        # Calcular la posición inicial de la barra de salud
+        barra_x = self.jugador.rect.centerx - 25  # Centrar el rectángulo en relación con la barra de salud
+        barra_y = self.jugador.rect.bottom + 10  # Ajustar la posición vertical para que esté debajo de la nave
+
+        # Dibujar las barras verticales de la barra de salud
+        for i in range(self.jugador.salud_maxima):
+            if i < self.jugador.salud:  # Las barras de salud activas serán verdes
+                color = (0, 255, 0)
+            else:  # Las barras de salud inactivas serán grises
+                color = (150, 150, 150)
+
+            # Calcular la posición y el tamaño de cada barra de salud
+            barra_salud_rect = pygame.Rect(barra_x + i * 10, barra_y, 8, 10)
+            pygame.draw.rect(self.pantalla, color, barra_salud_rect)
+
+        # Dibujar el rectángulo blanco alrededor de la barra de salud
+        rectangulo_salud = pygame.Rect(barra_x, barra_y, self.jugador.salud_maxima * 10, 10)  # El ancho total de la barra de salud
+        pygame.draw.rect(self.pantalla, (255, 255, 255), rectangulo_salud, 1)  # Grosor del borde: 1
 
     def mostrar_texto_fps(self):
         """
         Muestra el FPS en la pantalla.
         """
         font_fps = pygame.font.SysFont(None, 24)  # Fuente y tamaño del texto
-        texto_fps = font_fps.render(f"FPS: {int(self.reloj.get_fps())}", True, (255, 255, 255))  # Texto, antialiasing y color
+        # Texto, antialiasing y color
+        texto_fps = font_fps.render(f"FPS: {int(self.reloj.get_fps())}", True, (128, 128, 128) if self.pausado else (255, 255, 255))
         self.pantalla.blit(texto_fps, (self.pantalla_ancho - texto_fps.get_width() - 10, 10))  # Mostrar el texto en la esquina superior derecha
 
     def ejecutar(self):
@@ -759,6 +962,7 @@ class Juego:
         ejecutando = True
 
         while ejecutando:
+            pygame.display.set_caption("Galactic Guardian")
             ejecutando = self.manejar_eventos()
 
             # Si el juego está pausado, solo dibujar la pantalla y continuar al siguiente ciclo

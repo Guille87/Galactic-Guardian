@@ -28,9 +28,10 @@ RECURSOS = {
 
 # Sonidos
 SONIDOS = {
+    "skyfire_theme": "musica\\SkyFire.ogg",
+    "rain_of_lasers": "musica\\Rain of Lasers.ogg",
     "deathmatch_theme": "musica\\DeathMatch Boss Theme.ogg",
     "defeated_tune": "musica\\Defeated (Game Over Tune).ogg",
-    "skyfire_theme": "musica\\SkyFire.ogg",
     "victory_tune": "musica\\Victory Tune.ogg",
     "laser_gun": "sonidos\\laser-gun.wav",
     "hit": "sonidos\\hit.wav",

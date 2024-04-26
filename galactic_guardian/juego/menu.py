@@ -4,6 +4,7 @@ import pygame
 import pygame_gui
 
 from galactic_guardian.juego import configuracion
+from galactic_guardian.juego.clasificacion import SistemaClasificacion
 from galactic_guardian.resources.resource_manager import ResourceManager
 from galactic_guardian.juego.juego_principal import Juego
 from galactic_guardian.ui.boton import Boton
@@ -11,6 +12,8 @@ from galactic_guardian.ui.boton import Boton
 
 # Instancia global de ResourceManager
 resource_manager = ResourceManager()
+# Instancia global de sistema de clasificación
+sistema_clasificacion = SistemaClasificacion()
 
 
 def crear_pantalla():
@@ -62,10 +65,22 @@ def mostrar_menu(pantalla):
     boton_opciones = Boton("Opciones", boton_opciones_color, texto_color, pantalla.get_rect().centerx, boton_jugar.rect.bottom + 20, boton_opciones_ancho,
                            boton_opciones_alto, radio_borde=10)
 
+    # Definir las propiedades del botón "Puntuaciones"
+    boton_puntuaciones_ancho = 200
+    boton_puntuaciones_alto = 50
+    boton_puntuaciones_color = (255, 255, 0, 128)  # Amarillo brillante y semitransparente
+
+    # Crear el botón "Puntuaciones"
+    boton_puntuaciones = Boton("Puntuaciones", boton_puntuaciones_color, texto_color, pantalla.get_rect().centerx, boton_opciones.rect.bottom + 20,
+                               boton_puntuaciones_ancho, boton_puntuaciones_alto, radio_borde=10)
+
     while True:
         pygame.display.set_caption("Galactic Guardian")
 
         volumen_musica, volumen_efectos = configuracion.cargar_configuracion()
+
+        # Cargar las puntuaciones guardadas
+        sistema_clasificacion.cargar_puntuaciones()
 
         resource_manager.set_music_volume("skyfire_theme", volumen_musica)
 
@@ -77,6 +92,7 @@ def mostrar_menu(pantalla):
         # Dibujar los botones en la pantalla
         boton_jugar.dibujar(pantalla, font)
         boton_opciones.dibujar(pantalla, font)
+        boton_puntuaciones.dibujar(pantalla, font)
 
         # Manejar eventos de usuario, como clics de mouse o pulsaciones de teclas
         for event in pygame.event.get():
@@ -86,22 +102,24 @@ def mostrar_menu(pantalla):
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     if boton_jugar.clic_en_boton(event.pos):
-                        iniciar_juego(pantalla.get_width(), pantalla.get_height(), volumen_musica, volumen_efectos)
+                        iniciar_juego(pantalla.get_width(), pantalla.get_height(), volumen_musica, volumen_efectos, sistema_clasificacion)
                     elif boton_opciones.clic_en_boton(event.pos):
                         mostrar_opciones(pantalla, volumen_musica, volumen_efectos)
+                    elif boton_puntuaciones.clic_en_boton(event.pos):
+                        mostrar_puntuaciones(pantalla, sistema_clasificacion)
 
         # Actualizar la pantalla
         pygame.display.flip()
 
 
-def iniciar_juego(pantalla_ancho, pantalla_alto, volumen_musica, volumen_efectos):
+def iniciar_juego(pantalla_ancho, pantalla_alto, volumen_musica, volumen_efectos, clasificacion):
     """
     Iniciar el juego.
     """
     # Detener la música antes de salir de menu.py
     if resource_manager.is_music_playing("skyfire_theme"):
         resource_manager.stop_music("skyfire_theme")
-    juego = Juego(pantalla_ancho, pantalla_alto, volumen_musica, volumen_efectos)
+    juego = Juego(pantalla_ancho, pantalla_alto, volumen_musica, volumen_efectos, clasificacion)
     juego.ejecutar()
 
 
@@ -192,6 +210,9 @@ def mostrar_opciones(pantalla, volumen_musica, volumen_efectos):
                     if event.ui_element == musica_slider:
                         volumen_musica = event.value
                         resource_manager.set_music_volume("skyfire_theme", volumen_musica)
+                        resource_manager.set_music_volume("rain_of_lasers", volumen_musica)
+                        resource_manager.set_music_volume("deathmatch_theme", volumen_musica)
+                        resource_manager.set_music_volume("defeated_tune", volumen_musica)
                     elif event.ui_element == efectos_slider:
                         volumen_efectos = event.value
                         # Iterar sobre los efectos de sonido y actualizar su volumen
@@ -238,3 +259,65 @@ def mostrar_opciones(pantalla, volumen_musica, volumen_efectos):
         pygame.display.update()
 
     pygame.quit()
+
+
+def mostrar_puntuaciones(pantalla, clasificacion):
+    """
+    Mostrar las puntuaciones en la pantalla.
+    """
+    # Obtener la imagen de fondo
+    fondo = resource_manager.get_image("imagen_fondo1")
+
+    # Crear el texto del título
+    titulo_font = pygame.font.Font(None, 76)
+    titulo_surface = titulo_font.render("Puntuaciones", True, (255, 255, 255))
+    titulo_rect = titulo_surface.get_rect(center=(pantalla.get_width() // 2, 100))  # Centrar en la parte superior de la pantalla
+
+    # Crear la fuente para mostrar las puntuaciones
+    font = pygame.font.Font(None, 36)
+
+    # Definir la posición inicial para mostrar las puntuaciones
+    x = 130
+    y = 130
+    dy = 50  # Espaciado vertical entre cada línea de puntuación
+
+    # Mostrar mensaje de clic para salir
+    mensaje_salir_font = pygame.font.Font(None, 36)
+    mensaje_salir_surface = mensaje_salir_font.render("Haz clic en la pantalla para salir", True, (255, 255, 255))
+    mensaje_salir_rect = mensaje_salir_surface.get_rect(center=(pantalla.get_width() // 2, pantalla.get_height() - 50))
+
+    while True:
+        puntuaciones_top = clasificacion.obtener_puntuaciones_top()  # Obtener las 10 mejores puntuaciones
+
+        pantalla.blit(fondo, (0, 0))  # Dibujar la imagen de fondo en toda la pantalla
+
+        # Dibujar el título
+        pantalla.blit(titulo_surface, titulo_rect)
+
+        # Verificar si hay puntuaciones para mostrar
+        if puntuaciones_top:
+            # Dibujar las puntuaciones si hay al menos una
+            for i, (nombre, puntuacion) in enumerate(puntuaciones_top, start=1):
+                puntuacion_surface = font.render(f"{i}. {nombre}: {puntuacion}", True, (255, 255, 255))
+                pantalla.blit(puntuacion_surface, (x, y + i * dy))
+        else:
+            # Mostrar mensaje de que no hay puntuaciones
+            mensaje_no_puntuaciones_font = pygame.font.Font(None, 36)
+            mensaje_no_puntuaciones_surface = mensaje_no_puntuaciones_font.render("No hay puntuaciones", True, (255, 255, 255))
+            mensaje_no_puntuaciones_rect = mensaje_no_puntuaciones_surface.get_rect(center=(pantalla.get_width() // 2, pantalla.get_height() // 2))
+            pantalla.blit(mensaje_no_puntuaciones_surface, mensaje_no_puntuaciones_rect)
+
+        pantalla.blit(mensaje_salir_surface, mensaje_salir_rect)
+
+        # Manejar eventos de usuario
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    # Regresar al menú principal cuando se hace clic en cualquier parte de la pantalla
+                    return
+
+        # Actualizar la pantalla
+        pygame.display.flip()

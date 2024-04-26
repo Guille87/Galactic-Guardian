@@ -13,8 +13,8 @@ resource_manager = ResourceManager()
 class Jugador(pygame.sprite.Sprite):
     TAMANO_NAVE = (50, 50)
     DANIO_INICIAL = 1
-    VIDAS_INICIALES = 1
-    SALUD_INICIAL = 3
+    VIDAS_INICIALES = 3
+    SALUD_INICIAL = 5
     VELOCIDAD_INICIAL = 4
     CADENCIA_DISPARO_INICIAL = 350
     DANIO_MAXIMO = 3
@@ -43,7 +43,7 @@ class Jugador(pygame.sprite.Sprite):
         self.invulnerable = False  # Atributo para rastrear la invulnerabilidad
         self.tiempo_invulnerable = 0
         self.destello_constante = None
-        self.all_sprites = all_sprites  # Guardar una referencia al grupo de entidades
+        self.all_sprites = all_sprites  # Guardar una referencia al grupo de sprites
 
     def mover(self, teclas_presionadas, pantalla):
         """
@@ -152,10 +152,8 @@ class Jugador(pygame.sprite.Sprite):
         """
         if self.disparo_doble and not self.disparo_triple:
             self.disparo_triple = True
-            print("¡Disparo triple desbloqueado!")
         if not self.disparo_doble and self.danio >= self.danio_maximo:
             self.disparo_doble = True
-            print("¡Disparo doble desbloqueado!")
         self.danio += cantidad
         if self.danio > self.danio_maximo:
             self.danio = self.danio_maximo
