@@ -10,6 +10,7 @@ from entidades.explosion import Explosion
 from entidades.item import Item
 from entidades.jugador import Jugador
 from juego.collision_manager import CollisionManager
+from juego.ui_manager import UIManager
 from juego.wave_manager import WaveManager
 from resources.resource_manager import ResourceManager
 from ui.boton import Boton
@@ -44,6 +45,7 @@ class Juego:
 
         self.wave_manager = WaveManager(resource_manager, self.pantalla_ancho, self.pantalla_alto)
         self.collision_manager = CollisionManager(self)
+        self.ui_manager = UIManager(self)
 
         self.clasificacion = clasificacion
 
@@ -751,64 +753,9 @@ class Juego:
         else:
             self.pantalla.blit(self.jugador.image, self.jugador.rect)
 
-        # Mostrar texto de vidas
-        font = pygame.font.SysFont(None, 24)  # Fuente y tamaño del texto
-        color_texto_vidas = (128, 128, 128) if self.pausado else (255, 255, 255)
-        self.mostrar_texto("Vidas: ", (10, 10), color_texto_vidas, self.jugador.vidas, font)
-        self.dibujar_barra_salud()
-        if self.jefe is not None:
-            # Solo dibujamos la barra si el jefe está en la lista de enemigos o activo
-            self.dibujar_barra_salud_jefe()
-
-        # Mostrar puntuación
-        self.mostrar_texto("Puntuación: ", (10, 40), color_texto_vidas, self.puntuacion, font)
-
-        # Define el diccionario de colores para cada atributo
-        colores_atributos = {
-            "Ataque": (255, 0, 0),  # Rojo
-            "Vel. Ataque": (0, 255, 0),  # Verde
-            "Velocidad": (0, 0, 255)  # Azul
-        }
-
-        # Mostrar texto y barras de atributos
-        self.mostrar_atributo("Ataque", self.jugador.danio, self.jugador.DANIO_MAXIMO, (10, 70), colores_atributos["Ataque"])
-        self.mostrar_atributo("Vel. Ataque", round(1 / (self.jugador.cadencia_disparo / 1000), 2),
-                              round(1 / (Jugador.CADENCIA_DISPARO_MAXIMA / 1000), 2), (10, 120), colores_atributos["Vel. Ataque"])
-
-        self.mostrar_atributo("Velocidad", self.jugador.velocidad, Jugador.VELOCIDAD_MAXIMA, (10, 170), colores_atributos["Velocidad"])
-
-        # Mostrar FPS en la esquina superior derecha
-        self.mostrar_texto_fps()
+        self.ui_manager.dibujar_interfaz(self.pantalla)
 
         pygame.display.flip()  # Actualiza la pantalla
-
-    def mostrar_atributo(self, nombre, valor, maximo, posicion, color):
-        """
-        Muestra un texto y una barra de atributo en la pantalla.
-        """
-        font = pygame.font.SysFont(None, 24)  # Fuente y tamaño del texto
-        texto = font.render(f"{nombre}: {valor}", True, (255, 255, 255))  # Texto, antialiasing y color
-        self.pantalla.blit(texto, posicion)
-
-        # Calcular el tamaño de la barra de atributo
-        ancho_barra = 100  # Ancho total de la barra
-        incremento = ancho_barra / float(maximo)  # Ancho de cada incremento en la barra
-
-        # Dibujar la barra de atributo completa con borde blanco
-        barra_rect = pygame.Rect(posicion[0], posicion[1] + 20, ancho_barra, 10)
-        pygame.draw.rect(self.pantalla, (255, 255, 255), barra_rect, 1)  # Borde blanco de la barra
-
-        # Calcular el ancho de la porción de la barra que representa el valor actual
-        ancho_valor = valor * incremento
-
-        # Dibujar la porción de la barra que representa el valor actual del atributo
-        barra_valor_rect = pygame.Rect(posicion[0], posicion[1] + 20, ancho_valor, 10)
-        pygame.draw.rect(self.pantalla, color, barra_valor_rect)  # Barra de atributo
-
-        # Dibujar las divisiones en la barra de atributo
-        for i in range(int(maximo) + 1):
-            x = posicion[0] + i * incremento
-            pygame.draw.line(self.pantalla, (255, 255, 255), (x, posicion[1] + 21), (x, posicion[1] + 29), 1)  # Barra vertical
 
     def dibujar_botones_pausa(self):
         # Definir los parámetros para los botones
@@ -871,77 +818,6 @@ class Juego:
         sprite_image_gris = sprite.image.copy()
         sprite_image_gris.fill((128, 128, 128), special_flags=pygame.BLEND_RGB_MULT)
         self.pantalla.blit(sprite_image_gris, sprite.rect)
-
-    def mostrar_texto(self, texto_prefijo, posicion, color, valor=None, fuente=None):
-        """
-        Muestra un texto en la pantalla.
-        """
-        if fuente is None:
-            fuente = pygame.font.SysFont(None, 36)  # Fuente y tamaño del texto
-
-        # Si se pasa un valor, concatenarlo al texto prefijo
-        if valor is not None:
-            texto = f"{texto_prefijo}{valor}"
-        else:
-            texto = texto_prefijo
-
-        texto_renderizado = fuente.render(texto, True, color)  # Texto, antialiasing y color
-        self.pantalla.blit(texto_renderizado, posicion)
-
-    def dibujar_barra_salud(self):
-        """
-        Dibuja la barra de salud del jugador en la pantalla del juego.
-        """
-        # Calcular la posición inicial de la barra de salud
-        barra_x = self.jugador.rect.centerx - 25  # Centrar el rectángulo en relación con la barra de salud
-        barra_y = self.jugador.rect.bottom + 10  # Ajustar la posición vertical para que esté debajo de la nave
-
-        # Dibujar las barras verticales de la barra de salud
-        for i in range(self.jugador.salud_maxima):
-            if i < self.jugador.salud:  # Las barras de salud activas serán verdes
-                color = (0, 255, 0)
-            else:  # Las barras de salud inactivas serán grises
-                color = (150, 150, 150)
-
-            # Calcular la posición y el tamaño de cada barra de salud
-            barra_salud_rect = pygame.Rect(barra_x + i * 10, barra_y, 8, 10)
-            pygame.draw.rect(self.pantalla, color, barra_salud_rect)
-
-        # Dibujar el rectángulo blanco alrededor de la barra de salud
-        rectangulo_salud = pygame.Rect(barra_x, barra_y, self.jugador.salud_maxima * 10, 10)  # El ancho total de la barra de salud
-        pygame.draw.rect(self.pantalla, (255, 255, 255), rectangulo_salud, 1)  # Grosor del borde: 1
-
-    def dibujar_barra_salud_jefe(self):
-        """
-        Dibuja la barra de salud del jefe en la pantalla del juego.
-        """
-        if self.jefe is None:
-            return
-
-        # Calcular la posición inicial de la barra de salud del jefe
-        barra_x = self.jefe.rect.centerx - self.jefe.rect.width // 2  # Centrar el rectángulo en relación con el jefe
-        barra_y = self.jefe.rect.bottom - 210  # Posición vertical encima del jefe
-
-        # Calcular el ancho de la barra de salud del jefe en relación con su salud actual y máxima
-        ancho_barra = self.jefe.rect.width * (self.jefe.salud / self.jefe.salud_maxima)
-
-        # Dibujar el rectángulo rojo encima del jefe para la barra de salud
-        alto_barra = 15  # Altura fija de la barra de salud del jefe
-        barra_salud_rect = pygame.Rect(barra_x, barra_y, ancho_barra, alto_barra)
-        pygame.draw.rect(self.pantalla, (255, 0, 0), barra_salud_rect)
-
-        # Dibujar el rectángulo blanco alrededor de la barra de salud del jefe
-        rectangulo_salud = pygame.Rect(barra_x, barra_y, self.jefe.rect.width, alto_barra)
-        pygame.draw.rect(self.pantalla, (255, 255, 255), rectangulo_salud, 1)  # Grosor del borde: 1
-
-    def mostrar_texto_fps(self):
-        """
-        Muestra el FPS en la pantalla.
-        """
-        font_fps = pygame.font.SysFont(None, 24)  # Fuente y tamaño del texto
-        # Texto, antialiasing y color
-        texto_fps = font_fps.render(f"FPS: {int(self.reloj.get_fps())}", True, (128, 128, 128) if self.pausado else (255, 255, 255))
-        self.pantalla.blit(texto_fps, (self.pantalla_ancho - texto_fps.get_width() - 10, 10))  # Mostrar el texto en la esquina superior derecha
 
     def ejecutar(self):
         """
