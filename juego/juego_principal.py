@@ -9,7 +9,7 @@ from entidades.enemigo import EnemigoTipo1, EnemigoTipo2, EnemigoTipo3, Jefe
 from entidades.explosion import Explosion
 from entidades.item import Item
 from entidades.jugador import Jugador
-from juego import menu
+from juego.wave_manager import WaveManager
 from resources.resource_manager import ResourceManager
 from ui.boton import Boton
 
@@ -28,13 +28,13 @@ class Juego:
         self.puntuacion = 0
         self.nivel = 1
         self.jefe = None
-        self.jefe_generado = False
+        # self.jefe_generado = False
         self.jefe_derrotado = False
         self.enemigos_activos = 0
         self.enemigos_eliminados = 0
         self.max_enemigos_para_objeto = 10
         self.tiempo_espera_jefe = 5000
-        self.tiempo_inicio_espera_jefe = 0
+        # self.tiempo_inicio_espera_jefe = 0
         self.disparando = False
         self.pausado = False
         self.tiempo_pausa = 0
@@ -42,6 +42,8 @@ class Juego:
         self.tiempo_entre_enemigos = 0
         self.MIN_TIEMPO_GENERACION = 800
         self.MAX_TIEMPO_GENERACION = 1000
+
+        self.wave_manager = WaveManager(resource_manager, self.pantalla_ancho, self.pantalla_alto)
 
         self.clasificacion = clasificacion
 
@@ -86,76 +88,35 @@ class Juego:
         """
         Genera un nuevo enemigo en una posición aleatoria en la parte superior de la pantalla.
         """
-        tiempo_transcurrido = pygame.time.get_ticks() - self.inicio_juego  # Calcular el tiempo transcurrido en milisegundos
-        tiempo_espera = 2000  # 2 segundos en milisegundos
-        nuevo_enemigo = None  # Inicializar como None
+        tiempo_transcurrido = pygame.time.get_ticks() - self.inicio_juego- self.tiempo_entre_enemigos
 
-        if tiempo_transcurrido >= tiempo_espera:
-            ancho_enemigo = 50
-            alto_enemigo = 10
-            x_enemigo = random.randint(50, self.pantalla_ancho - ancho_enemigo - 50)
-            y_enemigo = -alto_enemigo  # Genera el enemigo arriba de la pantalla
+        # Pedimos al manager qué debemos generar
+        tipo_enemigo, ruta_imagen, es_jefe = self.wave_manager.obtener_config_enemigo(tiempo_transcurrido)
 
-            # Construir la ruta al directorio de las imágenes de los enemigos
-            ruta_enemigo1 = resource_manager.get_image_path("enemigo1")
-            ruta_enemigo2 = resource_manager.get_image_path("enemigo2")
-            ruta_enemigo3 = resource_manager.get_image_path("enemigo3")
-            ruta_enemigo_jefe = resource_manager.get_image_path("jefe1")
+        if not tipo_enemigo:
+            return None
 
-            # Restar el tiempo entre enemigos que se ha acumulado durante la pausa
-            tiempo_transcurrido -= self.tiempo_entre_enemigos
+        # Coordenadas básicas
+        x_enemigo = random.randint(50, self.pantalla_ancho - 100)
+        y_enemigo = -50
 
-            # Elige el tipo de enemigo según el tiempo transcurrido
-            if tiempo_transcurrido >= 62000:  # Después de 62 segundos en milisegundos
-                if not self.jefe_generado and self.enemigos_activos == 0:
-                    # Detener música de fondo
-                    resource_manager.stop_music("rain_of_lasers")
-                    if not resource_manager.is_music_playing("deathmatch_theme"):
-                        resource_manager.play_music("deathmatch_theme", loops=-1)
-                        resource_manager.set_music_volume("deathmatch_theme", self.volumen_musica)
-                    # Inicia el temporizador para esperar antes de generar al jefe
-                    if self.tiempo_inicio_espera_jefe == 0:
-                        self.tiempo_inicio_espera_jefe = pygame.time.get_ticks()
-                    # Verifica si ha pasado el tiempo de espera para generar al jefe
-                    tiempo_transcurrido_jefe = pygame.time.get_ticks() - self.tiempo_inicio_espera_jefe
-                    if tiempo_transcurrido_jefe >= self.tiempo_espera_jefe:
-                        tipo_enemigo = Jefe
-                        ruta_imagen = ruta_enemigo_jefe
-                        # Calcular las coordenadas x e y del jefe
-                        x_enemigo = (self.pantalla_ancho - 200) // 2
-                        y_enemigo = -150  # Genera el jefe en la parte superior de la pantalla
-                        nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.pantalla_alto, self.balas_enemigo,
-                                                     self.jugador, self.nivel)
-                        self.jefe = nuevo_enemigo
-                        self.jefe_generado = True  # Marca que el jefe ya ha sido generado
-            elif tiempo_transcurrido >= 42000:  # Después de 42 segundos en milisegundos
-                tipo_enemigo = random.choice([EnemigoTipo1, EnemigoTipo2, EnemigoTipo3])
-                if tipo_enemigo == EnemigoTipo1:
-                    ruta_imagen = ruta_enemigo1
-                    nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.nivel)
-                elif tipo_enemigo == EnemigoTipo2:
-                    ruta_imagen = ruta_enemigo2
-                    nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.balas_enemigo, self.jugador, self.nivel)
-                else:
-                    ruta_imagen = ruta_enemigo3
-                    nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.balas_enemigo, self.jugador, self.nivel)
-            elif tiempo_transcurrido >= 22000:  # Después de 22 segundos en milisegundos
-                tipo_enemigo = random.choice([EnemigoTipo1, EnemigoTipo2])
-                if tipo_enemigo == EnemigoTipo1:
-                    ruta_imagen = ruta_enemigo1
-                    nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.nivel)
-                else:
-                    ruta_imagen = ruta_enemigo2
-                    nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.balas_enemigo, self.jugador, self.nivel)
-            else:
-                tipo_enemigo = EnemigoTipo1
-                ruta_imagen = ruta_enemigo1
-                nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.nivel)
+        # Instanciar según el tipo
+        if es_jefe:
+            x_enemigo = (self.pantalla_ancho - 200) // 2
+            y_enemigo = -150  # Genera el enemigo arriba de la pantalla
 
-            if nuevo_enemigo:
-                self.enemigos_activos += 1
+            nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho,
+                                         self.pantalla_alto, self.balas_enemigo, self.jugador, self.nivel)
+            self.jefe = nuevo_enemigo
 
-            return nuevo_enemigo
+        elif tipo_enemigo == EnemigoTipo1:
+            nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.nivel)
+        else:  # Tipos 2 y 3
+            nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho,
+                                         self.balas_enemigo, self.jugador, self.nivel)
+
+        self.enemigos_activos += 1
+        return nuevo_enemigo
 
     def mostrar_confirmacion_salida(self):
         # Crea un rectángulo para el fondo oscuro
@@ -205,7 +166,8 @@ class Juego:
         """
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
-                return False  # Indica que el juego debe terminar
+                pygame.quit()
+                exit()
             elif evento.type == pygame.KEYDOWN:
                 self._manejar_tecla_presionada(evento.key)
             elif evento.type == pygame.KEYUP:
@@ -418,6 +380,7 @@ class Juego:
             elif isinstance(enemigo, Jefe):
                 puntuacion_enemigo = 1000
                 self.jefe_derrotado = True
+                self.jefe = None
                 self.reiniciar_juego()
             self.puntuacion += puntuacion_enemigo * self.nivel
             # Decrementa el contador de enemigos en pantalla
@@ -755,17 +718,17 @@ class Juego:
         self.enemigos = []
         self.enemigos_golpeados = {}
         self.tiempo_proximo_enemigo = 0
-        self.jefe_generado = False
         self.inicio_juego = pygame.time.get_ticks()
         self.enemigos_activos = 0
-        self.tiempo_inicio_espera_jefe = 0
+        self.tiempo_entre_enemigos = 0
+
+        # Resetear el WaveManager para que el jefe pueda volver a salir en el siguiente nivel
+        self.wave_manager.jefe_generado = False
+        self.wave_manager.tiempo_inicio_espera_jefe = 0
 
         if not resource_manager.is_music_playing("rain_of_lasers"):
             resource_manager.play_music("rain_of_lasers", loops=-1)
             resource_manager.set_music_volume("rain_of_lasers", self.volumen_musica)
-
-        # Continuar ejecutando el juego
-        self.ejecutar()
 
     def dibujar(self):
         """
@@ -802,7 +765,8 @@ class Juego:
         color_texto_vidas = (128, 128, 128) if self.pausado else (255, 255, 255)
         self.mostrar_texto("Vidas: ", (10, 10), color_texto_vidas, self.jugador.vidas, font)
         self.dibujar_barra_salud()
-        if self.jefe_generado:
+        if self.jefe is not None:
+            # Solo dibujamos la barra si el jefe está en la lista de enemigos o activo
             self.dibujar_barra_salud_jefe()
 
         # Mostrar puntuación
@@ -960,6 +924,9 @@ class Juego:
         """
         Dibuja la barra de salud del jefe en la pantalla del juego.
         """
+        if self.jefe is None:
+            return
+
         # Calcular la posición inicial de la barra de salud del jefe
         barra_x = self.jefe.rect.centerx - self.jefe.rect.width // 2  # Centrar el rectángulo en relación con el jefe
         barra_y = self.jefe.rect.bottom - 210  # Posición vertical encima del jefe

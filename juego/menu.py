@@ -175,7 +175,7 @@ class MenuManager:
                 bucle_opciones = False
 
             # Si el usuario cierra la ventana (X)
-            for event in pygame.event.get(pygame.QUIT):
+            for _ in pygame.event.get(pygame.QUIT):
                 pygame.quit()
                 exit()
 
