@@ -3,11 +3,11 @@ import time
 import pygame
 import pygame_gui
 
-from galactic_guardian.juego import configuracion
-from galactic_guardian.juego.clasificacion import SistemaClasificacion
-from galactic_guardian.resources.resource_manager import ResourceManager
-from galactic_guardian.juego.juego_principal import Juego
-from galactic_guardian.ui.boton import Boton
+from juego import configuracion
+from juego.clasificacion import SistemaClasificacion
+from resources.resource_manager import ResourceManager
+from juego.juego_principal import Juego
+from ui.boton import Boton
 
 
 # Instancia global de ResourceManager

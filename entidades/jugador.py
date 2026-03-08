@@ -2,8 +2,8 @@ import math
 
 import pygame
 
-from galactic_guardian.efectos.destello_constante import DestelloConstante
-from galactic_guardian.resources.resource_manager import ResourceManager
+from efectos.destello_constante import DestelloConstante
+from resources.resource_manager import ResourceManager
 from .bala import Bala
 
 # Instancia global de ResourceManager

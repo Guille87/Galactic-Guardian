@@ -1,7 +1,7 @@
 import os
 
 import pygame
-from galactic_guardian.resources.resource_manager import ResourceManager
+from resources.resource_manager import ResourceManager
 
 
 # Instancia global de ResourceManager

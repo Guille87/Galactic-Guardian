@@ -3,15 +3,15 @@ import random
 import pygame
 import pygame.freetype
 
-from galactic_guardian.efectos.destello import Destello
-from galactic_guardian.efectos.destello_constante import DestelloConstante
-from galactic_guardian.entidades.enemigo import EnemigoTipo1, EnemigoTipo2, EnemigoTipo3, Jefe
-from galactic_guardian.entidades.explosion import Explosion
-from galactic_guardian.entidades.item import Item
-from galactic_guardian.entidades.jugador import Jugador
-from galactic_guardian.juego import menu
-from galactic_guardian.resources.resource_manager import ResourceManager
-from galactic_guardian.ui.boton import Boton
+from efectos.destello import Destello
+from efectos.destello_constante import DestelloConstante
+from entidades.enemigo import EnemigoTipo1, EnemigoTipo2, EnemigoTipo3, Jefe
+from entidades.explosion import Explosion
+from entidades.item import Item
+from entidades.jugador import Jugador
+from juego import menu
+from resources.resource_manager import ResourceManager
+from ui.boton import Boton
 
 # Instancia global de ResourceManager
 resource_manager = ResourceManager()
@@ -710,14 +710,14 @@ class Juego:
             resource_manager.play_music("skyfire_theme", loops=-1)
             resource_manager.set_music_volume("skyfire_theme", self.volumen_musica)
 
-        from galactic_guardian.juego.menu import mostrar_menu
+        from juego.menu import mostrar_menu
         mostrar_menu(self.pantalla)
 
     def mostrar_opciones_juego(self):
         """
         Muestra el menú principal del juego.
         """
-        from galactic_guardian.juego.menu import mostrar_opciones
+        from juego.menu import mostrar_opciones
         mostrar_opciones(self.pantalla, self.volumen_musica, self.volumen_efectos)
 
     def reiniciar_juego(self):
