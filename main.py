@@ -1,9 +1,10 @@
 import pygame
 import os
 
-from juego.menu import crear_pantalla, mostrar_menu
+from juego.menu import MenuManager
 from resources.resource_manager import ResourceManager
 from juego.configuracion import RECURSOS, SONIDOS, EXPLOSIONES, DIR_BASE
+from juego.clasificacion import SistemaClasificacion
 
 
 def cargar_activos_del_juego(rm):
@@ -22,7 +23,7 @@ def main():
     pygame.init()
 
     # Crear la pantalla
-    pantalla = crear_pantalla()
+    pantalla = pygame.display.set_mode((600, 800))
 
     # Establecer el icono de la ventana
     icono_path = os.path.join(DIR_BASE, 'imagenes/favicon.ico')
@@ -33,8 +34,11 @@ def main():
     resource_manager = ResourceManager()
     cargar_activos_del_juego(resource_manager)
 
+    sistema_clasificacion = SistemaClasificacion()
+
     # Mostrar el menú
-    mostrar_menu(pantalla)
+    menu = MenuManager(pantalla, resource_manager, sistema_clasificacion)
+    menu.ejecutar()
 
 
 if __name__ == "__main__":

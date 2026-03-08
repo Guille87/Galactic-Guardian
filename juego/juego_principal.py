@@ -18,12 +18,13 @@ resource_manager = ResourceManager()
 
 
 class Juego:
-    def __init__(self, pantalla_ancho, pantalla_alto, volumen_musica, volumen_efectos, clasificacion):
+    def __init__(self, pantalla, volumen_musica, volumen_efectos, clasificacion):
         # Inicialización de variables
         self.volumen_musica = volumen_musica
         self.volumen_efectos = volumen_efectos
-        self.pantalla_ancho = pantalla_ancho
-        self.pantalla_alto = pantalla_alto
+        self.pantalla = pantalla
+        self.pantalla_ancho = pantalla.get_width()
+        self.pantalla_alto = pantalla.get_height()
         self.puntuacion = 0
         self.nivel = 1
         self.jefe = None
@@ -61,9 +62,6 @@ class Juego:
         self.fondo_imagen1 = resource_manager.get_image("imagen_fondo1")
         self.fondo_imagen2 = resource_manager.get_image("imagen_fondo2")
         self.explosion_images = [resource_manager.get_image(f"explosion_{i}") for i in range(1, 12)]
-
-        # Inicialización de la pantalla
-        self.pantalla = menu.crear_pantalla()
 
         # Inicialización de botones
         self.boton_opciones = None
@@ -194,11 +192,12 @@ class Juego:
             for evento in pygame.event.get():
                 if evento.type == pygame.QUIT:
                     pygame.quit()
+                    exit()
                 elif evento.type == pygame.MOUSEBUTTONDOWN:
                     if boton_si.clic_en_boton(evento.pos):
-                        self.mostrar_menu_principal()
+                        return "SALIR"
                     elif boton_no.clic_en_boton(evento.pos):
-                        return
+                        return "CONTINUAR"
 
     def manejar_eventos(self):
         """
@@ -218,7 +217,9 @@ class Juego:
                         if self.boton_opciones.clic_en_boton(evento.pos):
                             self.mostrar_opciones_juego()
                         elif self.boton_salir.clic_en_boton(evento.pos):
-                            self.mostrar_confirmacion_salida()
+                            decision = self.mostrar_confirmacion_salida()
+                            if decision == "SALIR":
+                                return False
             elif evento.type == pygame.MOUSEBUTTONUP:
                 self._manejar_click_soltado(evento.button)
 
@@ -710,15 +711,20 @@ class Juego:
             resource_manager.play_music("skyfire_theme", loops=-1)
             resource_manager.set_music_volume("skyfire_theme", self.volumen_musica)
 
-        from juego.menu import mostrar_menu
-        mostrar_menu(self.pantalla)
+        from juego.menu import MenuManager
+        menu = MenuManager(self.pantalla, resource_manager, self.clasificacion)
+        menu.ejecutar()
 
     def mostrar_opciones_juego(self):
         """
         Muestra el menú principal del juego.
         """
-        from juego.menu import mostrar_opciones
-        mostrar_opciones(self.pantalla, self.volumen_musica, self.volumen_efectos)
+        from juego.menu import MenuManager
+        menu = MenuManager(self.pantalla, resource_manager, self.clasificacion)
+
+        menu.mostrar_solo_opciones()
+
+        print("Regresando al juego pausado...")
 
     def reiniciar_juego(self):
         """
@@ -1001,4 +1007,4 @@ class Juego:
             self.dibujar()
             self.reloj.tick(60)
 
-        pygame.quit()
+        resource_manager.stop_music("rain_of_lasers")
