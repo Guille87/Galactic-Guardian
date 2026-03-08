@@ -9,6 +9,7 @@ from entidades.enemigo import EnemigoTipo1, EnemigoTipo2, EnemigoTipo3, Jefe
 from entidades.explosion import Explosion
 from entidades.item import Item
 from entidades.jugador import Jugador
+from juego.collision_manager import CollisionManager
 from juego.wave_manager import WaveManager
 from resources.resource_manager import ResourceManager
 from ui.boton import Boton
@@ -28,13 +29,11 @@ class Juego:
         self.puntuacion = 0
         self.nivel = 1
         self.jefe = None
-        # self.jefe_generado = False
         self.jefe_derrotado = False
         self.enemigos_activos = 0
         self.enemigos_eliminados = 0
         self.max_enemigos_para_objeto = 10
         self.tiempo_espera_jefe = 5000
-        # self.tiempo_inicio_espera_jefe = 0
         self.disparando = False
         self.pausado = False
         self.tiempo_pausa = 0
@@ -44,6 +43,7 @@ class Juego:
         self.MAX_TIEMPO_GENERACION = 1000
 
         self.wave_manager = WaveManager(resource_manager, self.pantalla_ancho, self.pantalla_alto)
+        self.collision_manager = CollisionManager(self)
 
         self.clasificacion = clasificacion
 
@@ -291,8 +291,12 @@ class Juego:
         self.generar_enemigos()
         self.actualizar_enemigos()
         self.eliminar_elementos_fuera_de_pantalla()
-        self.eliminar_colisiones_bala_jugador()
-        self.eliminar_colisiones_bala_enemigo()
+
+        self.actualizar_balas()
+
+        self.collision_manager.actualizar()
+
+        self.eliminar_elementos_fuera_de_pantalla()
         self.mover_fondo()
         self.jugador.update()
 
@@ -325,14 +329,6 @@ class Juego:
             bool: True si el rectángulo está fuera de la pantalla, False en caso contrario.
         """
         return rect.bottom < 0 or rect.top > self.pantalla_alto or rect.right < 0 or rect.left > self.pantalla_ancho
-
-    def eliminar_colisiones_bala_jugador(self):
-        """
-        Elimina las colisiones entre las balas del jugador y los enemigos.
-        """
-        for bala in self.balas:
-            bala.bala_jugador()
-            self.eliminar_colision_bala_enemigo(bala)
 
     def eliminar_colision_bala_enemigo(self, bala):
         """
@@ -445,25 +441,6 @@ class Juego:
         self.jugador.destello_constante = DestelloConstante(self.jugador)
         self.all_sprites.add(self.jugador.destello_constante)
 
-    def eliminar_colisiones_bala_enemigo(self):
-        """
-        Maneja las colisiones entre las balas del enemigo y el jugador.
-        Si una bala del enemigo colisiona con el jugador, la elimina, maneja el impacto en el jugador
-        y reproduce un efecto de golpe.
-        También elimina las balas del enemigo que están fuera de la pantalla.
-        """
-        balas_enemigas_a_eliminar = []
-        for bala_enemiga in self.balas_enemigo:
-            bala_enemiga.bala_enemigo()
-            if bala_enemiga.comprobar_colision(self.jugador):
-                self.eliminar_elementos([bala_enemiga])
-                self.jugador.reducir_salud(bala_enemiga.danio)
-                self.manejar_impacto_jugador()
-                self.EFECTO_GOLPE.play()
-            elif self.fuera_de_pantalla(bala_enemiga.rect):
-                balas_enemigas_a_eliminar.append(bala_enemiga)
-        self.eliminar_elementos(balas_enemigas_a_eliminar)
-
     def eliminar_elementos(self, elementos):
         """
         Elimina los elementos dados de las listas correspondientes.
@@ -484,6 +461,18 @@ class Juego:
         teclas_presionadas = pygame.key.get_pressed()
         self.jugador.mover(teclas_presionadas, self.pantalla)
         self.detectar_colisiones_objetos()
+
+    def actualizar_balas(self):
+        """Mueve las balas y elimina las que se salen de la pantalla."""
+        for bala in self.balas[:]:
+            bala.bala_jugador()
+            if self.fuera_de_pantalla(bala.rect):
+                self.balas.remove(bala)
+
+        for bala_e in self.balas_enemigo[:]:
+            bala_e.bala_enemigo()
+            if self.fuera_de_pantalla(bala_e.rect):
+                self.balas_enemigo.remove(bala_e)
 
     def detectar_colisiones_objetos(self):
         """
@@ -507,7 +496,9 @@ class Juego:
         """
         if not self.pausado and pygame.time.get_ticks() > self.tiempo_proximo_enemigo:
             if self.jugador.vidas > 0:  # Solo generar enemigos si el jugador está vivo
-                self.enemigos.append(self.generar_enemigo())
+                nuevo_enemigo = self.generar_enemigo()
+                if nuevo_enemigo is not None:  # Solo añadir si realmente se creó un enemigo
+                    self.enemigos.append(nuevo_enemigo)
                 self.tiempo_proximo_enemigo = pygame.time.get_ticks() + random.randint(self.MIN_TIEMPO_GENERACION, self.MAX_TIEMPO_GENERACION)
 
     def actualizar_enemigos(self):
