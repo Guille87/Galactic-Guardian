@@ -4,6 +4,7 @@ __pycache__/
 venv/
 .venv/
 *.json
+*.ini
 
 # Distribución / Empaquetado
 dist/
