@@ -1,8 +1,8 @@
 import pygame
 import os
 
-from galactic_guardian.juego.menu import crear_pantalla, mostrar_menu
-from galactic_guardian.resources.resource_manager import ResourceManager
+from juego.menu import crear_pantalla, mostrar_menu
+from resources.resource_manager import ResourceManager
 
 # Directorio de recursos
 DIR_RECURSOS = os.path.join(os.path.dirname(os.path.abspath(__file__)))

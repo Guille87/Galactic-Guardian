@@ -5,10 +5,31 @@
 **Mejoras de Nave:** Consigue potenciadores para mejorar tu nave, aumentando tu daño, velocidad de ataque y más.  
 **Acción Infinita:** Desafía tus habilidades en un juego que ofrece acción continua.  
 ## Instrucciones de instalación
-**Clona** o **descarga** el repositorio en tu máquina local.  
-Asegúrate de **tener Python** y **Pygame** instalados en tu sistema.  
-Abre una **terminal** y navega hasta el directorio del proyecto.  
-Ejecuta el comando `python main.py` para iniciar el juego..  
+Sigue estos pasos para configurar el entorno de desarrollo en tu máquina local:  
+1. **Clona el repositorio:**  
+Asegúrate de **tener Python** y **Pygame** instalados en tu sistema.
+   ```bash
+   git clone [https://github.com/Guille87/Galactic-Guardian.git](https://github.com/Guille87/Galactic-Guardian.git)
+   cd Galactic-Guardian
+   ```
+2. **Crea y activa un entorno virtual:**
+    ```
+    # Windows
+    python -m venv venv
+    .\venv\Scripts\activate
+    
+    # Linux/macOS
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
+3. **Instala las dependencias:**
+    ```
+    pip install -r requirements.txt
+    ```
+4. **Inicia el juego:**
+    ```
+    python main.py
+    ```
 ## Instrucciones de juego
 Utiliza las **teclas de dirección** o **W A S D** para **mover** tu nave.  
 Presiona la **barra espaciadora** o el **clic izquierdo** del **ratón** para **disparar** contra las naves enemigas.  

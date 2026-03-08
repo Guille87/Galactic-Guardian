@@ -5,7 +5,7 @@ import pygame
 import os
 from .bala_enemigo import BalaEnemigo
 from .item import Item
-from ..resources.resource_manager import ResourceManager
+from resources.resource_manager import ResourceManager
 
 
 # Crear una instancia global de ResourceManager
