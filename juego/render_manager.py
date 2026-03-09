@@ -60,7 +60,9 @@ class RenderManager:
 
     def _dibujar_entidades(self):
         """Dibuja todos los grupos de elementos, aplicando gris si está pausado."""
-        listas_elementos = [self.juego.balas, self.juego.balas_enemigo, self.juego.enemigos]
+        em = self.juego.entity_manager
+        # Listas extraídas del manager
+        listas_elementos = [em.balas, em.balas_enemigo, em.enemigos]
 
         # Primero los sprites generales (explosiones, items, etc)
         for sprite in self.juego.all_sprites:

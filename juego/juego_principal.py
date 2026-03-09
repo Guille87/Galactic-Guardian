@@ -9,6 +9,7 @@ from entidades.jugador import Jugador
 from juego.audio_manager import AudioManager
 from juego.collision_manager import CollisionManager
 from juego.effect_manager import EffectManager
+from juego.entity_manager import EntityManager
 from juego.input_handler import InputHandler
 from juego.render_manager import RenderManager
 from juego.ui_manager import UIManager
@@ -70,9 +71,7 @@ class Juego:
         # Inicialización de jugadores, enemigos, balas, etc.
         self.jugador = Jugador(self.ruta_imagen_jugador, self.pantalla_ancho, self.pantalla_alto, self.all_sprites)
 
-        self.enemigos = []
-        self.balas = []
-        self.balas_enemigo = []
+        self.entity_manager = EntityManager(self)
         # Inicialización de tiempo
         self.inicio_juego = pygame.time.get_ticks()
         # Inicialización de posiciones de fondo
@@ -100,8 +99,9 @@ class Juego:
         self.tiempo_proximo_enemigo += tiempo_pausado
         self.tiempo_entre_enemigos += tiempo_pausado
         self.jugador.tiempo_invulnerable += tiempo_pausado  # Actualizar el tiempo de invulnerabilidad del jugador
-        for enemigo in self.enemigos:
-            if isinstance(enemigo, EnemigoTipo2) or isinstance(enemigo, EnemigoTipo3):
+
+        for enemigo in self.entity_manager.enemigos:
+            if isinstance(enemigo, (EnemigoTipo2, EnemigoTipo3)):
                 enemigo.tiempo_ultimo_ataque += tiempo_pausado
             if isinstance(enemigo, Jefe):
                 enemigo.tiempo_ultimo_disparo += tiempo_pausado
@@ -114,14 +114,12 @@ class Juego:
         # Llama a la función disparar del jugador para obtener las nuevas balas
         nuevas_balas = self.jugador.disparar()
 
-        primera_bala = True  # Bandera para verificar si ya se disparó la primera bala
         # Verifica si hay nuevas balas y las agrega a la lista de balas
-        for bala in nuevas_balas:
+        for i, bala in enumerate(nuevas_balas):
             if bala:
-                self.balas.append(bala)
-                if primera_bala:  # Reproduce el sonido solo para la primera bala
+                self.entity_manager.añadir_bala_jugador(bala)
+                if i == 0:  # Reproduce el sonido solo para la primera bala
                     self.audio_manager.reproducir_efecto("disparo")
-                    primera_bala = False  # Cambia la bandera después del primer disparo
 
     def actualizar(self):
         """
@@ -133,36 +131,13 @@ class Juego:
 
         self.actualizar_jugador()
         self.generar_enemigos()
-        self.actualizar_enemigos()
-        self.eliminar_elementos_fuera_de_pantalla()
 
-        self.actualizar_balas()
-
+        # El manager se encarga de todo el "mundo"
+        self.entity_manager.actualizar()
         self.collision_manager.actualizar()
 
-        self.eliminar_elementos_fuera_de_pantalla()
         self.mover_fondo()
         self.jugador.update()
-
-    def eliminar_elementos_fuera_de_pantalla(self):
-        """
-        Elimina los elementos (balas, enemigos y objetos) que están fuera de la pantalla.
-        """
-        enemigos_salidos = []  # Lista para almacenar los enemigos que han salido fuera de la pantalla
-        for enemigo in self.enemigos:
-            if enemigo and self.fuera_de_pantalla(enemigo.rect):
-                enemigos_salidos.append(enemigo)
-
-        # Reducir en 1 el contador de enemigos_activos por cada enemigo que ha salido de la pantalla
-        self.enemigos_activos -= len(enemigos_salidos)
-
-        self.balas = [bala for bala in self.balas if not (bala is not None and self.fuera_de_pantalla(bala.rect))]
-        self.enemigos = [enemigo for enemigo in self.enemigos if
-                         not (enemigo is not None and self.fuera_de_pantalla(enemigo.rect))]
-        self.balas_enemigo = [bala_enemiga for bala_enemiga in self.balas_enemigo if
-                              not (bala_enemiga is not None and self.fuera_de_pantalla(bala_enemiga.rect))]
-        self.all_sprites = pygame.sprite.Group(
-            [item for item in self.all_sprites if not (item is not None and self.fuera_de_pantalla(item.rect))])
 
     def fuera_de_pantalla(self, rect):
         """
@@ -220,18 +195,6 @@ class Juego:
         self.jugador.mover(teclas_presionadas, self.pantalla)
         self.detectar_colisiones_objetos()
 
-    def actualizar_balas(self):
-        """Mueve las balas y elimina las que se salen de la pantalla."""
-        for bala in self.balas[:]:
-            bala.bala_jugador()
-            if self.fuera_de_pantalla(bala.rect):
-                self.balas.remove(bala)
-
-        for bala_e in self.balas_enemigo[:]:
-            bala_e.bala_enemigo()
-            if self.fuera_de_pantalla(bala_e.rect):
-                self.balas_enemigo.remove(bala_e)
-
     def detectar_colisiones_objetos(self):
         """
         Detecta y maneja las colisiones entre el jugador y los objetos.
@@ -259,11 +222,11 @@ class Juego:
 
                 # Delegación total al manager
                 nuevo = self.wave_manager.spawn_enemigo(
-                    tiempo_partida, self.balas_enemigo, self.jugador, self.nivel
+                    tiempo_partida, self.entity_manager.balas_enemigo, self.jugador, self.nivel
                 )
 
                 if nuevo:
-                    self.enemigos.append(nuevo)
+                    self.entity_manager.añadir_enemigo(nuevo)
                     if isinstance(nuevo, Jefe):
                         self.jefe = nuevo
                     self.enemigos_activos += 1
@@ -271,33 +234,6 @@ class Juego:
                 # Programar siguiente generación
                 intervalo = random.randint(self.MIN_TIEMPO_GENERACION, self.MAX_TIEMPO_GENERACION)
                 self.tiempo_proximo_enemigo = ahora + intervalo
-
-    def actualizar_enemigos(self):
-        """
-        Actualiza la posición y comportamiento de los enemigos.
-        """
-        for enemigo in self.enemigos:
-            if enemigo is not None:  # Verificar si enemigo no es None
-                enemigo.movimiento_enemigo()
-                enemigo.update()
-                if self.jugador.rect.colliderect(enemigo.rect):
-                    self.colision_jugador_enemigo(enemigo)
-
-                if isinstance(enemigo, EnemigoTipo2):
-                    nueva_bala_enemigo = enemigo.disparo_enemigo()
-                    if nueva_bala_enemigo:
-                        self.balas_enemigo.append(nueva_bala_enemigo)
-                if isinstance(enemigo, EnemigoTipo3):
-                    nueva_bala_enemigo = enemigo.disparo_enemigo()
-                    if nueva_bala_enemigo:
-                        self.balas_enemigo.append(nueva_bala_enemigo)
-                if isinstance(enemigo, Jefe):
-                    nueva_bala_enemigo1 = enemigo.disparo_jefe()
-                    nueva_bala_enemigo2 = enemigo.disparo_rapido()
-                    if nueva_bala_enemigo1:
-                        self.balas_enemigo.append(nueva_bala_enemigo1)
-                    if nueva_bala_enemigo2:
-                        self.balas_enemigo.append(nueva_bala_enemigo2)
 
     def colision_jugador_enemigo(self, enemigo):
         """
@@ -317,7 +253,8 @@ class Juego:
             enemigo.salud -= 1
         if enemigo.salud <= 0:
             self.effect_manager.crear_explosion(enemigo.rect.center)
-            self.enemigos.remove(enemigo)
+            if enemigo in self.entity_manager.enemigos:
+                self.entity_manager.enemigos.remove(enemigo)
             # Decrementa el contador de enemigos en pantalla
             self.enemigos_activos -= 1
             # Incrementa el contador de enemigos eliminados
@@ -435,11 +372,9 @@ class Juego:
             self.MIN_TIEMPO_GENERACION = 800
             self.MAX_TIEMPO_GENERACION = 1000
             self.puntuacion = 0
-            self.balas = []
-            self.balas_enemigo = []
 
         # Reiniciar todos los valores del juego a sus estados iniciales
-        self.enemigos = []
+        self.entity_manager.vaciar_todo()
         self.enemigos_golpeados = {}
         self.tiempo_proximo_enemigo = 0
         self.inicio_juego = pygame.time.get_ticks()

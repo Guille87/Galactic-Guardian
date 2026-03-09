@@ -1,4 +1,3 @@
-import pygame
 from efectos.destello import Destello
 from efectos.destello_constante import DestelloConstante
 from entidades.explosion import Explosion

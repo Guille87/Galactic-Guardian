@@ -1,6 +1,4 @@
-import pygame
 from entidades.enemigo import EnemigoTipo1, EnemigoTipo2, EnemigoTipo3, Jefe
-from entidades.explosion import Explosion
 from entidades.item import Item
 
 
@@ -16,8 +14,9 @@ class CollisionManager:
         self._colisiones_jugador_items()
 
     def _colisiones_bala_jugador(self):
-        for bala in self.juego.balas[:]:
-            for enemigo in self.juego.enemigos[:]:
+        em = self.juego.entity_manager
+        for bala in em.balas[:]:
+            for enemigo in em.enemigos[:]:
                 if bala.comprobar_colision(enemigo):
                     self._procesar_impacto_enemigo(bala, enemigo)
                     break
@@ -27,15 +26,15 @@ class CollisionManager:
         self.juego.audio_manager.reproducir_efecto("golpe")
 
         # Eliminar bala
-        if bala in self.juego.balas:
-            self.juego.balas.remove(bala)
+        if bala in self.juego.entity_manager.balas:
+            self.juego.entity_manager.balas.remove(bala)
 
         if enemigo.salud <= 0:
             self._eliminar_enemigo(enemigo)
 
     def _eliminar_enemigo(self, enemigo):
-        if enemigo in self.juego.enemigos:
-            self.juego.enemigos.remove(enemigo)
+        if enemigo in self.juego.entity_manager.enemigos:
+            self.juego.entity_manager.enemigos.remove(enemigo)
 
         # Efectos visuales
         self.juego.effect_manager.crear_explosion(enemigo.rect.center)
@@ -65,16 +64,18 @@ class CollisionManager:
         return 0
 
     def _colisiones_bala_enemigo(self):
-        for bala in self.juego.balas_enemigo[:]:
+        em = self.juego.entity_manager
+        for bala in em.balas_enemigo[:]:
             if bala.comprobar_colision(self.juego.jugador):
-                if bala in self.juego.balas_enemigo:
-                    self.juego.balas_enemigo.remove(bala)
+                if bala in em.balas_enemigo:
+                    em.balas_enemigo.remove(bala)
                 self.juego.jugador.reducir_salud(bala.danio)
                 self.juego.manejar_impacto_jugador()
                 self.juego.audio_manager.reproducir_efecto("golpe")
 
     def _colisiones_jugador_enemigo(self):
-        for enemigo in self.juego.enemigos[:]:
+        em = self.juego.entity_manager
+        for enemigo in em.enemigos[:]:
             # VALIDACIÓN: Si el enemigo es None, lo saltamos
             if enemigo is None:
                 continue
