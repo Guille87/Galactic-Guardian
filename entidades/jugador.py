@@ -116,12 +116,6 @@ class Jugador(pygame.sprite.Sprite):
             self.salud -= damage
             if self.salud <= 0 < self.vidas:
                 self.salud = 0  # Evita que la salud sea negativa
-                self.invulnerable = True  # Hacer la nave invulnerable
-                self.tiempo_invulnerable = pygame.time.get_ticks() + 3000
-                # Crear el destello constante alrededor del jugador
-                self.destello_constante = DestelloConstante(self)
-                # Agregar el destello constante al grupo de entidades
-                self.all_sprites.add(self.destello_constante)
 
     def aumentar_salud(self, cantidad):
         """
@@ -182,9 +176,13 @@ class Jugador(pygame.sprite.Sprite):
         """
         Actualiza el estado del jugador en cada fotograma.
         """
-        # Verifica si la nave es invulnerable y si ya pasaron los 3 segundos
-        if self.invulnerable and pygame.time.get_ticks() > self.tiempo_invulnerable:
-            self.invulnerable = False  # Hacer que la nave sea vulnerable nuevamente
-            # Eliminar el destello constante
-            if self.destello_constante:
-                self.destello_constante.kill()
+        # Comprobar si la invulnerabilidad ha expirado
+        if self.invulnerable:
+            tiempo_actual = pygame.time.get_ticks()
+            if tiempo_actual > self.tiempo_invulnerable:
+                self.invulnerable = False  # Hacer que la nave sea vulnerable nuevamente
+
+                # Limpieza segura del destello constante
+                if self.destello_constante:
+                    self.destello_constante.kill()
+                    self.destello_constante = None

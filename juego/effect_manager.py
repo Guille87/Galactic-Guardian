@@ -23,6 +23,8 @@ class EffectManager:
 
     def crear_destello_invulnerabilidad(self):
         """Crea el halo blanco constante de invulnerabilidad."""
-        destello = DestelloConstante(self.juego.jugador)
-        self.juego.jugador.destello_constante = destello
-        self.juego.all_sprites.add(destello)
+        # Solo crear si no hay uno ya activo
+        if self.juego.jugador.destello_constante is None:
+            destello = DestelloConstante(self.juego.jugador)
+            self.juego.jugador.destello_constante = destello
+            self.juego.all_sprites.add(destello)
