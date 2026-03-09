@@ -12,6 +12,7 @@ from entidades.jugador import Jugador
 from juego.audio_manager import AudioManager
 from juego.collision_manager import CollisionManager
 from juego.input_handler import InputHandler
+from juego.render_manager import RenderManager
 from juego.ui_manager import UIManager
 from juego.wave_manager import WaveManager
 from resources.resource_manager import ResourceManager
@@ -47,6 +48,7 @@ class Juego:
 
         self.audio_manager = AudioManager(resource_manager, volumen_musica, volumen_efectos)
         self.ui_manager = UIManager(self)
+        self.render_manager = RenderManager(self)
 
         self.wave_manager = WaveManager(resource_manager, self.audio_manager, self.pantalla_ancho, self.pantalla_alto)
 
@@ -526,100 +528,8 @@ class Juego:
         self.audio_manager.reproducir_musica("rain_of_lasers")
 
     def dibujar(self):
-        """
-        Dibuja en la pantalla.
-        """
-        # Blitgear la imagen de fondo en la pantalla con un tono gris si el juego está pausado
-        if self.pausado:
-            self.dibujar_fondo_en_gris()
-        else:
-            self.pantalla.blit(self.fondo_imagen1, (0, self.pos_y_fondo1))
-            self.pantalla.blit(self.fondo_imagen2, (0, self.pos_y_fondo2))
-
-        if self.jugador.vidas <= 0:
-            return  # Salir de la función si el juego ha terminado
-
-        # Dibujar todos los sprites en el grupo de sprites
-        self.all_sprites.draw(self.pantalla)
-
-        # Dibujar balas y enemigos
-        self.dibujar_elementos(self.balas)
-        self.dibujar_elementos(self.balas_enemigo)
-        self.dibujar_elementos(self.enemigos)
-
-        # Dibujar jugador
-        if self.pausado:
-            self.dibujar_sprite_en_gris(self.jugador)
-            self.mostrar_texto_centralizado("Juego Pausado", (255, 255, 255))
-            self.dibujar_botones_pausa()
-        else:
-            self.pantalla.blit(self.jugador.image, self.jugador.rect)
-
-        self.ui_manager.dibujar_interfaz(self.pantalla)
-
-        pygame.display.flip()  # Actualiza la pantalla
-
-    def dibujar_botones_pausa(self):
-        # Definir los parámetros para los botones
-        ancho_boton = 150
-        alto_boton = 50
-        color_fondo_boton_opciones = (0, 255, 255, 150)
-        color_fondo_boton_salir = (255, 0, 0, 150)
-        color_texto_boton = (255, 255, 255)
-
-        # Calcular posiciones de los botones
-        centro_x = self.pantalla_ancho // 2
-        y_opciones = self.pantalla_alto // 2 + 50
-        y_salir = self.pantalla_alto // 2 + 120
-
-        # Crear botones
-        self.boton_opciones = Boton("Opciones", color_fondo_boton_opciones, color_texto_boton, centro_x, y_opciones, ancho_boton, alto_boton,
-                                    radio_borde=10)
-        self.boton_salir = Boton("Salir", color_fondo_boton_salir, color_texto_boton, centro_x, y_salir, ancho_boton, alto_boton, radio_borde=10)
-
-        # Dibujar botones
-        self.boton_opciones.dibujar(self.pantalla, pygame.font.SysFont(None, 30))
-        self.boton_salir.dibujar(self.pantalla, pygame.font.SysFont(None, 30))
-
-    def mostrar_texto_centralizado(self, texto, color):
-        """
-        Muestra un texto en el centro de la pantalla.
-        """
-        font = pygame.font.SysFont(None, 36)  # Fuente y tamaño del texto
-        texto_surface = font.render(texto, True, color)  # Texto, antialiasing y color
-        texto_rect = texto_surface.get_rect(center=(self.pantalla_ancho // 2, self.pantalla_alto // 2))
-        self.pantalla.blit(texto_surface, texto_rect)
-
-    def dibujar_fondo_en_gris(self):
-        """
-        Dibuja el fondo en la pantalla con un tono gris cuando el juego está pausado.
-        """
-        fondo_gris1 = self.fondo_imagen1.copy()
-        fondo_gris1.fill((128, 128, 128), special_flags=pygame.BLEND_RGB_MULT)
-        self.pantalla.blit(fondo_gris1, (0, self.pos_y_fondo1))
-
-        fondo_gris2 = self.fondo_imagen2.copy()
-        fondo_gris2.fill((128, 128, 128), special_flags=pygame.BLEND_RGB_MULT)
-        self.pantalla.blit(fondo_gris2, (0, self.pos_y_fondo2))
-
-    def dibujar_elementos(self, elementos):
-        """
-        Dibuja una lista de elementos en la pantalla.
-        """
-        for elemento in elementos:
-            if elemento is not None:
-                if self.pausado:
-                    self.dibujar_sprite_en_gris(elemento)
-                else:
-                    self.pantalla.blit(elemento.image, elemento.rect)
-
-    def dibujar_sprite_en_gris(self, sprite):
-        """
-        Dibuja un sprite con tono grisáceo en la pantalla.
-        """
-        sprite_image_gris = sprite.image.copy()
-        sprite_image_gris.fill((128, 128, 128), special_flags=pygame.BLEND_RGB_MULT)
-        self.pantalla.blit(sprite_image_gris, sprite.rect)
+        """Lógica de dibujo delegada al RenderManager."""
+        self.render_manager.renderizar_todo()
 
     def ejecutar(self):
         """
