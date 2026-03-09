@@ -12,8 +12,8 @@ class ResourceManager:
         return cls._instance
 
     def __init__(self):
-        # El init debe estar vacío o controlado para no resetear los diccionarios del Singleton
-        pass
+        if not hasattr(self, 'scaled_resources'):
+            self.scaled_resources = {}  # Cache para versiones reescalada
 
     def load_image(self, name, path):
         self.resources[name] = pygame.image.load(path)
@@ -24,6 +24,21 @@ class ResourceManager:
 
     def get_image(self, name):
         return self.resources.get(name)
+
+    def get_image_scaled(self, name, size):
+        """Devuelve una imagen reescalada. Si ya se escaló antes, la saca del caché."""
+        cache_key = f"{name}_{size[0]}x{size[1]}"
+
+        if cache_key not in self.scaled_resources:
+            original = self.get_image(name)
+            if original:
+                # Convert_alpha() es vital para el rendimiento de Pygame
+                scaled = pygame.transform.scale(original, size).convert_alpha()
+                self.scaled_resources[cache_key] = scaled
+            else:
+                return None
+
+        return self.scaled_resources[cache_key]
 
     def get_image_path(self, name):
         return self.image_paths.get(name)

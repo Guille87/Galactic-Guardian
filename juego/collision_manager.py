@@ -41,9 +41,13 @@ class CollisionManager:
 
         # Soltar ítem
         self.juego.enemigos_eliminados += 1
-        objeto = enemigo.die(self.juego.jugador, self.juego.enemigos_eliminados)
-        if objeto:
-            self.juego.all_sprites.add(objeto)
+        tipo_item = enemigo.die(self.juego.jugador, self.juego.enemigos_eliminados)
+
+        if tipo_item:
+            img = self.juego.rm.get_image_scaled(tipo_item, Item.TAMANO_ESTANDAR)
+            nuevo_item = Item(tipo_item, img, enemigo.rect.centerx, enemigo.rect.centery)
+
+            self.juego.all_sprites.add(nuevo_item)
             self.juego.enemigos_eliminados = 0
 
         # Puntuación y lógica de Jefe

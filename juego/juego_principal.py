@@ -193,23 +193,6 @@ class Juego:
         """
         teclas_presionadas = pygame.key.get_pressed()
         self.jugador.mover(teclas_presionadas, self.pantalla)
-        self.detectar_colisiones_objetos()
-
-    def detectar_colisiones_objetos(self):
-        """
-        Detecta y maneja las colisiones entre el jugador y los objetos.
-        """
-        for objeto in self.all_sprites:
-            if isinstance(objeto, Item) and self.jugador.rect.colliderect(objeto.rect):
-                self.audio_manager.reproducir_efecto("item")
-                self.aplicar_efecto_y_eliminar(objeto)
-
-    def aplicar_efecto_y_eliminar(self, objeto):
-        """
-        Aplica los efectos del objeto al jugador y lo elimina del juego.
-        """
-        objeto.aplicar_efecto(self.jugador)
-        objeto.kill()
 
     def generar_enemigos(self):
         """

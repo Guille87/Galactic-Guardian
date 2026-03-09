@@ -42,44 +42,23 @@ class EnemigoBase(pygame.sprite.Sprite):
         return item
 
     def generate_item(self, jugador, enemigos_eliminados):
-        lista_objetos = ["potenciador_danio.png", "potenciador_cadencia.png", "potenciador_velocidad.png", "curacion.png"]
-        item = None
+        pool = ["potenciador_danio", "potenciador_cadencia", "potenciador_velocidad", "curacion"]
 
-        if jugador.salud == jugador.salud_maxima:
-            lista_objetos.remove("curacion.png")
-        if jugador.velocidad == jugador.velocidad_maxima:
-            lista_objetos.remove("potenciador_velocidad.png")
-        if jugador.cadencia_disparo == jugador.cadencia_disparo_maxima:
-            lista_objetos.remove("potenciador_cadencia.png")
-        if jugador.disparo_triple:
-            lista_objetos.remove("potenciador_danio.png")
+        if jugador.salud == jugador.salud_maxima: pool.remove("curacion")
+        if jugador.velocidad == jugador.velocidad_maxima: pool.remove("potenciador_velocidad")
+        if jugador.cadencia_disparo == jugador.cadencia_disparo_maxima: pool.remove("potenciador_cadencia")
+        if jugador.disparo_triple: pool.remove("potenciador_danio")
 
-        if lista_objetos:
-            ruta_imagen_base = random.choice([
-                resource_manager.get_image_path("potenciador_danio"),
-                resource_manager.get_image_path("potenciador_cadencia"),
-                resource_manager.get_image_path("potenciador_velocidad"),
-                resource_manager.get_image_path("curacion")
-            ])
-            if isinstance(self, EnemigoTipo1):
-                if random.random() < 0.05 or enemigos_eliminados >= 10:  # 5% de probabilidad para EnemigoTipo1
-                    nombre_imagen = random.choice(lista_objetos)
-                    ruta_imagen = os.path.join(ruta_imagen_base, nombre_imagen)
-                    item = Item(nombre_imagen, ruta_imagen)
-            elif isinstance(self, EnemigoTipo2):
-                if random.random() < 0.1 or enemigos_eliminados >= 10:  # 10% de probabilidad para EnemigoTipo2
-                    nombre_imagen = random.choice(lista_objetos)
-                    ruta_imagen = os.path.join(ruta_imagen_base, nombre_imagen)
-                    item = Item(nombre_imagen, ruta_imagen)
-            elif isinstance(self, EnemigoTipo3):
-                if random.random() < 0.2 or enemigos_eliminados >= 10:  # 20% de probabilidad para EnemigoTipo3
-                    nombre_imagen = random.choice(lista_objetos)
-                    ruta_imagen = os.path.join(ruta_imagen_base, nombre_imagen)
-                    item = Item(nombre_imagen, ruta_imagen)
+        if not pool: return None
 
-        if item:
-            item.set_posicion(self.rect.x, self.rect.y)
-        return item
+        prob = 0.05
+        if isinstance(self, EnemigoTipo2): prob = 0.1
+        if isinstance(self, EnemigoTipo3): prob = 0.2
+        if isinstance(self, Jefe): prob = 1.0
+
+        if random.random() < prob or enemigos_eliminados >= 10:
+            return random.choice(pool)
+        return None
 
     def aumentar_vida(self, cantidad):
         self.salud += cantidad
