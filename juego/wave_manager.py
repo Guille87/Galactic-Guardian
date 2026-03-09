@@ -19,7 +19,33 @@ class WaveManager:
         self.tiempo_inicio_espera_jefe = 0
         self.tiempo_espera_jefe = 5000
 
-    def obtener_config_enemigo(self, tiempo_actual):
+    def spawn_enemigo(self, tiempo_actual, balas_enemigo, jugador, nivel):
+        """
+        Decide y crea la instancia del enemigo correspondiente.
+        Retorna la instancia del enemigo o None.
+        """
+        tipo_enemigo, ruta_imagen, es_jefe = self._obtener_config_enemigo(tiempo_actual)
+
+        if not tipo_enemigo:
+            return None
+
+        # Coordenadas de aparición
+        x = random.randint(50, self.ancho - 100)
+        y = -50
+
+        # Lógica de instanciación
+        if es_jefe:
+            x = (self.ancho - 200) // 2
+            y = -150
+            return Jefe(ruta_imagen, x, y, self.ancho, self.alto, balas_enemigo, jugador, nivel)
+
+        if tipo_enemigo == EnemigoTipo1:
+            return EnemigoTipo1(ruta_imagen, x, y, self.ancho, nivel)
+
+        # Tipos 2 y 3 comparten firma de constructor
+        return tipo_enemigo(ruta_imagen, x, y, self.ancho, balas_enemigo, jugador, nivel)
+
+    def _obtener_config_enemigo(self, tiempo_actual):
         """
         Decide qué enemigo toca generar según el tiempo.
         Retorna (ClaseEnemigo, ruta_imagen, es_jefe)
@@ -54,12 +80,10 @@ class WaveManager:
 
     def _procesar_fase_jefe(self):
         """Lógica interna para el cambio de música y espera del jefe."""
-        # Cambiar música
-        self.am.detener_musica("rain_of_lasers")
-        self.am.reproducir_musica("deathmatch_theme")
-
         if self.tiempo_inicio_espera_jefe == 0:
             self.tiempo_inicio_espera_jefe = pygame.time.get_ticks()
+            self.am.detener_musica("rain_of_lasers")
+            self.am.reproducir_musica("deathmatch_theme")
 
         if pygame.time.get_ticks() - self.tiempo_inicio_espera_jefe >= self.tiempo_espera_jefe:
             self.jefe_generado = True

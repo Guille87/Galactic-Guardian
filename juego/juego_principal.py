@@ -3,7 +3,7 @@ import random
 import pygame
 import pygame.freetype
 
-from entidades.enemigo import EnemigoTipo1, EnemigoTipo2, EnemigoTipo3, Jefe
+from entidades.enemigo import EnemigoTipo2, EnemigoTipo3, Jefe
 from entidades.item import Item
 from entidades.jugador import Jugador
 from juego.audio_manager import AudioManager
@@ -82,40 +82,6 @@ class Juego:
         self.enemigos_golpeados = {}
         # Configuración del reloj
         self.reloj = pygame.time.Clock()
-
-    def generar_enemigo(self):
-        """
-        Genera un nuevo enemigo en una posición aleatoria en la parte superior de la pantalla.
-        """
-        tiempo_transcurrido = pygame.time.get_ticks() - self.inicio_juego - self.tiempo_entre_enemigos
-
-        # Pedimos al manager qué debemos generar
-        tipo_enemigo, ruta_imagen, es_jefe = self.wave_manager.obtener_config_enemigo(tiempo_transcurrido)
-
-        if not tipo_enemigo:
-            return None
-
-        # Coordenadas básicas
-        x_enemigo = random.randint(50, self.pantalla_ancho - 100)
-        y_enemigo = -50
-
-        # Instanciar según el tipo
-        if es_jefe:
-            x_enemigo = (self.pantalla_ancho - 200) // 2
-            y_enemigo = -150  # Genera el enemigo arriba de la pantalla
-
-            nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho,
-                                         self.pantalla_alto, self.balas_enemigo, self.jugador, self.nivel)
-            self.jefe = nuevo_enemigo
-
-        elif tipo_enemigo == EnemigoTipo1:
-            nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho, self.nivel)
-        else:  # Tipos 2 y 3
-            nuevo_enemigo = tipo_enemigo(ruta_imagen, x_enemigo, y_enemigo, self.pantalla_ancho,
-                                         self.balas_enemigo, self.jugador, self.nivel)
-
-        self.enemigos_activos += 1
-        return nuevo_enemigo
 
     def _pausar_juego(self):
         """
@@ -284,15 +250,27 @@ class Juego:
 
     def generar_enemigos(self):
         """
-        Genera nuevos enemigos de forma aleatoria.
+        Maneja el temporizador y solicita al WaveManager un nuevo enemigo.
         """
-        if not self.pausado and pygame.time.get_ticks() > self.tiempo_proximo_enemigo:
+        ahora = pygame.time.get_ticks()
+        if not self.pausado and ahora > self.tiempo_proximo_enemigo:
             if self.jugador.vidas > 0:  # Solo generar enemigos si el jugador está vivo
-                nuevo_enemigo = self.generar_enemigo()
-                if nuevo_enemigo is not None:  # Solo añadir si realmente se creó un enemigo
-                    self.enemigos.append(nuevo_enemigo)
-                self.tiempo_proximo_enemigo = pygame.time.get_ticks() + random.randint(self.MIN_TIEMPO_GENERACION,
-                                                                                       self.MAX_TIEMPO_GENERACION)
+                tiempo_partida = ahora - self.inicio_juego - self.tiempo_entre_enemigos
+
+                # Delegación total al manager
+                nuevo = self.wave_manager.spawn_enemigo(
+                    tiempo_partida, self.balas_enemigo, self.jugador, self.nivel
+                )
+
+                if nuevo:
+                    self.enemigos.append(nuevo)
+                    if isinstance(nuevo, Jefe):
+                        self.jefe = nuevo
+                    self.enemigos_activos += 1
+
+                # Programar siguiente generación
+                intervalo = random.randint(self.MIN_TIEMPO_GENERACION, self.MAX_TIEMPO_GENERACION)
+                self.tiempo_proximo_enemigo = ahora + intervalo
 
     def actualizar_enemigos(self):
         """
