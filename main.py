@@ -2,8 +2,9 @@ import pygame
 import os
 
 from juego.menu import MenuManager
+from juego.audio_manager import AudioManager
 from resources.resource_manager import ResourceManager
-from juego.configuracion import RECURSOS, SONIDOS, EXPLOSIONES, DIR_BASE
+from juego.configuracion import RECURSOS, SONIDOS, EXPLOSIONES, DIR_BASE, cargar_configuracion
 from juego.clasificacion import SistemaClasificacion
 
 
@@ -34,10 +35,16 @@ def main():
     resource_manager = ResourceManager()
     cargar_activos_del_juego(resource_manager)
 
+    # Cargar configuración de usuario (Volúmenes guardados)
+    vol_musica, vol_efectos = cargar_configuracion()
+
+    # Inicializar el Manager de Audio
+    audio_manager = AudioManager(resource_manager, vol_musica, vol_efectos)
+
     sistema_clasificacion = SistemaClasificacion()
 
     # Mostrar el menú
-    menu = MenuManager(pantalla, resource_manager, sistema_clasificacion)
+    menu = MenuManager(pantalla, resource_manager, audio_manager, sistema_clasificacion)
     menu.ejecutar()
 
 

@@ -24,7 +24,7 @@ class CollisionManager:
 
     def _procesar_impacto_enemigo(self, bala, enemigo):
         enemigo.take_damage(bala.danio)
-        self.juego.EFECTO_GOLPE.play()
+        self.juego.audio_manager.reproducir_efecto("golpe")
 
         # Eliminar bala
         if bala in self.juego.balas:
@@ -72,7 +72,7 @@ class CollisionManager:
                     self.juego.balas_enemigo.remove(bala)
                 self.juego.jugador.reducir_salud(bala.danio)
                 self.juego.manejar_impacto_jugador()
-                self.juego.EFECTO_GOLPE.play()
+                self.juego.audio_manager.reproducir_efecto("golpe")
 
     def _colisiones_jugador_enemigo(self):
         for enemigo in self.juego.enemigos[:]:
@@ -86,6 +86,6 @@ class CollisionManager:
     def _colisiones_jugador_items(self):
         for sprite in self.juego.all_sprites:
             if isinstance(sprite, Item) and self.juego.jugador.rect.colliderect(sprite.rect):
-                self.juego.EFECTO_ITEM.play()
+                self.juego.audio_manager.reproducir_efecto("item")
                 sprite.aplicar_efecto(self.juego.jugador)
                 sprite.kill()

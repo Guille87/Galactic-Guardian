@@ -4,8 +4,9 @@ from entidades.enemigo import EnemigoTipo1, EnemigoTipo2, EnemigoTipo3, Jefe
 
 
 class WaveManager:
-    def __init__(self, resource_manager, pantalla_ancho, pantalla_alto):
+    def __init__(self, resource_manager, audio_manager, pantalla_ancho, pantalla_alto):
         self.rm = resource_manager
+        self.am = audio_manager
         self.ancho = pantalla_ancho
         self.alto = pantalla_alto
 
@@ -53,10 +54,9 @@ class WaveManager:
 
     def _procesar_fase_jefe(self):
         """Lógica interna para el cambio de música y espera del jefe."""
-        # Cambiar música (Delegamos esto al RM)
-        self.rm.stop_music("rain_of_lasers")
-        if not self.rm.is_music_playing("deathmatch_theme"):
-            self.rm.play_music("deathmatch_theme", loops=-1)
+        # Cambiar música
+        self.am.detener_musica("rain_of_lasers")
+        self.am.reproducir_musica("deathmatch_theme")
 
         if self.tiempo_inicio_espera_jefe == 0:
             self.tiempo_inicio_espera_jefe = pygame.time.get_ticks()

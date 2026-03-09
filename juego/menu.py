@@ -11,9 +11,10 @@ class MenuManager:
     Clase principal para gestionar las pantallas del menú (Estado).
     """
 
-    def __init__(self, pantalla, resource_manager, sistema_clasificacion):
+    def __init__(self, pantalla, resource_manager, audio_manager, sistema_clasificacion):
         self.pantalla = pantalla
         self.rm = resource_manager
+        self.am = audio_manager
         self.clasificacion = sistema_clasificacion
         self.font_titulo = pygame.font.Font(None, 76)
         self.font_estandar = pygame.font.Font(None, 36)
@@ -31,9 +32,8 @@ class MenuManager:
         self.tiempo_final_reproduccion = 0
 
     def _preparar_musica(self):
-        if not self.rm.is_music_playing("skyfire_theme"):
-            self.rm.play_music("skyfire_theme", loops=-1)
-            self.rm.set_music_volume("skyfire_theme", self.vol_musica)
+        """Usa el AudioManager para gestionar la música del menú."""
+        self.am.reproducir_musica("skyfire_theme")
 
     def _crear_botones(self):
         cx = self.pantalla.get_rect().centerx
@@ -121,12 +121,12 @@ class MenuManager:
                 if event.user_type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
                     if event.ui_element == self.slider_musica:
                         self.vol_musica = event.value
-                        # Actualizamos el volumen de toda la música en el RM
-                        self.rm.update_all_music_volume(self.vol_musica)
+                        # Actualizamos el volumen de toda la música
+                        self.am.actualizar_volumen_musica(self.vol_musica)
                     elif event.ui_element == self.slider_efectos:
                         self.vol_efectos = event.value
-                        # Actualizamos el volumen de TODOS los efectos en el RM
-                        self.rm.update_all_sfx_volume(self.vol_efectos)
+                        # Actualizamos el volumen de TODOS los efectos
+                        self.am.actualizar_volumen_efectos(self.vol_efectos)
                         # Lógica de feedback continuo
                         ahora = time.time()
                         if not self.sonido_reproduciendose or ahora >= self.tiempo_final_reproduccion:
@@ -220,7 +220,7 @@ class MenuManager:
 
     def _lanzar_juego(self):
         from juego.juego_principal import Juego
-        self.rm.stop_music("skyfire_theme")
+        self.am.detener_musica("skyfire_theme")
 
         juego = Juego(self.pantalla, self.vol_musica, self.vol_efectos, self.clasificacion)
         juego.ejecutar()

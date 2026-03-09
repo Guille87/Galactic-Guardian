@@ -9,6 +9,7 @@ from entidades.enemigo import EnemigoTipo1, EnemigoTipo2, EnemigoTipo3, Jefe
 from entidades.explosion import Explosion
 from entidades.item import Item
 from entidades.jugador import Jugador
+from juego.audio_manager import AudioManager
 from juego.collision_manager import CollisionManager
 from juego.input_handler import InputHandler
 from juego.ui_manager import UIManager
@@ -44,25 +45,21 @@ class Juego:
         self.MIN_TIEMPO_GENERACION = 800
         self.MAX_TIEMPO_GENERACION = 1000
 
-        self.wave_manager = WaveManager(resource_manager, self.pantalla_ancho, self.pantalla_alto)
-        self.collision_manager = CollisionManager(self)
+        self.audio_manager = AudioManager(resource_manager, volumen_musica, volumen_efectos)
         self.ui_manager = UIManager(self)
+
+        self.wave_manager = WaveManager(resource_manager, self.audio_manager, self.pantalla_ancho, self.pantalla_alto)
+
         self.input_handler = InputHandler(self)
+        self.collision_manager = CollisionManager(self)
+
+        # Iniciar música inicial
+        self.audio_manager.reproducir_musica("rain_of_lasers")
 
         self.clasificacion = clasificacion
 
         # Inicialización de recursos
         self.all_sprites = pygame.sprite.Group()
-        self.EFECTO_DISPARO = resource_manager.get_sound("laser_gun")
-        self.EFECTO_GOLPE = resource_manager.get_sound("hit")
-        self.EFECTO_ITEM = resource_manager.get_sound("item_take")
-        # Configuración de volúmenes
-        self.EFECTO_DISPARO.set_volume(volumen_efectos)
-        self.EFECTO_GOLPE.set_volume(volumen_efectos)
-        self.EFECTO_ITEM.set_volume(volumen_efectos)
-        if not resource_manager.is_music_playing("rain_of_lasers"):
-            resource_manager.play_music("rain_of_lasers", loops=-1)
-            resource_manager.set_music_volume("rain_of_lasers", volumen_musica)
         # Obtener imágenes
         self.ruta_imagen_jugador = resource_manager.get_image_path("jugador")
         self.fondo_imagen1 = resource_manager.get_image("imagen_fondo1")
@@ -159,7 +156,7 @@ class Juego:
             if bala:
                 self.balas.append(bala)
                 if primera_bala:  # Reproduce el sonido solo para la primera bala
-                    self.EFECTO_DISPARO.play()
+                    self.audio_manager.reproducir_efecto("disparo")
                     primera_bala = False  # Cambia la bandera después del primer disparo
 
     def actualizar(self):
@@ -296,7 +293,7 @@ class Juego:
         """
         for objeto in self.all_sprites:
             if isinstance(objeto, Item) and self.jugador.rect.colliderect(objeto.rect):
-                self.EFECTO_ITEM.play()
+                self.audio_manager.reproducir_efecto("item")
                 self.aplicar_efecto_y_eliminar(objeto)
 
     def aplicar_efecto_y_eliminar(self, objeto):
@@ -356,7 +353,7 @@ class Juego:
         tiempo_ultima_colision = self.enemigos_golpeados.get(enemigo, 0)
         if tiempo_actual - tiempo_ultima_colision >= 2000:  # 2000 milisegundos = 2 segundos
             self.jugador.reducir_salud(1)
-            self.EFECTO_GOLPE.play()
+            self.audio_manager.reproducir_efecto("golpe")
             self.enemigos_golpeados[enemigo] = tiempo_actual  # Registrar el tiempo de la última colisión
             self.manejar_impacto_jugador()
             enemigo.salud -= 1
@@ -395,13 +392,11 @@ class Juego:
         Muestra el mensaje de "Game Over" y las opciones de "Reintentar" y "Salir".
         """
         # Detener música de fondo
-        resource_manager.stop_music("rain_of_lasers")
-        resource_manager.stop_music("deathmatch_theme")
+        self.audio_manager.detener_toda_la_musica()
 
-        # Iniciar música Game Over de fondo si aún no se ha iniciado
-        if not resource_manager.is_music_playing("defeated_tune"):
-            resource_manager.play_music("defeated_tune", loops=-1)
-            resource_manager.set_music_volume("defeated_tune", self.volumen_musica)
+
+        # Iniciar música Game Over de fondo
+        self.audio_manager.reproducir_musica("defeated_tune")
 
         puntuaciones_top = self.clasificacion.obtener_puntuaciones_top()
         if len(puntuaciones_top) < 10 or self.puntuacion > puntuaciones_top[-1][1]:
@@ -472,17 +467,13 @@ class Juego:
         Muestra el menú principal del juego.
         """
         # Detener música
-        resource_manager.stop_music("rain_of_lasers")
-        resource_manager.stop_music("deathmatch_theme")
-        resource_manager.stop_music("defeated_tune")
+        self.audio_manager.detener_toda_la_musica()
 
         # Iniciar música de fondo del menú si aún no se ha iniciado
-        if not resource_manager.is_music_playing("skyfire_theme"):
-            resource_manager.play_music("skyfire_theme", loops=-1)
-            resource_manager.set_music_volume("skyfire_theme", self.volumen_musica)
+        self.audio_manager.reproducir_musica("skyfire_theme")
 
         from juego.menu import MenuManager
-        menu = MenuManager(self.pantalla, resource_manager, self.clasificacion)
+        menu = MenuManager(self.pantalla, resource_manager, self.audio_manager, self.clasificacion)
         menu.ejecutar()
 
     def mostrar_opciones_juego(self):
@@ -490,7 +481,7 @@ class Juego:
         Muestra el menú principal del juego.
         """
         from juego.menu import MenuManager
-        menu = MenuManager(self.pantalla, resource_manager, self.clasificacion)
+        menu = MenuManager(self.pantalla, resource_manager, self.audio_manager, self.clasificacion)
 
         menu.mostrar_solo_opciones()
 
@@ -509,8 +500,6 @@ class Juego:
                 self.MIN_TIEMPO_GENERACION = 200
             if self.MAX_TIEMPO_GENERACION <= 200:
                 self.MAX_TIEMPO_GENERACION = 200
-            # Detener música Jefe
-            resource_manager.stop_music("deathmatch_theme")
         else:
             self.jugador = Jugador(self.ruta_imagen_jugador, self.pantalla_ancho, self.pantalla_alto, self.all_sprites)
             self.MIN_TIEMPO_GENERACION = 800
@@ -518,8 +507,6 @@ class Juego:
             self.puntuacion = 0
             self.balas = []
             self.balas_enemigo = []
-            # Detener música Game Over
-            resource_manager.stop_music("defeated_tune")
 
         # Reiniciar todos los valores del juego a sus estados iniciales
         self.enemigos = []
@@ -533,9 +520,10 @@ class Juego:
         self.wave_manager.jefe_generado = False
         self.wave_manager.tiempo_inicio_espera_jefe = 0
 
-        if not resource_manager.is_music_playing("rain_of_lasers"):
-            resource_manager.play_music("rain_of_lasers", loops=-1)
-            resource_manager.set_music_volume("rain_of_lasers", self.volumen_musica)
+        # Detenemos la música
+        self.audio_manager.detener_toda_la_musica()
+        # Aseguramos que suene la música principal
+        self.audio_manager.reproducir_musica("rain_of_lasers")
 
     def dibujar(self):
         """
@@ -659,4 +647,4 @@ class Juego:
             self.dibujar()
             self.reloj.tick(60)
 
-        resource_manager.stop_music("rain_of_lasers")
+        self.audio_manager.detener_musica("rain_of_lasers")
