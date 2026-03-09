@@ -222,7 +222,7 @@ class MenuManager:
         from juego.juego_principal import Juego
         self.am.detener_musica("skyfire_theme")
 
-        juego = Juego(self.pantalla, self.vol_musica, self.vol_efectos, self.clasificacion)
+        juego = Juego(self.pantalla, self.vol_musica, self.vol_efectos, self.clasificacion, self.rm)
         juego.ejecutar()
 
         # Al volver del juego, restauramos música y estado

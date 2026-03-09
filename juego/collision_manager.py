@@ -38,8 +38,7 @@ class CollisionManager:
             self.juego.enemigos.remove(enemigo)
 
         # Efectos visuales
-        explosion = Explosion(enemigo.rect.center, self.juego.explosion_images)
-        self.juego.all_sprites.add(explosion)
+        self.juego.effect_manager.crear_explosion(enemigo.rect.center)
 
         # Soltar ítem
         self.juego.enemigos_eliminados += 1

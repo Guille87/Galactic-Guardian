@@ -3,27 +3,21 @@ import random
 import pygame
 import pygame.freetype
 
-from efectos.destello import Destello
-from efectos.destello_constante import DestelloConstante
 from entidades.enemigo import EnemigoTipo1, EnemigoTipo2, EnemigoTipo3, Jefe
-from entidades.explosion import Explosion
 from entidades.item import Item
 from entidades.jugador import Jugador
 from juego.audio_manager import AudioManager
 from juego.collision_manager import CollisionManager
+from juego.effect_manager import EffectManager
 from juego.input_handler import InputHandler
 from juego.render_manager import RenderManager
 from juego.ui_manager import UIManager
 from juego.wave_manager import WaveManager
-from resources.resource_manager import ResourceManager
 from ui.boton import Boton
-
-# Instancia global de ResourceManager
-resource_manager = ResourceManager()
 
 
 class Juego:
-    def __init__(self, pantalla, volumen_musica, volumen_efectos, clasificacion):
+    def __init__(self, pantalla, volumen_musica, volumen_efectos, clasificacion, resource_manager):
         # Inicialización de variables
         self.volumen_musica = volumen_musica
         self.volumen_efectos = volumen_efectos
@@ -45,8 +39,10 @@ class Juego:
         self.tiempo_entre_enemigos = 0
         self.MIN_TIEMPO_GENERACION = 800
         self.MAX_TIEMPO_GENERACION = 1000
+        self.rm = resource_manager
 
-        self.audio_manager = AudioManager(resource_manager, volumen_musica, volumen_efectos)
+        self.audio_manager = AudioManager(self.rm, volumen_musica, volumen_efectos)
+        self.effect_manager = EffectManager(self)
         self.ui_manager = UIManager(self)
         self.render_manager = RenderManager(self)
 
@@ -91,7 +87,7 @@ class Juego:
         """
         Genera un nuevo enemigo en una posición aleatoria en la parte superior de la pantalla.
         """
-        tiempo_transcurrido = pygame.time.get_ticks() - self.inicio_juego- self.tiempo_entre_enemigos
+        tiempo_transcurrido = pygame.time.get_ticks() - self.inicio_juego - self.tiempo_entre_enemigos
 
         # Pedimos al manager qué debemos generar
         tipo_enemigo, ruta_imagen, es_jefe = self.wave_manager.obtener_config_enemigo(tiempo_transcurrido)
@@ -195,10 +191,12 @@ class Juego:
         self.enemigos_activos -= len(enemigos_salidos)
 
         self.balas = [bala for bala in self.balas if not (bala is not None and self.fuera_de_pantalla(bala.rect))]
-        self.enemigos = [enemigo for enemigo in self.enemigos if not (enemigo is not None and self.fuera_de_pantalla(enemigo.rect))]
+        self.enemigos = [enemigo for enemigo in self.enemigos if
+                         not (enemigo is not None and self.fuera_de_pantalla(enemigo.rect))]
         self.balas_enemigo = [bala_enemiga for bala_enemiga in self.balas_enemigo if
                               not (bala_enemiga is not None and self.fuera_de_pantalla(bala_enemiga.rect))]
-        self.all_sprites = pygame.sprite.Group([item for item in self.all_sprites if not (item is not None and self.fuera_de_pantalla(item.rect))])
+        self.all_sprites = pygame.sprite.Group(
+            [item for item in self.all_sprites if not (item is not None and self.fuera_de_pantalla(item.rect))])
 
     def fuera_de_pantalla(self, rect):
         """
@@ -223,26 +221,11 @@ class Juego:
         """
         if self.jugador.vidas > 0:
             if self.jugador.salud > 0:
-                self.crear_destello()
+                self.effect_manager.crear_destello_recibir_danio()
             else:
-                self.jugador_explota()
+                self.effect_manager.crear_explosion(self.jugador.rect.center)
                 self.reposicionar_jugador()
                 self.reducir_vidas_y_aumentar_salud()
-
-    def crear_destello(self):
-        """
-        Crea un destello en la posición del jugador.
-        """
-        if not self.jugador.invulnerable:
-            destello = Destello(self.jugador)
-            self.all_sprites.add(destello)
-
-    def jugador_explota(self):
-        """
-        Crea una explosión en la posición del jugador.
-        """
-        explosion = Explosion(self.jugador.rect.center, self.explosion_images)
-        self.all_sprites.add(explosion)
 
     def reposicionar_jugador(self):
         """
@@ -258,16 +241,10 @@ class Juego:
         self.jugador.reducir_vidas(1)
         self.jugador.invulnerable = True
         self.jugador.tiempo_invulnerable = pygame.time.get_ticks() + 3000
-        self.crear_destello_constante()
+        self.effect_manager.crear_destello_invulnerabilidad()
+
         if self.jugador.vidas > 0:
             self.jugador.aumentar_salud(self.jugador.salud_maxima)
-
-    def crear_destello_constante(self):
-        """
-        Crea un destello constante en la posición del jugador.
-        """
-        self.jugador.destello_constante = DestelloConstante(self.jugador)
-        self.all_sprites.add(self.jugador.destello_constante)
 
     def actualizar_jugador(self):
         """
@@ -314,7 +291,8 @@ class Juego:
                 nuevo_enemigo = self.generar_enemigo()
                 if nuevo_enemigo is not None:  # Solo añadir si realmente se creó un enemigo
                     self.enemigos.append(nuevo_enemigo)
-                self.tiempo_proximo_enemigo = pygame.time.get_ticks() + random.randint(self.MIN_TIEMPO_GENERACION, self.MAX_TIEMPO_GENERACION)
+                self.tiempo_proximo_enemigo = pygame.time.get_ticks() + random.randint(self.MIN_TIEMPO_GENERACION,
+                                                                                       self.MAX_TIEMPO_GENERACION)
 
     def actualizar_enemigos(self):
         """
@@ -360,8 +338,7 @@ class Juego:
             self.manejar_impacto_jugador()
             enemigo.salud -= 1
         if enemigo.salud <= 0:
-            explosion = Explosion(enemigo.rect.center, self.explosion_images)
-            self.all_sprites.add(explosion)  # Añadir la explosión al grupo de sprites
+            self.effect_manager.crear_explosion(enemigo.rect.center)
             self.enemigos.remove(enemigo)
             # Decrementa el contador de enemigos en pantalla
             self.enemigos_activos -= 1
@@ -386,7 +363,8 @@ class Juego:
         self.all_sprites.empty()  # Eliminar todos los sprites
         font_game_over = pygame.font.SysFont(None, 72)  # Fuente y tamaño del texto
         texto_game_over = font_game_over.render("Game Over", True, (255, 255, 255))  # Texto, antialiasing y color
-        texto_rect = texto_game_over.get_rect(center=(self.pantalla_ancho // 2, self.pantalla_alto // 2 - 150))  # Centrar el texto un poco más arriba
+        texto_rect = texto_game_over.get_rect(
+            center=(self.pantalla_ancho // 2, self.pantalla_alto // 2 - 150))  # Centrar el texto un poco más arriba
         self.pantalla.blit(texto_game_over, texto_rect)  # Mostrar el texto "Game Over"
 
     def juego_terminado(self):
@@ -395,7 +373,6 @@ class Juego:
         """
         # Detener música de fondo
         self.audio_manager.detener_toda_la_musica()
-
 
         # Iniciar música Game Over de fondo
         self.audio_manager.reproducir_musica("defeated_tune")
@@ -475,7 +452,7 @@ class Juego:
         self.audio_manager.reproducir_musica("skyfire_theme")
 
         from juego.menu import MenuManager
-        menu = MenuManager(self.pantalla, resource_manager, self.audio_manager, self.clasificacion)
+        menu = MenuManager(self.pantalla, self.rm, self.audio_manager, self.clasificacion)
         menu.ejecutar()
 
     def mostrar_opciones_juego(self):
@@ -483,7 +460,7 @@ class Juego:
         Muestra el menú principal del juego.
         """
         from juego.menu import MenuManager
-        menu = MenuManager(self.pantalla, resource_manager, self.audio_manager, self.clasificacion)
+        menu = MenuManager(self.pantalla, self.rm, self.audio_manager, self.clasificacion)
 
         menu.mostrar_solo_opciones()
 
