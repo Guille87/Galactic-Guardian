@@ -13,7 +13,6 @@ from juego.input_handler import InputHandler
 from juego.render_manager import RenderManager
 from juego.ui_manager import UIManager
 from juego.wave_manager import WaveManager
-from ui.boton import Boton
 
 
 class Juego:
@@ -40,6 +39,7 @@ class Juego:
         self.MIN_TIEMPO_GENERACION = 800
         self.MAX_TIEMPO_GENERACION = 1000
         self.rm = resource_manager
+        self.estado_game_over = False
 
         self.audio_manager = AudioManager(self.rm, volumen_musica, volumen_efectos)
         self.effect_manager = EffectManager(self)
@@ -371,53 +371,19 @@ class Juego:
         """
         Muestra el mensaje de "Game Over" y las opciones de "Reintentar" y "Salir".
         """
+        self.pausado = True  # Usamos el estado de pausa para detener la actualización
         # Detener música de fondo
         self.audio_manager.detener_toda_la_musica()
-
         # Iniciar música Game Over de fondo
         self.audio_manager.reproducir_musica("defeated_tune")
 
         puntuaciones_top = self.clasificacion.obtener_puntuaciones_top()
         if len(puntuaciones_top) < 10 or self.puntuacion > puntuaciones_top[-1][1]:
-            self.mostrar_game_over()
             # La puntuación del jugador está entre las 10 mejores o es superior a la última de las 10 mejores
             nombre_jugador = self.mostrar_cuadro_dialogo("Introduce tu nombre: ")
             self.clasificacion.agregar_puntuacion(nombre_jugador, self.puntuacion)
 
-        # Actualizar la pantalla para borrar el texto "Introduce tu nombre"
-        self.pantalla.blit(self.fondo_imagen1, (0, 0))
-
-        # Cargar la fuente para los botones
-        font = pygame.font.Font(None, 36)
-
-        # Crear el botón "Reintentar"
-        boton_reintentar = Boton("Reintentar", (255, 0, 0, 128), (255, 255, 255), self.pantalla.get_rect().centerx, 400,
-                                 200, 50, radio_borde=10)
-
-        # Crear el botón "Salir"
-        boton_salir = Boton("Salir", (255, 0, 255, 128), (255, 255, 255), self.pantalla.get_rect().centerx, 470,
-                            200, 50, radio_borde=10)
-
-        self.mostrar_game_over()
-        # Dibujar el botón en la pantalla
-        boton_reintentar.dibujar(self.pantalla, font)
-        boton_salir.dibujar(self.pantalla, font)
-
-        pygame.display.flip()  # Actualizar la pantalla
-
-        while True:
-            for evento in pygame.event.get():
-                if evento.type == pygame.QUIT:
-                    pygame.quit()
-                    return False
-                elif evento.type == pygame.MOUSEBUTTONDOWN:
-                    if boton_reintentar.clic_en_boton(evento.pos):
-                        self.reiniciar_juego()  # Reiniciar el juego si el jugador hace clic en "Reintentar"
-                        return True
-                    elif boton_salir.clic_en_boton(evento.pos):
-                        # Volver al menú principal si el jugador hace clic en "Salir"
-                        self.mostrar_menu_principal()
-                        return True
+        self.estado_game_over = True
 
     def mostrar_cuadro_dialogo(self, mensaje):
         font_dialogo = pygame.freetype.SysFont(None, 24)
@@ -425,6 +391,11 @@ class Juego:
         ingresando = True
         while ingresando:
             for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    import sys
+                    sys.exit()
+
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
                         ingresando = False
@@ -455,6 +426,10 @@ class Juego:
         menu = MenuManager(self.pantalla, self.rm, self.audio_manager, self.clasificacion)
         menu.ejecutar()
 
+        pygame.quit()
+        import sys
+        sys.exit()
+
     def mostrar_opciones_juego(self):
         """
         Muestra el menú principal del juego.
@@ -463,8 +438,6 @@ class Juego:
         menu = MenuManager(self.pantalla, self.rm, self.audio_manager, self.clasificacion)
 
         menu.mostrar_solo_opciones()
-
-        print("Regresando al juego pausado...")
 
     def reiniciar_juego(self):
         """
@@ -494,6 +467,8 @@ class Juego:
         self.inicio_juego = pygame.time.get_ticks()
         self.enemigos_activos = 0
         self.tiempo_entre_enemigos = 0
+        self.pausado = False
+        self.estado_game_over = False
 
         # Resetear el WaveManager para que el jefe pueda volver a salir en el siguiente nivel
         self.wave_manager.jefe_generado = False

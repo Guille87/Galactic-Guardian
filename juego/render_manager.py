@@ -11,6 +11,10 @@ class RenderManager:
 
     def renderizar_todo(self):
         """Método principal que orquestra el dibujo de cada frame."""
+        if self.juego.estado_game_over:
+            self._dibujar_pantalla_game_over()
+            return  # No dibujamos nada más si es Game Over total
+
         if self.juego.pausado:
             self._dibujar_fondo_en_gris()
         else:
@@ -36,6 +40,22 @@ class RenderManager:
         # Interfaz de Usuario (Salud, Puntos, Nivel)
         self.juego.ui_manager.dibujar_interfaz(self.pantalla)
 
+        pygame.display.flip()
+
+    def _dibujar_pantalla_game_over(self):
+        """Dibuja la UI de fin de juego."""
+        self.pantalla.blit(self.juego.fondo_imagen1, (0, 0))
+        self.juego.mostrar_game_over()
+
+        # Dibujar botones de Reintentar y Salir
+        centro_x = self.juego.pantalla_ancho // 2
+        self.juego.boton_reintentar = Boton("Reintentar", (255, 0, 0, 128), (255, 255, 255),
+                                            centro_x, 400, 200, 50, radio_borde=10)
+        self.juego.boton_salir_post = Boton("Salir", (255, 0, 255, 128), (255, 255, 255),
+                                            centro_x, 470, 200, 50, radio_borde=10)
+
+        self.juego.boton_reintentar.dibujar(self.pantalla, self.font_botones)
+        self.juego.boton_salir_post.dibujar(self.pantalla, self.font_botones)
         pygame.display.flip()
 
     def _dibujar_entidades(self):

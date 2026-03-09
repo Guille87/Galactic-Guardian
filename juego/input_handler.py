@@ -1,5 +1,4 @@
 import pygame
-import sys
 
 from ui.boton import Boton
 
@@ -54,6 +53,17 @@ class InputHandler:
             self.juego.disparando = False
 
     def _manejar_clic_presionado(self, evento):
+        # Prioridad: ¿Estamos en Game Over?
+        if self.juego.estado_game_over:
+            if evento.button == 1:
+                if self.juego.boton_reintentar and self.juego.boton_reintentar.clic_en_boton(evento.pos):
+                    self.juego.estado_game_over = False
+                    self.juego.reiniciar_juego()
+                elif self.juego.boton_salir_post and self.juego.boton_salir_post.clic_en_boton(evento.pos):
+                    self.juego.mostrar_menu_principal()
+            return True  # Evento consumido
+
+        # ¿Estamos en pausa?
         if self.juego.pausado:
             # Lógica de botones en pausa
             if evento.button == 1:  # Clic izquierdo
@@ -63,6 +73,7 @@ class InputHandler:
                     decision = self.mostrar_confirmacion_salida()
                     if decision == "SALIR":
                         return False
+        # Juego activo
         else:
             if evento.button == 1:
                 self.juego.disparando = True
