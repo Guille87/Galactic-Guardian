@@ -10,6 +10,7 @@ from entidades.explosion import Explosion
 from entidades.item import Item
 from entidades.jugador import Jugador
 from juego.collision_manager import CollisionManager
+from juego.input_handler import InputHandler
 from juego.ui_manager import UIManager
 from juego.wave_manager import WaveManager
 from resources.resource_manager import ResourceManager
@@ -46,6 +47,7 @@ class Juego:
         self.wave_manager = WaveManager(resource_manager, self.pantalla_ancho, self.pantalla_alto)
         self.collision_manager = CollisionManager(self)
         self.ui_manager = UIManager(self)
+        self.input_handler = InputHandler(self)
 
         self.clasificacion = clasificacion
 
@@ -119,127 +121,6 @@ class Juego:
 
         self.enemigos_activos += 1
         return nuevo_enemigo
-
-    def mostrar_confirmacion_salida(self):
-        # Crea un rectángulo para el fondo oscuro
-        fondo_oscuro = pygame.Surface((self.pantalla_ancho, self.pantalla_alto))
-        fondo_oscuro.set_alpha(200)  # Configura la transparencia
-        fondo_oscuro.fill((0, 0, 0))  # Color oscuro
-
-        # Dibuja el fondo oscuro en la pantalla
-        self.pantalla.blit(fondo_oscuro, (0, 0))
-
-        # Crea un rectángulo para el cuadro de diálogo
-        rectangulo_dialogo = pygame.Rect(50, 200, 500, 200)
-        pygame.draw.rect(self.pantalla, (255, 255, 255), rectangulo_dialogo)
-
-        # Dibuja el texto del cuadro de diálogo
-        font = pygame.font.SysFont(None, 36)
-        texto = font.render("¿Estás seguro de que deseas salir?", True, (0, 0, 0))
-        texto_rect = texto.get_rect(center=(rectangulo_dialogo.centerx, rectangulo_dialogo.centery - 50))
-        self.pantalla.blit(texto, texto_rect)
-
-        # Dibuja los botones "Sí" y "No"
-        boton_si = Boton("Sí", (50, 50, 50), (255, 255, 255), rectangulo_dialogo.centerx - 100, rectangulo_dialogo.bottom - 80,
-                         100, 50)
-        boton_no = Boton("No", (50, 50, 50), (255, 255, 255), rectangulo_dialogo.centerx + 110, rectangulo_dialogo.bottom - 80,
-                         100, 50)
-        boton_si.dibujar(self.pantalla, font)
-        boton_no.dibujar(self.pantalla, font)
-
-        # Actualiza la pantalla
-        pygame.display.flip()
-
-        # Espera la respuesta del usuario
-        while True:
-            for evento in pygame.event.get():
-                if evento.type == pygame.QUIT:
-                    pygame.quit()
-                    exit()
-                elif evento.type == pygame.MOUSEBUTTONDOWN:
-                    if boton_si.clic_en_boton(evento.pos):
-                        return "SALIR"
-                    elif boton_no.clic_en_boton(evento.pos):
-                        return "CONTINUAR"
-
-    def manejar_eventos(self):
-        """
-        Maneja los eventos de pygame.
-        """
-        for evento in pygame.event.get():
-            if evento.type == pygame.QUIT:
-                pygame.quit()
-                exit()
-            elif evento.type == pygame.KEYDOWN:
-                self._manejar_tecla_presionada(evento.key)
-            elif evento.type == pygame.KEYUP:
-                self._manejar_tecla_soltada(evento.key)
-            elif evento.type == pygame.MOUSEBUTTONDOWN:
-                self._manejar_click_presionado(evento.button)
-                if self.pausado:
-                    if evento.button == 1:
-                        if self.boton_opciones.clic_en_boton(evento.pos):
-                            self.mostrar_opciones_juego()
-                        elif self.boton_salir.clic_en_boton(evento.pos):
-                            decision = self.mostrar_confirmacion_salida()
-                            if decision == "SALIR":
-                                return False
-            elif evento.type == pygame.MOUSEBUTTONUP:
-                self._manejar_click_soltado(evento.button)
-
-            # Si el juego está pausado, no manejar otros eventos
-        if self.pausado:
-            return True
-
-            # Si la tecla de disparo está presionada, crea una nueva bala
-        if self.disparando:
-            self._disparar()
-
-        return True
-
-    def _manejar_tecla_presionada(self, tecla):
-        """
-        Maneja el evento de tecla presionada.
-        Si se presiona la tecla de escape o P, pausa o reanuda el juego.
-        Si se presiona la tecla de espacio, activa el disparo si el juego no está pausado.
-        """
-        if tecla == pygame.K_ESCAPE or tecla == pygame.K_p:
-            if not self.pausado:
-                self._pausar_juego()
-            else:
-                self._reanudar_juego()
-        elif tecla == pygame.K_SPACE:
-            if not self.pausado:
-                self.disparando = True
-                self._disparar()
-
-    def _manejar_tecla_soltada(self, tecla):
-        """
-        Maneja el evento de tecla soltada.
-        Si se suelta la tecla de espacio, desactiva el disparo si el juego no está pausado.
-        """
-        if tecla == pygame.K_SPACE:
-            if not self.pausado:
-                self.disparando = False
-
-    def _manejar_click_presionado(self, boton):
-        """
-        Maneja el evento de clic de ratón presionado.
-        Si se presiona el botón izquierdo del ratón, activa el disparo si el juego no está pausado.
-        """
-        if boton == 1:  # Botón izquierdo del ratón
-            if not self.pausado:
-                self.disparando = True
-                self._disparar()
-
-    def _manejar_click_soltado(self, boton):
-        """
-        Maneja el evento de clic de ratón soltado.
-        Si se suelta el botón izquierdo del ratón, desactiva el disparo si el juego no está pausado.
-        """
-        if boton == 1:  # Botón izquierdo del ratón
-            if not self.pausado:
-                self.disparando = False
 
     def _pausar_juego(self):
         """
@@ -332,60 +213,6 @@ class Juego:
         """
         return rect.bottom < 0 or rect.top > self.pantalla_alto or rect.right < 0 or rect.left > self.pantalla_ancho
 
-    def eliminar_colision_bala_enemigo(self, bala):
-        """
-        Elimina las colisiones entre las balas de los enemigos y el jugador.
-
-        Args:
-            bala: Bala del enemigo a comprobar.
-        """
-        for enemigo in self.enemigos:
-            if bala.comprobar_colision(enemigo):
-                self.procesar_colision_bala_enemigo(bala, enemigo)
-                break
-
-    def procesar_colision_bala_enemigo(self, bala, enemigo):
-        """
-        Procesa la colisión entre una bala y un enemigo.
-
-        Args:
-            bala: Bala del jugador.
-            enemigo: Enemigo colisionado.
-        """
-        balas_a_eliminar = [bala, enemigo]
-        # Reducir la salud del enemigo según el daño de la bala del jugador
-        enemigo.take_damage(bala.danio)
-        if enemigo.salud <= 0:
-            self.enemigos.remove(enemigo)
-            # Incrementa el contador de enemigos eliminados
-            self.enemigos_eliminados += 1
-            explosion = Explosion(enemigo.rect.center, self.explosion_images)
-            self.all_sprites.add(explosion)  # Añadir la explosión al grupo de sprites
-            objeto = enemigo.die(self.jugador, self.enemigos_eliminados)  # Crear un objeto cuando el enemigo muere
-            if objeto is not None or self.enemigos_eliminados >= self.enemigos_eliminados:
-                if objeto is not None:
-                    self.all_sprites.add(objeto)
-                    # Restablece el contador de enemigos eliminados
-                    self.enemigos_eliminados = 0
-            # Aumentar la puntuación según el tipo de enemigo eliminado y el nivel actual
-            puntuacion_enemigo = 0
-            if isinstance(enemigo, EnemigoTipo1):
-                puntuacion_enemigo = 1
-            elif isinstance(enemigo, EnemigoTipo2):
-                puntuacion_enemigo = 2
-            elif isinstance(enemigo, EnemigoTipo3):
-                puntuacion_enemigo = 3
-            elif isinstance(enemigo, Jefe):
-                puntuacion_enemigo = 1000
-                self.jefe_derrotado = True
-                self.jefe = None
-                self.reiniciar_juego()
-            self.puntuacion += puntuacion_enemigo * self.nivel
-            # Decrementa el contador de enemigos en pantalla
-            self.enemigos_activos -= 1
-        self.EFECTO_GOLPE.play()
-        self.eliminar_elementos(balas_a_eliminar)
-
     def manejar_impacto_jugador(self):
         """
         Maneja el impacto en el jugador.
@@ -442,19 +269,6 @@ class Juego:
         """
         self.jugador.destello_constante = DestelloConstante(self.jugador)
         self.all_sprites.add(self.jugador.destello_constante)
-
-    def eliminar_elementos(self, elementos):
-        """
-        Elimina los elementos dados de las listas correspondientes.
-
-        Args:
-            elementos (list): Lista de elementos a eliminar.
-        """
-        for elemento in elementos:
-            if elemento in self.balas:
-                self.balas.remove(elemento)
-            elif elemento in self.balas_enemigo:
-                self.balas_enemigo.remove(elemento)
 
     def actualizar_jugador(self):
         """
@@ -827,7 +641,11 @@ class Juego:
 
         while ejecutando:
             pygame.display.set_caption("Galactic Guardian")
-            ejecutando = self.manejar_eventos()
+
+            # Si manejar_eventos() devuelve False, salimos del bucle
+            if not self.input_handler.manejar_eventos():
+                ejecutando = False
+                continue
 
             # Si el juego está pausado, solo dibujar la pantalla y continuar al siguiente ciclo
             if self.pausado:

@@ -93,3 +93,26 @@ class UIManager:
     def _dibujar_texto(self, pantalla, texto, pos, color):
         surface = self.fuente_pequena.render(texto, True, color)
         pantalla.blit(surface, pos)
+
+    def dibujar_confirmacion_salida(self, pantalla, boton_si, boton_no):
+        """Dibuja el cuadro de diálogo de confirmación."""
+        # 1. Fondo oscuro traslúcido
+        fondo_oscuro = pygame.Surface((self.juego.pantalla_ancho, self.juego.pantalla_alto))
+        fondo_oscuro.set_alpha(200)
+        fondo_oscuro.fill((0, 0, 0))
+        pantalla.blit(fondo_oscuro, (0, 0))
+
+        # 2. Cuadro de diálogo
+        rect_dialogo = pygame.Rect(50, 200, 500, 200)
+        pygame.draw.rect(pantalla, (255, 255, 255), rect_dialogo)
+
+        # 3. Texto
+        texto = self.fuente_media.render("¿Estás seguro de que deseas salir?", True, (0, 0, 0))
+        texto_rect = texto.get_rect(center=(rect_dialogo.centerx, rect_dialogo.centery - 50))
+        pantalla.blit(texto, texto_rect)
+
+        # 4. Dibujar botones (que el manager recibe ya creados)
+        boton_si.dibujar(pantalla, self.fuente_media)
+        boton_no.dibujar(pantalla, self.fuente_media)
+
+        pygame.display.flip()
