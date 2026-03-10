@@ -18,8 +18,8 @@ class RenderManager:
         if self.juego.pausado:
             self._dibujar_fondo_en_gris()
         else:
-            self.pantalla.blit(self.juego.fondo_imagen1, (0, self.juego.pos_y_fondo1))
-            self.pantalla.blit(self.juego.fondo_imagen2, (0, self.juego.pos_y_fondo2))
+            # Ahora el manager del fondo se encarga de sus propias capas
+            self.juego.background.draw(self.pantalla)
 
         # Si el jugador murió, no dibujamos más elementos del mundo
         if self.juego.jugador.vidas <= 0:
@@ -44,7 +44,7 @@ class RenderManager:
 
     def _dibujar_pantalla_game_over(self):
         """Dibuja la UI de fin de juego."""
-        self.pantalla.blit(self.juego.fondo_imagen1, (0, 0))
+        self.pantalla.blit(self.juego.background.img1, (0, 0))
         self.juego.mostrar_game_over()
 
         # Dibujar botones de Reintentar y Salir
@@ -100,8 +100,10 @@ class RenderManager:
         self.pantalla.blit(texto_surface, texto_rect)
 
     def _dibujar_fondo_en_gris(self):
-        for img, pos_y in [(self.juego.fondo_imagen1, self.juego.pos_y_fondo1),
-                           (self.juego.fondo_imagen2, self.juego.pos_y_fondo2)]:
+        """Dibuja el fondo con un filtro gris."""
+        # Creamos superficies temporales para el efecto de pausa
+        bg = self.juego.background
+        for img, pos_y in [(bg.img1, bg.y1), (bg.img2, bg.y2)]:
             img_gris = img.copy()
             img_gris.fill((128, 128, 128), special_flags=pygame.BLEND_RGB_MULT)
             self.pantalla.blit(img_gris, (0, pos_y))

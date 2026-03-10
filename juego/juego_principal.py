@@ -6,6 +6,7 @@ import pygame.freetype
 from entidades.enemigo import EnemigoTipo2, EnemigoTipo3, Jefe
 from entidades.jugador import Jugador
 from juego.audio_manager import AudioManager
+from juego.background_manager import ScrollingBackground
 from juego.collision_manager import CollisionManager
 from juego.effect_manager import EffectManager
 from juego.entity_manager import EntityManager
@@ -74,8 +75,11 @@ class Juego:
         # Inicialización de tiempo
         self.inicio_juego = pygame.time.get_ticks()
         # Inicialización de posiciones de fondo
-        self.pos_y_fondo1 = 0
-        self.pos_y_fondo2 = -self.pantalla_alto
+        self.background = ScrollingBackground(
+            self.rm.get_image("imagen_fondo1"),
+            self.rm.get_image("imagen_fondo2"),
+            self.pantalla_alto
+        )
         # Inicialización de diccionario de enemigos golpeados
         self.enemigos_golpeados = {}
         # Configuración del reloj
@@ -135,7 +139,8 @@ class Juego:
         self.entity_manager.actualizar()
         self.collision_manager.actualizar()
 
-        self.mover_fondo()
+        #self.mover_fondo()
+        self.background.update()
         self.jugador.update()
 
     def fuera_de_pantalla(self, rect):
@@ -241,17 +246,6 @@ class Juego:
             self.enemigos_activos -= 1
             # Incrementa el contador de enemigos eliminados
             self.enemigos_eliminados += 1
-
-    def mover_fondo(self):
-        """
-        Mueve el fondo del juego.
-        """
-        self.pos_y_fondo1 += 0.5
-        self.pos_y_fondo2 += 0.5
-        if self.pos_y_fondo1 >= self.pantalla_alto:
-            self.pos_y_fondo1 = -self.pantalla_alto
-        if self.pos_y_fondo2 >= self.pantalla_alto:
-            self.pos_y_fondo2 = -self.pantalla_alto
 
     def mostrar_game_over(self):
         """

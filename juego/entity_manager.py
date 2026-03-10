@@ -38,7 +38,7 @@ class EntityManager:
             enemigo.movimiento_enemigo()
             enemigo.update()
 
-            # Lógica de disparo automático de enemigos delegada aquí
+            # Lógica de disparo automática de enemigos
             if isinstance(enemigo, (EnemigoTipo2, EnemigoTipo3)):
                 bala = enemigo.disparo_enemigo()
                 if bala: self.añadir_bala_enemigo(bala)
