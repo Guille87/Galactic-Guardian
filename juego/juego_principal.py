@@ -203,7 +203,7 @@ class Juego:
         ahora = pygame.time.get_ticks()
         if ahora > self.tiempo_proximo_enemigo:
             nuevo = self.wave_manager.spawn_enemigo(
-                ahora - self.inicio_juego, self.entity_manager.balas_enemigo, self.jugador, self.nivel
+                ahora - self.inicio_juego, self.jugador, self.nivel
             )
             if nuevo:
                 self.entity_manager.agregar_enemigo(nuevo)
@@ -211,7 +211,7 @@ class Juego:
                 if isinstance(nuevo, Jefe):
                     self.jefe = nuevo
 
-            self.tiempo_proximo_enemigo = ahora + random.randint(800, 1000)
+            self.tiempo_proximo_enemigo = ahora + random.randint(self.MIN_TIEMPO_GENERACION, self.MAX_TIEMPO_GENERACION)
 
     def juego_terminado(self):
         """Muestra el mensaje de "Game Over" y las opciones de "Reintentar" y "Salir"."""

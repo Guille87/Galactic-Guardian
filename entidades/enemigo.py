@@ -3,29 +3,28 @@ import random
 
 import pygame
 
-from resources.resource_manager import ResourceManager
 from .bala_enemigo import BalaEnemigo
-
-# Crear una instancia global de ResourceManager
-resource_manager = ResourceManager()
 
 
 class EnemigoBase(pygame.sprite.Sprite):
     TAMANO_ESTANDAR = (48, 48)
 
-    def __init__(self, imagen_surface, x, y, pantalla_ancho, nivel, salud, salud_maxima):
+    def __init__(self, imagen_surface, x, y, pantalla_ancho, nivel, salud_base):
         super().__init__()
-        # Carga la imagen original de la nave enemiga
         self.image = imagen_surface
         self.rect = self.image.get_rect(x=x, y=y)
-
-        self.velocidad_x = random.uniform(-2, 2)  # Velocidad horizontal aleatoria
-        self.velocidad_y = random.uniform(2, 4)  # Velocidad vertical aleatoria
         self.pantalla_ancho = pantalla_ancho
-        self.salud = salud * (2 ** nivel-1)  # Ajuste de la salud según el nivel
-        self.salud_maxima = salud_maxima * (2 ** nivel-1)  # Ajuste de la salud según el nivel
+        self.radio = 16
+
+        # Escalado de salud por nivel: Salud * 2^(nivel-1)
+        self.salud_maxima = salud_base * (2 ** (nivel - 1))
+        self.salud = self.salud_maxima
+
+        self.velocidad_x = random.uniform(-2, 2)
+        self.velocidad_y = random.uniform(2, 4)
 
     def movimiento_enemigo(self):
+        """Lógica de rebote lateral y descenso."""
         self.rect.y += self.velocidad_y
         self.rect.x += self.velocidad_x
 
@@ -37,10 +36,11 @@ class EnemigoBase(pygame.sprite.Sprite):
         self.salud -= damage
 
     def die(self, jugador, enemigos_eliminados):
-        item = self.generate_item(jugador, enemigos_eliminados)
-        return item
+        """Determina si suelta un ítem al morir."""
+        return self.generate_item(jugador, enemigos_eliminados)
 
     def generate_item(self, jugador, enemigos_eliminados):
+        """Lógica de probabilidad de loot basada en el estado del jugador."""
         pool = ["potenciador_danio", "potenciador_cadencia", "potenciador_velocidad", "curacion"]
 
         if jugador.salud >= jugador.salud_maxima:
@@ -63,150 +63,102 @@ class EnemigoBase(pygame.sprite.Sprite):
             return random.choice(pool)
         return None
 
-    def aumentar_vida(self, cantidad):
-        self.salud += cantidad
+    def _crear_proyectil_hacia_jugador(self, ruta_imagen, danio, velocidad, jugador):
+        dx = jugador.rect.centerx - self.rect.centerx
+        dy = jugador.rect.centery - self.rect.centery
+        distancia = math.hypot(dx, dy)
 
-    def generate_enemy_bullet(self, image_key, danio, velocidad, jugador):
-        direccion_x = jugador.rect.centerx - self.rect.centerx
-        direccion_y = jugador.rect.centery - self.rect.centery
-        magnitud = math.sqrt(direccion_x ** 2 + direccion_y ** 2)
+        if distancia == 0: return None
 
-        if magnitud != 0:
-            direccion_x /= magnitud
-            direccion_y /= magnitud
+        # Normalizar vector
+        ux, uy = dx / distancia, dy / distancia
+        angulo = math.degrees(math.atan2(-uy, ux))
 
-        angulo = math.degrees(math.atan2(-direccion_y, direccion_x))
-        ruta_imagen_bala_enemigo = resource_manager.get_image_path(image_key)
-
-        bala_enemigo = BalaEnemigo(ruta_imagen_bala_enemigo, self.rect.centerx, self.rect.bottom, direccion_x, direccion_y,
-                                   danio=danio, velocidad=velocidad)
-        bala_enemigo.girar(angulo)
-        return bala_enemigo
+        bala = BalaEnemigo(ruta_imagen, self.rect.centerx, self.rect.bottom, ux, uy, danio, velocidad)
+        bala.girar(angulo)
+        return bala
 
 
 class EnemigoTipo1(EnemigoBase):
-    def __init__(self, imagen, x, y, pantalla_ancho, nivel, salud=1, salud_maxima=1):
-        super().__init__(imagen, x, y, pantalla_ancho, nivel, salud=salud, salud_maxima=salud_maxima)
+    def __init__(self, imagen, x, y, pantalla_ancho, nivel):
+        super().__init__(imagen, x, y, pantalla_ancho, nivel, salud_base=1)
         # Atributos específicos del tipo de enemigo 1
         self.velocidad_x = random.uniform(-3, 3)
-        self.velocidad_y = random.uniform(1, 4)
-        self.radio = 16  # Definir el radio de la hitbox circular
 
 
 class EnemigoTipo2(EnemigoBase):
-    def __init__(self, imagen, x, y, pantalla_ancho, lista_balas_enemigas, jugador, nivel, salud=2, salud_maxima=2):
-        super().__init__(imagen, x, y, pantalla_ancho, nivel, salud=salud, salud_maxima=salud_maxima)
+    def __init__(self, imagen, x, y, pantalla_ancho, nivel, jugador):
+        super().__init__(imagen, x, y, pantalla_ancho, nivel, salud_base=2)
         # Atributos específicos del tipo de enemigo 2
-        self.velocidad_x = random.uniform(-3, 3)
-        self.velocidad_y = random.uniform(2, 4)
-        self.lista_balas_enemigas = lista_balas_enemigas  # Guarda la referencia a la lista de balas enemigas
         self.jugador = jugador  # Guarda la referencia al jugador
-        self.danio = 2
-        self.velocidad_disparo = 4
         self.tiempo_ultimo_ataque = 0  # Inicializa el tiempo del último ataque
-        self.tiempo_entre_disparos = 3000
-        self.radio = 16  # Definir el radio de la hitbox circular
+        self.cadencia = 3000
 
-    def disparo_enemigo(self):
-        tiempo_actual = pygame.time.get_ticks()
-        if tiempo_actual - self.tiempo_ultimo_ataque > self.tiempo_entre_disparos:
-            bala_enemigo = self.generate_enemy_bullet("bala_enemigo", self.danio, self.velocidad_disparo, self.jugador)
-            self.tiempo_ultimo_ataque = tiempo_actual
-            return bala_enemigo
-        else:
-            return None
+    def disparo_enemigo(self, ahora, ruta_bala):
+        if ahora - self.tiempo_ultimo_ataque > self.cadencia:
+            self.tiempo_ultimo_ataque = ahora
+            return self._crear_proyectil_hacia_jugador(ruta_bala, 2, 4, self.jugador)
+        return None
 
 
 class EnemigoTipo3(EnemigoBase):
-    def __init__(self, imagen, x, y, pantalla_ancho, lista_balas_enemigas, jugador, nivel, salud=3, salud_maxima=3):
-        super().__init__(imagen, x, y, pantalla_ancho, nivel, salud=salud, salud_maxima=salud_maxima)
+    def __init__(self, imagen, x, y, pantalla_ancho, nivel, jugador):
+        super().__init__(imagen, x, y, pantalla_ancho, nivel, salud_base=3)
         # Atributos específicos del tipo de enemigo 3
-        self.velocidad_x = random.uniform(-3, 3)
-        self.velocidad_y = random.uniform(3, 6)
-        self.lista_balas_enemigas = lista_balas_enemigas
         self.jugador = jugador
-        self.danio = 2
-        self.velocidad_disparo = 7
+        self.velocidad_y = random.uniform(3, 6)
         self.tiempo_ultimo_ataque = 0
-        self.tiempo_entre_disparos = 1500
-        self.radio = 16  # Definir el radio de la hitbox circular
+        self.cadencia = 1500
 
-    def disparo_enemigo(self):
-        tiempo_actual = pygame.time.get_ticks()
-        if tiempo_actual - self.tiempo_ultimo_ataque > self.tiempo_entre_disparos:
-            bala_enemigo = self.generate_enemy_bullet("bala_enemigo2", self.danio, self.velocidad_disparo, self.jugador)
-            self.tiempo_ultimo_ataque = tiempo_actual
-            return bala_enemigo
-        else:
-            return None
+    def disparo_enemigo(self, ahora, ruta_bala):
+        if ahora - self.tiempo_ultimo_ataque > self.cadencia:
+            self.tiempo_ultimo_ataque = ahora
+            return self._crear_proyectil_hacia_jugador(ruta_bala, 2, 7, self.jugador)
+        return None
 
 
 class Jefe(EnemigoBase):
     TAMANO_JEFE = (200, 200)
 
-    def __init__(self, imagen_surface, x, y, pantalla_ancho, pantalla_alto, balas_enemigo, jugador, nivel):
-        super().__init__(imagen_surface, x, y, pantalla_ancho, nivel, salud=100, salud_maxima=100)
-
+    def __init__(self, imagen_surface, x, y, pantalla_ancho, pantalla_alto, nivel, jugador):
+        super().__init__(imagen_surface, x, y, pantalla_ancho, nivel, salud_base=100)
         # Atributos específicos del jefe
-        self.velocidad_y = 1  # Velocidad vertical de descenso
-        self.velocidad_x = 0  # Velocidad horizontal de movimiento lateral
-        self.radio = 50  # Definir el radio de la hitbox circular del jefe
         self.pantalla_alto = pantalla_alto
-        self.lista_balas_enemigas = balas_enemigo
         self.jugador = jugador
-        self.danio_disparo = 2
-        self.danio_disparo_rapido = 1
-        self.velocidad_disparo = 7
-        self.velocidad_disparo_rapido = 3
-        self.tiempo_ultimo_disparo = 0
-        self.tiempo_ultimo_disparo_rapido = 0
-        self.tiempo_entre_disparos_rapidos = 200  # Tiempo entre cada disparo rápido en milisegundos
+        self.radio = 80  # Definir el radio de la hitbox circular del jefe
+        self.velocidad_y = 2  # Velocidad vertical de descenso
+        self.velocidad_x = 3  # Velocidad lateral tras llegar a su posición
+        self.ultimo_disparo_normal = 0
+        self.ultimo_disparo_rapido = 0
+
+    def movimiento_enemigo(self):
+        """
+        Anulamos el movimiento base.
+        El jefe maneja su propia posición en update.
+        """
+        pass
 
     def update(self):
-        self.movimiento_jefe()
-
-    def movimiento_jefe(self):
+        """Lógica de patrulla del Jefe."""
+        # Descenso inicial
         if self.rect.y < self.pantalla_alto // 4:
-            # Incrementa la posición vertical para que baje hacia la mitad de la pantalla
             self.rect.y += self.velocidad_y
         else:
-            # Calcula la nueva posición X e Y para el movimiento lateral
-            nuevo_x = self.rect.x + self.velocidad_x
-            nuevo_y = self.rect.y
+            # Movimiento lateral
+            self.rect.x += self.velocidad_x
+            if self.rect.left < 0 or self.rect.right > self.pantalla_ancho:
+                self.velocidad_x *= -1
 
-            self.velocidad_y = 0
-
-            # Oscilación de la velocidad lateral entre dos valores
-            '''amplitud = 2  # Amplitud de la oscilación
-            frecuencia = 0.1  # Frecuencia de la oscilación (ajusta según lo deseado)
-            fase = pygame.time.get_ticks() * frecuencia  # Fase de la oscilación basada en el tiempo
-            velocidad_oscilante = amplitud * math.sin(fase)  # Velocidad oscilante'''
-
-            # Limita el movimiento del jefe para que no salga de los bordes de la pantalla
-            if nuevo_x > self.pantalla_ancho - self.rect.width:
-                nuevo_x = self.pantalla_ancho - self.rect.width
-            elif nuevo_y > self.pantalla_alto // 4:
-                self.velocidad_x = 1
-                nuevo_y = self.pantalla_alto // 4
-
-            # Actualiza la posición del jefe
-            self.rect.x = nuevo_x
-            self.rect.y = nuevo_y
-
-    def disparo_jefe(self):
-        tiempo_actual = pygame.time.get_ticks()
-        if tiempo_actual - self.tiempo_ultimo_disparo > 1500:
-            bala_enemigo = self.generate_enemy_bullet("bala_enemigo2", self.danio_disparo, self.velocidad_disparo, self.jugador)
-            self.tiempo_ultimo_disparo = tiempo_actual
-            return bala_enemigo
+    def disparo_jefe(self, ahora, ruta_bala):
+        if ahora - self.ultimo_disparo_normal > 1500:
+            self.ultimo_disparo_normal = ahora
+            return self._crear_proyectil_hacia_jugador(ruta_bala, 3, 7, self.jugador)
         else:
             return None
 
-    def disparo_rapido(self):
-        tiempo_actual = pygame.time.get_ticks()
-        if tiempo_actual - self.tiempo_ultimo_disparo_rapido > self.tiempo_entre_disparos_rapidos:
-            bala_enemigo = self.generate_enemy_bullet("bala_enemigo", self.danio_disparo_rapido, self.velocidad_disparo_rapido, self.jugador)
-            self.tiempo_ultimo_disparo_rapido = tiempo_actual
-            return bala_enemigo
+    def disparo_rapido(self, ahora, ruta_bala):
+        if ahora - self.ultimo_disparo_rapido > 250:
+            self.ultimo_disparo_rapido = ahora
+            return self._crear_proyectil_hacia_jugador(ruta_bala, 1, 4, self.jugador)
         else:
             return None

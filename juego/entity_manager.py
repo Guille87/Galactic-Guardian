@@ -1,3 +1,5 @@
+import pygame
+
 from entidades.enemigo import EnemigoTipo2, EnemigoTipo3, Jefe
 
 
@@ -34,18 +36,32 @@ class EntityManager:
             bala_e.bala_enemigo()
 
     def _actualizar_enemigos(self):
+        ahora = pygame.time.get_ticks()
+
         for enemigo in self.enemigos:
             enemigo.movimiento_enemigo()
             enemigo.update()
 
+            # 1. Lógica para Enemigos Tipo 2 y 3
             # Lógica de disparo automática de enemigos
             if isinstance(enemigo, (EnemigoTipo2, EnemigoTipo3)):
-                bala = enemigo.disparo_enemigo()
-                if bala: self.agregar_bala_enemigo(bala)
+                # Elegimos la imagen según el tipo
+                key_bala = "bala_enemigo" if isinstance(enemigo, EnemigoTipo2) else "bala_enemigo2"
+                ruta_bala = self.juego.rm.get_image_path(key_bala)
 
+                bala = enemigo.disparo_enemigo(ahora, ruta_bala)
+                if bala:
+                    self.agregar_bala_enemigo(bala)
+
+            # 2. Lógica específica del Jefe
             if isinstance(enemigo, Jefe):
-                b1 = enemigo.disparo_jefe()
-                b2 = enemigo.disparo_rapido()
+                # El jefe suele usar ambos tipos de bala
+                ruta_normal = self.juego.rm.get_image_path("bala_enemigo2")
+                ruta_rapida = self.juego.rm.get_image_path("bala_enemigo")
+
+                b1 = enemigo.disparo_jefe(ahora, ruta_normal)
+                b2 = enemigo.disparo_rapido(ahora, ruta_rapida)
+
                 if b1: self.agregar_bala_enemigo(b1)
                 if b2: self.agregar_bala_enemigo(b2)
 

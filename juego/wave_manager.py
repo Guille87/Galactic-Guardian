@@ -19,7 +19,7 @@ class WaveManager:
         self.tiempo_inicio_espera_jefe = 0
         self.tiempo_espera_jefe = 5000
 
-    def spawn_enemigo(self, tiempo_actual, balas_enemigo, jugador, nivel):
+    def spawn_enemigo(self, tiempo_actual, jugador, nivel):
         """
         Decide y crea la instancia del enemigo correspondiente.
         Retorna la instancia del enemigo o None.
@@ -45,13 +45,13 @@ class WaveManager:
 
         # Lógica de instanciación
         if es_jefe:
-            return Jefe(img_final, x, y, self.ancho, self.alto, balas_enemigo, jugador, nivel)
+            return Jefe(img_final, x, y, self.ancho, self.alto, nivel, jugador)
 
         if tipo_clase == EnemigoTipo1:
             return EnemigoTipo1(img_final, x, y, self.ancho, nivel)
 
         # Tipos 2 y 3 comparten firma de constructor
-        return tipo_clase(img_final, x, y, self.ancho, balas_enemigo, jugador, nivel)
+        return tipo_clase(img_final, x, y, self.ancho, nivel, jugador)
 
     def _obtener_config_enemigo(self, tiempo_actual):
         """
