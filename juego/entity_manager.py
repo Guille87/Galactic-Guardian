@@ -31,9 +31,9 @@ class EntityManager:
 
     def _actualizar_balas(self):
         for bala in self.balas[:]:
-            bala.bala_jugador()
+            bala.update()
         for bala_e in self.balas_enemigo[:]:
-            bala_e.bala_enemigo()
+            bala_e.update()
 
     def _actualizar_enemigos(self):
         ahora = pygame.time.get_ticks()

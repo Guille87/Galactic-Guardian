@@ -1,42 +1,13 @@
-import math
-
-import pygame
+from entidades.proyectil_base import Proyectil
 
 
-class BalaEnemigo(pygame.sprite.Sprite):
-    def __init__(self, imagen, x, y, direccion_x, direccion_y, danio, velocidad):
-        super().__init__()
-        self.image = pygame.image.load(imagen)
-        self.rect = self.image.get_rect(center=(x, y))
-        self.direccion_x = direccion_x
-        self.direccion_y = direccion_y
-        self.danio = danio
-        self.velocidad = velocidad
-        self.radio = 16  # Radio de la hitbox circular
+class BalaEnemigo(Proyectil):
+    def __init__(self, ruta_imagen, x, y, dir_x, dir_y, danio, velocidad):
+        super().__init__(ruta_imagen, x, y, danio, velocidad)
+        self.dir_x = dir_x
+        self.dir_y = dir_y
 
-    def bala_enemigo(self):
-        """
-        Mueve la bala en la dirección especificada por direccion_x y direccion_y.
-        """
-        self.rect.x += self.velocidad * self.direccion_x
-        self.rect.y += self.velocidad * self.direccion_y
-
-    def girar(self, angulo):
-        """
-        Gira la imagen de la bala.
-        """
-        # Girar la imagen de la bala
-        self.image = pygame.transform.rotate(self.image, angulo)
-        self.rect = self.image.get_rect(center=self.rect.center)
-
-    def comprobar_colision(self, objeto):
-        """
-        Comprueba si hay colisión entre la bala y otro objeto.
-        """
-        # Calcular la distancia entre los centros de la bala y el objeto
-        distancia_x = self.rect.centerx - objeto.rect.centerx
-        distancia_y = self.rect.centery - objeto.rect.centery
-        distancia = math.hypot(distancia_x, distancia_y)
-
-        # Si la distancia es menor que la suma de los radios de las hitboxes circulares, hay colisión
-        return distancia < self.radio + objeto.radio
+    def update(self):
+        """Movimiento basado en vector de dirección."""
+        self.rect.x += self.velocidad * self.dir_x
+        self.rect.y += self.velocidad * self.dir_y
