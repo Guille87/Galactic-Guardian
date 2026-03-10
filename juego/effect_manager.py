@@ -3,17 +3,29 @@ from efectos.destello_constante import DestelloConstante
 from entidades.explosion import Explosion
 
 class EffectManager:
+    TAMANO_EXPLOSION = (64, 64)
+
     def __init__(self, juego):
         self.juego = juego
-        # Guardamos las imágenes de explosión aquí para no pedirlas cada vez
-        self.explosion_images = [
-            self.juego.rm.get_image(f"explosion_{i}") for i in range(1, 12)
-        ]
+        # Pre-cargamos y escalamos la secuencia de animación una sola vez
+        self.explosion_frames = self._preparar_frames_explosion()
+
+    def _preparar_frames_explosion(self):
+        """Prepara y cachea los frames de la explosión escalados."""
+        frames = []
+        for i in range(1, 12):
+            nombre = f"explosion_{i}"
+            # Usamos el nuevo método del ResourceManager para obtenerlas optimizadas
+            img = self.juego.rm.get_image_scaled(nombre, self.TAMANO_EXPLOSION)
+            if img:
+                frames.append(img)
+        return frames
 
     def crear_explosion(self, posicion):
         """Crea una animación de explosión en el centro dado."""
-        explosion = Explosion(posicion, self.explosion_images)
-        self.juego.all_sprites.add(explosion)
+        if self.explosion_frames:
+            explosion = Explosion(posicion, self.explosion_frames)
+            self.juego.all_sprites.add(explosion)
 
     def crear_destello_recibir_danio(self):
         """Crea el destello rojo efímero sobre el jugador."""
