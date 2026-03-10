@@ -45,7 +45,13 @@ class RenderManager:
     def _dibujar_pantalla_game_over(self):
         """Dibuja la UI de fin de juego."""
         self.pantalla.blit(self.juego.background.img1, (0, 0))
-        self.juego.mostrar_game_over()
+
+        # Dibujar Texto "Game Over" (Lo que antes hacía Juego)
+        font_game_over = pygame.font.SysFont(None, 72)
+        texto_surf = font_game_over.render("Game Over", True, (255, 255, 255))
+        texto_rect = texto_surf.get_rect(center=(self.juego.pantalla_ancho // 2,
+                                                 self.juego.pantalla_alto // 2 - 150))
+        self.pantalla.blit(texto_surf, texto_rect)
 
         # Dibujar botones de Reintentar y Salir
         centro_x = self.juego.pantalla_ancho // 2

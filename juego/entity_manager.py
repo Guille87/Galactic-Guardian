@@ -51,13 +51,21 @@ class EntityManager:
 
     def _limpiar_entidades_fuera(self):
         """Elimina lo que sobra y actualiza contadores del juego."""
+
+        def esta_fuera(rect):
+            return (
+                    rect.bottom < 0 or rect.top > self.juego.pantalla_alto or
+                    rect.right < 0 or rect.left > self.juego.pantalla_ancho
+            )
+
         # Filtrar enemigos que se salen
-        salidos = [e for e in self.enemigos if self.juego.fuera_de_pantalla(e.rect)]
+        salidos = [e for e in self.enemigos if esta_fuera(e.rect)]
         self.juego.enemigos_activos -= len(salidos)
 
-        self.enemigos = [e for e in self.enemigos if not self.juego.fuera_de_pantalla(e.rect)]
-        self.balas = [b for b in self.balas if not self.juego.fuera_de_pantalla(b.rect)]
-        self.balas_enemigo = [b for b in self.balas_enemigo if not self.juego.fuera_de_pantalla(b.rect)]
+        # Reasignar listas filtrando las que NO están fuera
+        self.enemigos = [e for e in self.enemigos if not esta_fuera(e.rect)]
+        self.balas = [b for b in self.balas if not esta_fuera(b.rect)]
+        self.balas_enemigo = [b for b in self.balas_enemigo if not esta_fuera(b.rect)]
 
     def vaciar_todo(self):
         self.balas.clear()

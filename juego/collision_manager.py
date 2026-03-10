@@ -1,3 +1,5 @@
+import pygame
+
 from entidades.enemigo import EnemigoTipo1, EnemigoTipo2, EnemigoTipo3, Jefe
 from entidades.item import Item
 
@@ -80,13 +82,25 @@ class CollisionManager:
 
     def _colisiones_jugador_enemigo(self):
         em = self.juego.entity_manager
+        tiempo_actual = pygame.time.get_ticks()
+
         for enemigo in em.enemigos[:]:
             # VALIDACIÓN: Si el enemigo es None, lo saltamos
             if enemigo is None:
                 continue
 
             if self.juego.jugador.rect.colliderect(enemigo.rect):
-                self.juego.colision_jugador_enemigo(enemigo)
+                tiempo_ultima_colision = self.juego.enemigos_golpeados.get(enemigo, 0)
+
+                if tiempo_actual - tiempo_ultima_colision >= 2000:
+                    self.juego.jugador.reducir_salud(1)
+                    self.juego.audio_manager.reproducir_efecto("golpe")
+                    self.juego.enemigos_golpeados[enemigo] = tiempo_actual
+                    self.juego.manejar_impacto_jugador()
+                    enemigo.salud -= 1
+
+                if enemigo.salud <= 0:
+                    self._eliminar_enemigo(enemigo)
 
     def _colisiones_jugador_items(self):
         for sprite in self.juego.all_sprites:
