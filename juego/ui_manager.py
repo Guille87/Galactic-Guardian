@@ -31,16 +31,16 @@ class UIManager:
 
         # Atributos con barras
         self._dibujar_atributo(pantalla, "Ataque", self.juego.jugador.danio,
-                               self.juego.jugador.DANIO_MAXIMO, (10, 70), self.colores_atributos["Ataque"])
+                               self.juego.jugador.danio_maximo, (10, 70), self.colores_atributos["Ataque"])
 
         # Cálculo de cadencia (puedes mover esta lógica al jugador luego)
         cadencia_val = round(1 / (self.juego.jugador.cadencia_disparo / 1000), 2)
-        cadencia_max = round(1 / (self.juego.jugador.CADENCIA_DISPARO_MAXIMA / 1000), 2)
+        cadencia_max = round(1 / (self.juego.jugador.cadencia_disparo_maxima / 1000), 2)
         self._dibujar_atributo(pantalla, "Vel. Ataque", cadencia_val, cadencia_max, (10, 120),
                                self.colores_atributos["Vel. Ataque"])
 
         self._dibujar_atributo(pantalla, "Velocidad", self.juego.jugador.velocidad,
-                               self.juego.jugador.VELOCIDAD_MAXIMA, (10, 170), self.colores_atributos["Velocidad"])
+                               self.juego.jugador.CONFIG["vel_max"], (10, 170), self.colores_atributos["Velocidad"])
 
     def _dibujar_barras_jugador(self, pantalla):
         """Dibuja las mini-barras de salud bajo la nave."""
@@ -57,13 +57,18 @@ class UIManager:
 
     def _dibujar_barra_salud_jefe(self, pantalla):
         jefe = self.juego.jefe
-        barra_x = jefe.rect.centerx - jefe.rect.width // 2
-        barra_y = jefe.rect.bottom - 210
+        # Posición fija en la parte superior central
+        ancho_total = 400
+        barra_x = (self.juego.pantalla_ancho - ancho_total) // 2
+        barra_y = 50
 
-        ancho_total = jefe.rect.width
-        ancho_actual = ancho_total * (jefe.salud / jefe.salud_maxima)
+        ancho_actual = ancho_total * (max(0, jefe.salud) / jefe.salud_maxima)
 
-        # Fondo rojo y borde blanco
+        # Dibujar nombre del jefe arriba de la barra
+        texto_jefe = self.fuente_pequena.render("JEFE", True, (255, 255, 255))
+        pantalla.blit(texto_jefe, (barra_x, barra_y - 20))
+
+        # Fondo rojo (salud actual) y borde blanco
         pygame.draw.rect(pantalla, (255, 0, 0), (barra_x, barra_y, ancho_actual, 15))
         pygame.draw.rect(pantalla, (255, 255, 255), (barra_x, barra_y, ancho_total, 15), 1)
 

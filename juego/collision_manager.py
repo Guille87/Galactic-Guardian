@@ -76,7 +76,7 @@ class CollisionManager:
             if bala.comprobar_colision(self.juego.jugador):
                 if bala in em.balas_enemigo:
                     em.balas_enemigo.remove(bala)
-                self.juego.jugador.reducir_salud(bala.danio)
+                self.juego.jugador.recibir_danio(bala.danio)
                 self.juego.manejar_impacto_jugador()
                 self.juego.audio_manager.reproducir_efecto("golpe")
 
@@ -93,7 +93,7 @@ class CollisionManager:
                 tiempo_ultima_colision = self.juego.enemigos_golpeados.get(enemigo, 0)
 
                 if tiempo_actual - tiempo_ultima_colision >= 2000:
-                    self.juego.jugador.reducir_salud(1)
+                    self.juego.jugador.recibir_danio(1)
                     self.juego.audio_manager.reproducir_efecto("golpe")
                     self.juego.enemigos_golpeados[enemigo] = tiempo_actual
                     self.juego.manejar_impacto_jugador()

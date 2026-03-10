@@ -34,6 +34,9 @@ class Juego:
         self.nombre_entrada = ""
         self.jefe_derrotado = False
         self.disparando = False
+        self.all_sprites = pygame.sprite.Group()
+        self.enemigos_activos = 0
+        self.enemigos_eliminados = 0
 
         # Parámetros de dificultad
         self.MIN_TIEMPO_GENERACION = 800
@@ -50,7 +53,6 @@ class Juego:
         self.collision_manager = CollisionManager(self)
 
         # 4. Entidades Principales
-        self.all_sprites = pygame.sprite.Group()
         self.background = ScrollingBackground(
             self.rm.get_image("imagen_fondo1"),
             self.rm.get_image("imagen_fondo2"),
@@ -75,9 +77,6 @@ class Juego:
         self.clasificacion = clasificacion
 
         self.jefe = None
-
-        self.enemigos_activos = 0
-        self.enemigos_eliminados = 0
 
         # Inicialización de botones
         self.boton_opciones = None
@@ -160,20 +159,25 @@ class Juego:
         if self.jugador.vidas > 0:
             self.jugador.invulnerable = True
             self.jugador.tiempo_invulnerable = pygame.time.get_ticks() + 3000
-            self.jugador.aumentar_salud(self.jugador.salud_maxima)
+            self.jugador.curar(self.jugador.salud_maxima)
             self.effect_manager.crear_destello_invulnerabilidad()
 
     def disparar(self):
         """Extrae las balas del jugador y las registra en el manager de entidades."""
+        # 1. Obtenemos el tiempo actual
+        ahora = pygame.time.get_ticks()
+
+        # 2. Obtenemos la ruta de la imagen desde el RM que ya tiene Juego
+        ruta_bala = self.rm.get_image_path("bala_jugador1")
+
         # Llama a la función disparar del jugador para obtener las nuevas balas
-        nuevas_balas = self.jugador.disparar()
+        nuevas_balas = self.jugador.disparar(ahora, ruta_bala)
 
         # Verifica si hay nuevas balas y las agrega a la lista de balas
         for i, bala in enumerate(nuevas_balas):
-            if bala:
-                self.entity_manager.agregar_bala_jugador(bala)
-                if i == 0:  # Reproduce el sonido solo para la primera bala
-                    self.audio_manager.reproducir_efecto("disparo")
+            self.entity_manager.agregar_bala_jugador(bala)
+            if i == 0:  # Reproduce el sonido solo para la primera bala
+                self.audio_manager.reproducir_efecto("disparo")
 
     def actualizar(self):
         """Actualiza el estado del juego."""
@@ -203,6 +207,9 @@ class Juego:
             )
             if nuevo:
                 self.entity_manager.agregar_enemigo(nuevo)
+
+                if isinstance(nuevo, Jefe):
+                    self.jefe = nuevo
 
             self.tiempo_proximo_enemigo = ahora + random.randint(800, 1000)
 

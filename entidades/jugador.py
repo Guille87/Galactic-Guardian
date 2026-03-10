@@ -1,187 +1,139 @@
-import math
-
 import pygame
 
-from resources.resource_manager import ResourceManager
 from .bala import Bala
-
-# Instancia global de ResourceManager
-resource_manager = ResourceManager()
 
 
 class Jugador(pygame.sprite.Sprite):
-    TAMANO_NAVE = (50, 50)
-    DANIO_INICIAL = 1
-    VIDAS_INICIALES = 3
-    SALUD_INICIAL = 5
-    VELOCIDAD_INICIAL = 4
-    CADENCIA_DISPARO_INICIAL = 350
-    DANIO_MAXIMO = 3
-    SALUD_MAXIMA = 5
-    VELOCIDAD_MAXIMA = 6
-    CADENCIA_DISPARO_MAXIMA = 150
+    # Constantes de clase para configuración (Mantenible)
+    CONFIG = {
+        "tamano": (50, 50),
+        "salud_max": 5,
+        "vidas_init": 3,
+        "vel_max": 6,
+        "cadencia_max": 150,
+        "danio_max": 3
+    }
 
-    def __init__(self, imagen, pantalla_ancho, pantalla_alto, all_sprites):
-        super().__init__()
-        self.imagen_original = pygame.image.load(imagen)
-        self.image = pygame.transform.scale(self.imagen_original, Jugador.TAMANO_NAVE)
+    def __init__(self, ruta_imagen, pantalla_ancho, pantalla_alto, grupo_sprites):
+        super().__init__(grupo_sprites)
+        # 1. Configuración de Imagen (Recibimos la ruta, pero cargamos vía Pygame o pasamos la superficie)
+        # Nota: Idealmente el ResourceManager debería darte el Surface directamente
+        self.image = pygame.transform.scale(pygame.image.load(ruta_imagen), self.CONFIG["tamano"])
         self.rect = self.image.get_rect(centerx=pantalla_ancho // 2, bottom=pantalla_alto - 10)
-        self.danio = Jugador.DANIO_INICIAL
-        self.vidas = Jugador.VIDAS_INICIALES
-        self.salud = Jugador.SALUD_INICIAL
-        self.velocidad = Jugador.VELOCIDAD_INICIAL
-        self.cadencia_disparo = Jugador.CADENCIA_DISPARO_INICIAL
-        self.danio_maximo = Jugador.DANIO_MAXIMO  # Cantidad de daño máximo que puede infligir la nave del jugador
-        self.salud_maxima = Jugador.SALUD_MAXIMA  # Establece la salud máxima del jugador
-        self.velocidad_maxima = Jugador.VELOCIDAD_MAXIMA  # Establece la velocidad máxima de la nave del jugador
-        self.cadencia_disparo_maxima = Jugador.CADENCIA_DISPARO_MAXIMA  # Cadencia de disparo máxima en milisegundos
-        self.ultimo_disparo = pygame.time.get_ticks()  # Tiempo del último disparo
-        self.disparo_doble = False  # Atributo para rastrear el disparo doble
-        self.disparo_triple = False  # Atributo para rastrear el disparo triple
-        self.radio = 16  # Definir el radio de la hitbox circular
-        self.invulnerable = False  # Atributo para rastrear la invulnerabilidad
+
+        # 2. Atributos de Estado (Estadísticas)
+        self.vidas = self.CONFIG["vidas_init"]
+        self.salud = self.CONFIG["salud_max"]
+        self.salud_maxima = self.CONFIG["salud_max"]
+        self.velocidad = 4
+        self.danio = 1
+
+        # 3. Sistema de Armas
+        self.cadencia_disparo = 350
+        self.ultimo_disparo = 0
+        self.tipo_disparo = "simple"  # simple, doble, triple
+
+        # 4. Estado Físico
+        self.invulnerable = False
         self.tiempo_invulnerable = 0
         self.destello_constante = None
-        self.all_sprites = all_sprites  # Guardar una referencia al grupo de sprites
+        self.radio = 16
 
-    def mover(self, teclas_presionadas, pantalla):
-        """
-        Mueve al jugador según las teclas presionadas.
+    @property
+    def danio_maximo(self):
+        return self.CONFIG["danio_max"]
 
-        Args:
-            teclas_presionadas: Diccionario que contiene el estado de las teclas presionadas.
-            pantalla (Surface): Superficie de la pantalla del juego.
-        """
-        if teclas_presionadas[pygame.K_UP] or teclas_presionadas[pygame.K_w]:
-            self.rect.y -= self.velocidad
-        if teclas_presionadas[pygame.K_DOWN] or teclas_presionadas[pygame.K_s]:
-            self.rect.y += self.velocidad
-        if teclas_presionadas[pygame.K_LEFT] or teclas_presionadas[pygame.K_a]:
-            self.rect.x -= self.velocidad
-        if teclas_presionadas[pygame.K_RIGHT] or teclas_presionadas[pygame.K_d]:
-            self.rect.x += self.velocidad
+    @property
+    def velocidad_maxima(self):
+        return self.CONFIG["vel_max"]
+
+    @property
+    def cadencia_disparo_maxima(self):
+        return self.CONFIG["cadencia_max"]
+
+    def mover(self, teclas, pantalla):
+        """Mueve al jugador según las teclas presionadas."""
+        dx = (teclas[pygame.K_RIGHT] or teclas[pygame.K_d]) - (teclas[pygame.K_LEFT] or teclas[pygame.K_a])
+        dy = (teclas[pygame.K_DOWN] or teclas[pygame.K_s]) - (teclas[pygame.K_UP] or teclas[pygame.K_w])
+
+        self.rect.x += dx * self.velocidad
+        self.rect.y += dy * self.velocidad
+
+        # Obtenemos el rect de la superficie si es necesario
+        if isinstance(pantalla, pygame.Surface):
+            rect_limite = pantalla.get_rect()
+        else:
+            rect_limite = pantalla
 
         # Limita el movimiento del jugador para que no salga de los bordes de la pantalla
-        self.rect.clamp_ip(pantalla.get_rect().inflate(-15, -45))
+        self.rect.clamp_ip(rect_limite.inflate(-15, -45))
 
-    def disparar(self):
-        """
-        Realiza un disparo si ha pasado suficiente tiempo desde el último disparo.
-
-        Returns:
-            tuple: Una tupla que contiene las nuevas balas creadas.
-        """
-        tiempo_actual = pygame.time.get_ticks()
+    def disparar(self, tiempo_actual, ruta_bala):
+        """Lógica de control de tiempo para disparar."""
         if tiempo_actual - self.ultimo_disparo > self.cadencia_disparo:
-            nuevas_balas = self._crear_balas()
             self.ultimo_disparo = tiempo_actual
-            return nuevas_balas
-        return None, None, None
+            return self._generar_balas(ruta_bala)
+        return []
 
-    def _crear_balas(self):
-        """
-        Crea nuevas instancias de balas del jugador.
+    def _generar_balas(self, ruta_bala):
+        """Crea las instancias de balas según el power-up actual."""
+        balas = []
+        # Ángulo por defecto (hacia arriba)
+        angulo = 90
 
-        Returns:
-            list: Una lista que contiene las nuevas balas creadas.
-        """
-        ruta_imagen_bala_jugador = resource_manager.get_image_path("bala_jugador1")
-        angulo = math.degrees(math.atan2(45, 0))
-        nuevas_balas = []
+        pos_x = self.rect.centerx
+        pos_y = self.rect.top + 10
 
-        if self.disparo_triple:
-            for i in range(-1, 2):
-                nueva_bala = Bala(ruta_imagen_bala_jugador, self.rect.centerx + i * 15, self.rect.top + 10, self.danio)
-                nueva_bala.girar(angulo)
-                nuevas_balas.append(nueva_bala)
-        elif self.disparo_doble:
-            for i in range(2):
-                nueva_bala = Bala(ruta_imagen_bala_jugador, self.rect.centerx + (i - 0.5) * 15, self.rect.top + 10, self.danio)
-                nueva_bala.girar(angulo)
-                nuevas_balas.append(nueva_bala)
+        if self.tipo_disparo == "triple":
+            offsets = [-15, 0, 15]
+        elif self.tipo_disparo == "doble":
+            offsets = [-10, 10]
         else:
-            nueva_bala = Bala(ruta_imagen_bala_jugador, self.rect.centerx, self.rect.top + 10, self.danio)
-            nueva_bala.girar(angulo)
-            nuevas_balas.append(nueva_bala)
+            offsets = [0]
 
-        return nuevas_balas
+        for offset in offsets:
+            b = Bala(ruta_bala, pos_x + offset, pos_y, self.danio)
+            b.girar(angulo)
+            balas.append(b)
 
-    def reducir_salud(self, damage):
-        """
-        Reduce la salud del jugador.
-        :param damage: Cantidad de salud que se va a reducir.
-        """
+        return balas
+
+    def recibir_danio(self, cantidad):
         if not self.invulnerable:  # Verificar si la nave es vulnerable
-            self.salud -= damage
-            if self.salud <= 0 < self.vidas:
-                self.salud = 0  # Evita que la salud sea negativa
+            self.salud = max(0, self.salud - cantidad)
+            return True
+        return False
 
-    def aumentar_salud(self, cantidad):
+    def curar(self, cantidad):
         """
         Aumenta la salud del jugador.
         :param cantidad: Cantidad de salud que se va a aumentar.
         """
-        self.salud += cantidad
-        if self.salud > self.salud_maxima:
-            self.salud = self.salud_maxima
+        self.salud = min(self.salud_maxima, self.salud + cantidad)
 
-    def modificar_cadencia(self, cantidad):
-        """
-        Modifica la cadencia de disparo del jugador.
+    def mejorar_danio(self, cantidad=1):
+        # Evolución automática del tipo de disparo
+        if self.danio < self.CONFIG["danio_max"]:
+            self.danio += 1
+        elif self.tipo_disparo == "simple":
+            self.tipo_disparo = "doble"
+        elif self.tipo_disparo == "doble":
+            self.tipo_disparo = "triple"
 
-        Args:
-            cantidad (int): Cantidad en milisegundos que se va a modificar la cadencia de disparo.
-        """
-        self.cadencia_disparo += cantidad
-        if self.cadencia_disparo <= self.cadencia_disparo_maxima:
-            self.cadencia_disparo = self.cadencia_disparo_maxima
+    def mejorar_velocidad(self,cantidad=1):
+        self.velocidad = min(self.CONFIG["vel_max"], self.velocidad + cantidad)
 
-    def modificar_danio(self, cantidad):
-        """
-        Modifica el daño de las balas del jugador y desbloquea disparos dobles o triples si es necesario.
-
-        Args:
-            cantidad (int): Cantidad de daño que se va a modificar.
-        """
-        if self.disparo_doble and not self.disparo_triple:
-            self.disparo_triple = True
-        if not self.disparo_doble and self.danio >= self.danio_maximo:
-            self.disparo_doble = True
-        self.danio += cantidad
-        if self.danio > self.danio_maximo:
-            self.danio = self.danio_maximo
-
-    def modificar_velocidad(self, cantidad):
-        """
-        Modifica la velocidad de movimiento del jugador.
-
-        Args:
-            cantidad (int): Cantidad de velocidad que se va a modificar.
-        """
-        self.velocidad += cantidad
-        if self.velocidad > self.velocidad_maxima:
-            self.velocidad = self.velocidad_maxima
+    def mejorar_cadencia(self, decremento):
+        self.cadencia_disparo = max(self.CONFIG["cadencia_max"], self.cadencia_disparo - decremento)
 
     def reducir_vidas(self, cantidad):
-        """
-        Reduce la salud del jugador.
-        :param cantidad: Cantidad de vidas que se va a reducir.
-        """
-        self.vidas -= cantidad
-        if self.vidas < 0:
-            self.vidas = 0  # Evita que las vidas sea negativa
+        self.vidas = max(0, self.vidas - cantidad)
 
     def update(self):
-        """
-        Actualiza el estado del jugador en cada fotograma.
-        """
+        """Actualiza el estado del jugador en cada fotograma."""
         # Comprobar si la invulnerabilidad ha expirado
-        if self.invulnerable:
-            tiempo_actual = pygame.time.get_ticks()
-            if tiempo_actual > self.tiempo_invulnerable:
-                self.invulnerable = False  # Hacer que la nave sea vulnerable nuevamente
-
-                # Limpieza segura del destello constante
-                if self.destello_constante:
-                    self.destello_constante.kill()
-                    self.destello_constante = None
+        if self.invulnerable and pygame.time.get_ticks() > self.tiempo_invulnerable:
+            self.invulnerable = False
+            if self.destello_constante:
+                self.destello_constante.kill()
+                self.destello_constante = None

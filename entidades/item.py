@@ -6,10 +6,10 @@ class Item(pygame.sprite.Sprite):
 
     # Mapeo de efectos a funciones de jugador
     EFECTOS = {
-        "curacion": lambda jugador: jugador.aumentar_salud(1),
-        "potenciador_cadencia": lambda jugador: jugador.modificar_cadencia(-25),
-        "potenciador_danio": lambda jugador: jugador.modificar_danio(1),
-        "potenciador_velocidad": lambda jugador: jugador.modificar_velocidad(0.25)
+        "curacion": lambda jugador: jugador.curar(1),
+        "potenciador_cadencia": lambda jugador: jugador.mejorar_cadencia(25),
+        "potenciador_danio": lambda jugador: jugador.mejorar_danio(1),
+        "potenciador_velocidad": lambda jugador: jugador.mejorar_velocidad(0.5)
     }
 
     def __init__(self, tipo, imagen_surface, x, y):

@@ -43,10 +43,14 @@ class EnemigoBase(pygame.sprite.Sprite):
     def generate_item(self, jugador, enemigos_eliminados):
         pool = ["potenciador_danio", "potenciador_cadencia", "potenciador_velocidad", "curacion"]
 
-        if jugador.salud == jugador.salud_maxima: pool.remove("curacion")
-        if jugador.velocidad == jugador.velocidad_maxima: pool.remove("potenciador_velocidad")
-        if jugador.cadencia_disparo == jugador.cadencia_disparo_maxima: pool.remove("potenciador_cadencia")
-        if jugador.disparo_triple: pool.remove("potenciador_danio")
+        if jugador.salud >= jugador.salud_maxima:
+            pool.remove("curacion")
+        if jugador.velocidad >= jugador.velocidad_maxima:
+            pool.remove("potenciador_velocidad")
+        if jugador.cadencia_disparo <= jugador.cadencia_disparo_maxima:
+            pool.remove("potenciador_cadencia")
+        if jugador.tipo_disparo == "triple":
+            pool.remove("potenciador_danio")
 
         if not pool: return None
 
