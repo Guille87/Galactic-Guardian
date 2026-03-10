@@ -4,7 +4,6 @@ import pygame
 import pygame.freetype
 
 from entidades.enemigo import EnemigoTipo2, EnemigoTipo3, Jefe
-from entidades.item import Item
 from entidades.jugador import Jugador
 from juego.audio_manager import AudioManager
 from juego.collision_manager import CollisionManager

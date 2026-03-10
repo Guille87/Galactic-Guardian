@@ -2,24 +2,23 @@ import math
 import random
 
 import pygame
-import os
-from .bala_enemigo import BalaEnemigo
-from .item import Item
-from resources.resource_manager import ResourceManager
 
+from resources.resource_manager import ResourceManager
+from .bala_enemigo import BalaEnemigo
 
 # Crear una instancia global de ResourceManager
 resource_manager = ResourceManager()
 
 
 class EnemigoBase(pygame.sprite.Sprite):
-    def __init__(self, imagen, x, y, pantalla_ancho, nivel, salud, salud_maxima):
+    TAMANO_ESTANDAR = (48, 48)
+
+    def __init__(self, imagen_surface, x, y, pantalla_ancho, nivel, salud, salud_maxima):
         super().__init__()
         # Carga la imagen original de la nave enemiga
-        self.imagen_original = pygame.image.load(imagen)
-        # Escala la imagen a una fracción de su tamaño original
-        self.image = pygame.transform.scale(self.imagen_original, (50, 50))
+        self.image = imagen_surface
         self.rect = self.image.get_rect(x=x, y=y)
+
         self.velocidad_x = random.uniform(-2, 2)  # Velocidad horizontal aleatoria
         self.velocidad_y = random.uniform(2, 4)  # Velocidad vertical aleatoria
         self.pantalla_ancho = pantalla_ancho
@@ -139,17 +138,17 @@ class EnemigoTipo3(EnemigoBase):
 
 
 class Jefe(EnemigoBase):
-    def __init__(self, imagen, x, y, pantalla_ancho, pantalla_alto, lista_balas_enemigas, jugador, nivel, salud=100, tamano=(200, 200), salud_maxima=100):
-        super().__init__(imagen, x, y, pantalla_ancho, nivel, salud=salud, salud_maxima=salud_maxima)
-        # Carga la imagen del jefe con el tamaño deseado
-        self.image = pygame.transform.scale(pygame.image.load(imagen), tamano)
-        self.rect = self.image.get_rect(x=x, y=y)
+    TAMANO_JEFE = (200, 200)
+
+    def __init__(self, imagen_surface, x, y, pantalla_ancho, pantalla_alto, balas_enemigo, jugador, nivel):
+        super().__init__(imagen_surface, x, y, pantalla_ancho, nivel, salud=100, salud_maxima=100)
+
         # Atributos específicos del jefe
         self.velocidad_y = 1  # Velocidad vertical de descenso
         self.velocidad_x = 0  # Velocidad horizontal de movimiento lateral
         self.radio = 50  # Definir el radio de la hitbox circular del jefe
         self.pantalla_alto = pantalla_alto
-        self.lista_balas_enemigas = lista_balas_enemigas
+        self.lista_balas_enemigas = balas_enemigo
         self.jugador = jugador
         self.danio_disparo = 2
         self.danio_disparo_rapido = 1

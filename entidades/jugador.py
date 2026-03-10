@@ -2,7 +2,6 @@ import math
 
 import pygame
 
-from efectos.destello_constante import DestelloConstante
 from resources.resource_manager import ResourceManager
 from .bala import Bala
 

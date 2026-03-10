@@ -36,6 +36,7 @@ class ResourceManager:
                 scaled = pygame.transform.scale(original, size).convert_alpha()
                 self.scaled_resources[cache_key] = scaled
             else:
+                print(f"ERROR: No se encontró el recurso: {name}")
                 return None
 
         return self.scaled_resources[cache_key]
