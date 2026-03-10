@@ -18,6 +18,7 @@ class MenuManager:
         self.clasificacion = sistema_clasificacion
         self.font_titulo = pygame.font.Font(None, 76)
         self.font_estandar = pygame.font.Font(None, 36)
+        self.opciones_cargadas = False
 
         # Estado inicial
         self.estado = "PRINCIPAL"  # Posibles: PRINCIPAL, OPCIONES, PUNTUACIONES

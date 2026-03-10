@@ -34,16 +34,16 @@ class InputHandler:
 
         # Si no está pausado y la bandera está activa, dispara
         if not self.juego.pausado and self.juego.disparando:
-            self.juego._disparar()
+            self.juego.disparar()
 
         return True
 
     def _manejar_teclas_presionadas(self, tecla):
         if tecla == pygame.K_ESCAPE or tecla == pygame.K_p:
             if not self.juego.pausado:
-                self.juego._pausar_juego()
+                self.juego.pausar_juego()
             else:
-                self.juego._reanudar_juego()
+                self.juego.reanudar_juego()
 
         elif tecla == pygame.K_SPACE and not self.juego.pausado:
             self.juego.disparando = True

@@ -77,7 +77,8 @@ class WaveManager:
         # Fase 1 (Solo Tipo 1)
         return EnemigoTipo1, "enemigo1", False
 
-    def _get_ruta(self, clase_enemigo):
+    @staticmethod
+    def _get_ruta(clase_enemigo):
         mapping = {
             EnemigoTipo1: "enemigo1",
             EnemigoTipo2: "enemigo2",

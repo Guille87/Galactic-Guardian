@@ -10,7 +10,7 @@ class RenderManager:
         self.font_botones = pygame.font.SysFont(None, 30)
 
     def renderizar_todo(self):
-        """Método principal que orquestra el dibujo de cada frame."""
+        """Función principal que orquesta el dibujo de cada frame."""
         if self.juego.estado_game_over:
             self._dibujar_pantalla_game_over()
             return  # No dibujamos nada más si es Game Over total

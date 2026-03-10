@@ -60,7 +60,8 @@ class CollisionManager:
             self.juego.jefe = None
             self.juego.reiniciar_juego()
 
-    def _obtener_puntuacion(self, enemigo):
+    @staticmethod
+    def _obtener_puntuacion(enemigo):
         if isinstance(enemigo, EnemigoTipo1): return 1
         if isinstance(enemigo, EnemigoTipo2): return 2
         if isinstance(enemigo, EnemigoTipo3): return 3

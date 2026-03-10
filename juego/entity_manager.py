@@ -9,15 +9,15 @@ class EntityManager:
         self.enemigos = []
         self.items = juego.all_sprites  # Compartimos el grupo de items/explosiones
 
-    def añadir_enemigo(self, enemigo):
+    def agregar_enemigo(self, enemigo):
         if enemigo:
             self.enemigos.append(enemigo)
 
-    def añadir_bala_jugador(self, bala):
+    def agregar_bala_jugador(self, bala):
         if bala:
             self.balas.append(bala)
 
-    def añadir_bala_enemigo(self, bala):
+    def agregar_bala_enemigo(self, bala):
         if bala:
             self.balas_enemigo.append(bala)
 
@@ -41,13 +41,13 @@ class EntityManager:
             # Lógica de disparo automática de enemigos
             if isinstance(enemigo, (EnemigoTipo2, EnemigoTipo3)):
                 bala = enemigo.disparo_enemigo()
-                if bala: self.añadir_bala_enemigo(bala)
+                if bala: self.agregar_bala_enemigo(bala)
 
             if isinstance(enemigo, Jefe):
                 b1 = enemigo.disparo_jefe()
                 b2 = enemigo.disparo_rapido()
-                if b1: self.añadir_bala_enemigo(b1)
-                if b2: self.añadir_bala_enemigo(b2)
+                if b1: self.agregar_bala_enemigo(b1)
+                if b2: self.agregar_bala_enemigo(b2)
 
     def _limpiar_entidades_fuera(self):
         """Elimina lo que sobra y actualiza contadores del juego."""

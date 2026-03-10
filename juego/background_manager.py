@@ -27,6 +27,6 @@ class ScrollingBackground(pygame.sprite.Sprite):
             self.y2 = self.y1 - self.pantalla_alto
 
     def draw(self, superficie):
-        """Método personalizado de dibujo para el fondo doble."""
+        """Función personalizada de dibujo para el fondo doble."""
         superficie.blit(self.img1, (0, self.y1))
         superficie.blit(self.img2, (0, self.y2))

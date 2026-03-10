@@ -15,7 +15,7 @@ class EffectManager:
         frames = []
         for i in range(1, 12):
             nombre = f"explosion_{i}"
-            # Usamos el nuevo método del ResourceManager para obtenerlas optimizadas
+            # Usamos la nueva función del ResourceManager para obtenerlas optimizadas
             img = self.juego.rm.get_image_scaled(nombre, self.TAMANO_EXPLOSION)
             if img:
                 frames.append(img)

@@ -85,14 +85,14 @@ class Juego:
         # Configuración del reloj
         self.reloj = pygame.time.Clock()
 
-    def _pausar_juego(self):
+    def pausar_juego(self):
         """
         Pausa el juego y guarda el tiempo en que se pausó.
         """
         self.pausado = True
         self.tiempo_pausa = pygame.time.get_ticks()
 
-    def _reanudar_juego(self):
+    def reanudar_juego(self):
         """
         Reanuda el juego y ajusta los tiempos para sincronizarlos con el tiempo pausado.
         """
@@ -110,7 +110,7 @@ class Juego:
                 enemigo.tiempo_ultimo_disparo += tiempo_pausado
                 enemigo.tiempo_ultimo_disparo_rapido += tiempo_pausado
 
-    def _disparar(self):
+    def disparar(self):
         """
         Maneja la lógica de disparo del jugador.
         """
@@ -120,7 +120,7 @@ class Juego:
         # Verifica si hay nuevas balas y las agrega a la lista de balas
         for i, bala in enumerate(nuevas_balas):
             if bala:
-                self.entity_manager.añadir_bala_jugador(bala)
+                self.entity_manager.agregar_bala_jugador(bala)
                 if i == 0:  # Reproduce el sonido solo para la primera bala
                     self.audio_manager.reproducir_efecto("disparo")
 
@@ -135,7 +135,7 @@ class Juego:
         self.actualizar_jugador()
         self.generar_enemigos()
 
-        # El manager se encarga de todo el "mundo"
+        # El manager se encarga de totalidad del "mundo"
         self.entity_manager.actualizar()
         self.collision_manager.actualizar()
 
@@ -213,7 +213,7 @@ class Juego:
                 )
 
                 if nuevo:
-                    self.entity_manager.añadir_enemigo(nuevo)
+                    self.entity_manager.agregar_enemigo(nuevo)
                     if isinstance(nuevo, Jefe):
                         self.jefe = nuevo
                     self.enemigos_activos += 1
