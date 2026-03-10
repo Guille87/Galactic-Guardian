@@ -49,7 +49,7 @@ class Jugador(pygame.sprite.Sprite):
         Mueve al jugador según las teclas presionadas.
 
         Args:
-            teclas_presionadas (dict): Diccionario que contiene el estado de las teclas presionadas.
+            teclas_presionadas: Diccionario que contiene el estado de las teclas presionadas.
             pantalla (Surface): Superficie de la pantalla del juego.
         """
         if teclas_presionadas[pygame.K_UP] or teclas_presionadas[pygame.K_w]:

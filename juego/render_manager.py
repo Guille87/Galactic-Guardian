@@ -11,34 +11,34 @@ class RenderManager:
 
     def renderizar_todo(self):
         """Función principal que orquesta el dibujo de cada frame."""
-        if self.juego.estado_game_over:
-            self._dibujar_pantalla_game_over()
-            return  # No dibujamos nada más si es Game Over total
-
+        # 1. Dibujar el Fondo (siempre primero)
         if self.juego.pausado:
             self._dibujar_fondo_en_gris()
         else:
             # Ahora el manager del fondo se encarga de sus propias capas
             self.juego.background.draw(self.pantalla)
 
-        # Si el jugador murió, no dibujamos más elementos del mundo
-        if self.juego.jugador.vidas <= 0:
-            pygame.display.flip()
-            return
+        # 2. Dibujar Entidades del mundo (solo si no es Game Over total)
+        if not self.juego.estado_game_over and not self.juego.pidiendo_nombre:
+            self._dibujar_entidades()
 
-        # Dibujar Sprites (Balas, Enemigos, Items, Explosiones)
-        self._dibujar_entidades()
+            # Dibujar Jugador
+            if self.juego.pausado:
+                self._dibujar_sprite_en_gris(self.juego.jugador)
+                self._mostrar_texto_centralizado("Juego Pausado", (255, 255, 255))
+                self._dibujar_botones_pausa()
+            else:
+                self.pantalla.blit(self.juego.jugador.image, self.juego.jugador.rect)
 
-        # Dibujar Jugador
-        if self.juego.pausado:
-            self._dibujar_sprite_en_gris(self.juego.jugador)
-            self._mostrar_texto_centralizado("Juego Pausado", (255, 255, 255))
-            self._dibujar_botones_pausa()
-        else:
-            self.pantalla.blit(self.juego.jugador.image, self.juego.jugador.rect)
+            # Interfaz de Usuario estándar
+            self.juego.ui_manager.dibujar_interfaz(self.pantalla)
 
-        # Interfaz de Usuario (Salud, Puntos, Nivel)
-        self.juego.ui_manager.dibujar_interfaz(self.pantalla)
+        # 3. Capas Superiores (Overlays)
+        if self.juego.pidiendo_nombre:
+            self.juego.ui_manager.dibujar_entrada_nombre(self.pantalla, self.juego.nombre_entrada)
+
+        elif self.juego.estado_game_over:
+            self._dibujar_pantalla_game_over()
 
         pygame.display.flip()
 
@@ -56,20 +56,21 @@ class RenderManager:
 
         self.juego.boton_reintentar.dibujar(self.pantalla, self.font_botones)
         self.juego.boton_salir_post.dibujar(self.pantalla, self.font_botones)
-        pygame.display.flip()
 
     def _dibujar_entidades(self):
         """Dibuja todos los grupos de elementos, aplicando gris si está pausado."""
         em = self.juego.entity_manager
+
         # Listas extraídas del manager
         listas_elementos = [em.balas, em.balas_enemigo, em.enemigos]
 
         # Primero los sprites generales (explosiones, items, etc)
         for sprite in self.juego.all_sprites:
-            if self.juego.pausado:
-                self._dibujar_sprite_en_gris(sprite)
-            else:
-                self.pantalla.blit(sprite.image, sprite.rect)
+            if sprite != self.juego.jugador:
+                if self.juego.pausado:
+                    self._dibujar_sprite_en_gris(sprite)
+                else:
+                    self.pantalla.blit(sprite.image, sprite.rect)
 
         # Luego las listas específicas
         for lista in listas_elementos:
@@ -105,11 +106,11 @@ class RenderManager:
         bg = self.juego.background
         for img, pos_y in [(bg.img1, bg.y1), (bg.img2, bg.y2)]:
             img_gris = img.copy()
-            img_gris.fill((128, 128, 128), special_flags=pygame.BLEND_RGB_MULT)
+            img_gris.fill((80, 80, 80), special_flags=pygame.BLEND_RGB_MULT)
             self.pantalla.blit(img_gris, (0, pos_y))
 
     def _dibujar_sprite_en_gris(self, sprite):
         if hasattr(sprite, 'image'):
             img_gris = sprite.image.copy()
-            img_gris.fill((128, 128, 128), special_flags=pygame.BLEND_RGB_MULT)
+            img_gris.fill((100, 100, 100), special_flags=pygame.BLEND_RGB_MULT)
             self.pantalla.blit(img_gris, sprite.rect)

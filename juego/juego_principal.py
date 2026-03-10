@@ -41,6 +41,8 @@ class Juego:
         self.MAX_TIEMPO_GENERACION = 1000
         self.rm = resource_manager
         self.estado_game_over = False
+        self.pidiendo_nombre = False
+        self.nombre_entrada = ""
 
         self.audio_manager = AudioManager(self.rm, volumen_musica, volumen_efectos)
         self.effect_manager = EffectManager(self)
@@ -271,10 +273,10 @@ class Juego:
         puntuaciones_top = self.clasificacion.obtener_puntuaciones_top()
         if len(puntuaciones_top) < 10 or self.puntuacion > puntuaciones_top[-1][1]:
             # La puntuación del jugador está entre las 10 mejores o es superior a la última de las 10 mejores
-            nombre_jugador = self.mostrar_cuadro_dialogo("Introduce tu nombre: ")
-            self.clasificacion.agregar_puntuacion(nombre_jugador, self.puntuacion)
-
-        self.estado_game_over = True
+            self.pidiendo_nombre = True
+            self.nombre_entrada = ""
+        else:
+            self.estado_game_over = True
 
     def mostrar_cuadro_dialogo(self, mensaje):
         font_dialogo = pygame.freetype.SysFont(None, 24)

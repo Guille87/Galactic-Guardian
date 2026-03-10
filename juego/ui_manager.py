@@ -116,3 +116,26 @@ class UIManager:
         boton_no.dibujar(pantalla, self.fuente_media)
 
         pygame.display.flip()
+
+    def dibujar_entrada_nombre(self, pantalla, nombre_actual):
+        """Dibuja la interfaz para introducir el nombre en el Game Over."""
+        # 1. Fondo (usamos el fondo del juego para consistencia)
+        pantalla.blit(self.juego.background.img1, (0, 0))
+
+        # 2. Capa oscura traslúcida para resaltar el texto
+        overlay = pygame.Surface((self.juego.pantalla_ancho, self.juego.pantalla_alto))
+        overlay.set_alpha(180)
+        overlay.fill((0, 0, 0))
+        pantalla.blit(overlay, (0, 0))
+
+        # 3. Textos
+        titulo = self.fuente_media.render("¡NUEVA PUNTUACIÓN TOP!", True, (255, 215, 0))  # Dorado
+        instrucciones = self.fuente_pequena.render("Introduce tu nombre y pulsa ENTER:", True, (200, 200, 200))
+        nombre_surface = self.fuente_media.render(nombre_actual + "_", True, (255, 255, 255))
+
+        # Posicionamiento centrado
+        cx, cy = self.juego.pantalla_ancho // 2, self.juego.pantalla_alto // 2
+
+        pantalla.blit(titulo, titulo.get_rect(center=(cx, cy - 60)))
+        pantalla.blit(instrucciones, instrucciones.get_rect(center=(cx, cy - 20)))
+        pantalla.blit(nombre_surface, nombre_surface.get_rect(center=(cx, cy + 40)))

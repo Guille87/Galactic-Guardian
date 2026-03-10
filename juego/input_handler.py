@@ -16,6 +16,24 @@ class InputHandler:
                 pygame.quit()
                 sys.exit()
 
+            # --- ENTRADA DE TEXTO (GAME OVER) ---
+            if self.juego.pidiendo_nombre:
+                if evento.type == pygame.KEYDOWN:
+                    if evento.key == pygame.K_RETURN:
+                        if self.juego.nombre_entrada.strip():
+                            self.juego.clasificacion.agregar_puntuacion(
+                                self.juego.nombre_entrada, self.juego.puntuacion
+                            )
+                            self.juego.pidiendo_nombre = False
+                            self.juego.estado_game_over = True
+                    elif evento.key == pygame.K_BACKSPACE:
+                        self.juego.nombre_entrada = self.juego.nombre_entrada[:-1]
+                    elif len(self.juego.nombre_entrada) < 15:
+                        # Filtrar solo caracteres imprimibles
+                        if evento.unicode.isprintable():
+                            self.juego.nombre_entrada += evento.unicode
+                continue  # Saltamos el resto del procesamiento si estamos escribiendo
+
             # --- TECLAS ---
             elif evento.type == pygame.KEYDOWN:
                 self._manejar_teclas_presionadas(evento.key)
