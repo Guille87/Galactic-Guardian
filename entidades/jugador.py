@@ -114,7 +114,7 @@ class Jugador(pygame.sprite.Sprite):
     def mejorar_danio(self, cantidad=1):
         # Evolución automática del tipo de disparo
         if self.danio < self.CONFIG["danio_max"]:
-            self.danio += 1
+            self.danio += cantidad
         elif self.tipo_disparo == "simple":
             self.tipo_disparo = "doble"
         elif self.tipo_disparo == "doble":
