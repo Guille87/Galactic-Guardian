@@ -1,7 +1,7 @@
 import pygame
 
-from entidades.enemigo import Jefe
-from entidades.item import Item
+from src.entities.enemies import Jefe
+from src.entities.items import Item
 
 
 class CollisionManager:

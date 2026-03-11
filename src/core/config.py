@@ -2,8 +2,9 @@ import configparser
 import os
 
 # --- RUTAS Y RECURSOS (CONSTANTES) ---
-DIR_BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CONFIG_FILE = os.path.join(DIR_BASE, 'config.ini')
+DIR_PROYECTO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DIR_ASSETS = os.path.join(DIR_PROYECTO, 'data', 'assets')
+CONFIG_FILE = os.path.join(DIR_PROYECTO, 'config.ini')
 
 RECURSOS = {
     "imagen_fondo1": "imagenes/fondo1.png",

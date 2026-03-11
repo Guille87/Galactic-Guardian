@@ -1,22 +1,22 @@
 import pygame
 import os
 
-from juego.menu import MenuManager
-from juego.audio_manager import AudioManager
-from resources.resource_manager import ResourceManager
-from juego.configuracion import RECURSOS, SONIDOS, EXPLOSIONES, DIR_BASE, cargar_configuracion
-from juego.clasificacion import SistemaClasificacion
+from src.ui.menu import MenuManager
+from src.core.audio import AudioManager
+from src.core.resources import ResourceManager
+from src.core.config import RECURSOS, SONIDOS, EXPLOSIONES, DIR_ASSETS, cargar_configuracion
+from src.ui.scoreboard import SistemaClasificacion
 
 
 def cargar_activos_del_juego(rm):
     """Carga todas las imágenes y sonidos en el ResourceManager."""
     # Cargar Imágenes
     for nombre, ruta in {** RECURSOS, ** EXPLOSIONES}.items():
-        rm.load_image(nombre, os.path.join(DIR_BASE, ruta))
+        rm.load_image(nombre, os.path.join(DIR_ASSETS, ruta))
 
     # Cargar Sonidos
     for nombre, ruta in SONIDOS.items():
-        rm.load_sound(nombre, os.path.join(DIR_BASE, ruta))
+        rm.load_sound(nombre, os.path.join(DIR_ASSETS, ruta))
 
 
 def main():
@@ -27,7 +27,7 @@ def main():
     pantalla = pygame.display.set_mode((600, 800))
 
     # Establecer el icono de la ventana
-    icono_path = os.path.join(DIR_BASE, 'imagenes/favicon.ico')
+    icono_path = os.path.join(DIR_ASSETS, 'data/assets/imagenes/favicon.ico')
     if os.path.exists(icono_path):
         pygame.display.set_icon(pygame.image.load(icono_path))
 

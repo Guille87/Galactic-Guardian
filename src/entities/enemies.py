@@ -3,7 +3,7 @@ import random
 
 import pygame
 
-from .bala_enemigo import BalaEnemigo
+from .bullet_enemy import BalaEnemigo
 
 
 class EnemigoBase(pygame.sprite.Sprite):

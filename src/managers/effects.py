@@ -1,6 +1,6 @@
-from efectos.destello import Destello
-from efectos.destello_constante import DestelloConstante
-from entidades.explosion import Explosion
+from src.visual.flash import Destello
+from src.visual.flash_constant import DestelloConstante
+from src.visual.explosions import Explosion
 
 class EffectManager:
     TAMANO_EXPLOSION = (64, 64)

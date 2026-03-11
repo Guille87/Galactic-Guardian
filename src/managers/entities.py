@@ -1,6 +1,6 @@
 import pygame
 
-from entidades.enemigo import EnemigoTipo2, EnemigoTipo3, Jefe
+from src.entities.enemies import EnemigoTipo2, EnemigoTipo3, Jefe
 
 
 class EntityManager:

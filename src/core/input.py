@@ -1,6 +1,6 @@
 import pygame
 
-from ui.boton import Boton
+from src.ui.components.button import Boton
 
 
 class InputHandler:

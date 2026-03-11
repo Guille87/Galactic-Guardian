@@ -1,6 +1,6 @@
 import pygame
 import random
-from entidades.enemigo import EnemigoTipo1, EnemigoTipo2, EnemigoTipo3, Jefe, EnemigoBase
+from src.entities.enemies import EnemigoTipo1, EnemigoTipo2, EnemigoTipo3, Jefe, EnemigoBase
 
 
 class WaveManager:

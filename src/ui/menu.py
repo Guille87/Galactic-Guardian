@@ -2,8 +2,9 @@ import time
 
 import pygame
 import pygame_gui
-from juego import configuracion
-from ui.boton import Boton
+
+from src.core import config
+from src.ui.components.button import Boton
 
 
 class MenuManager:
@@ -25,7 +26,7 @@ class MenuManager:
         self.ejecutando = True
 
         # Cargar config inicial
-        self.vol_musica, self.vol_efectos = configuracion.cargar_configuracion()
+        self.vol_musica, self.vol_efectos = config.cargar_configuracion()
         self._crear_botones()
 
         # Control de feedback sonoro
@@ -141,7 +142,7 @@ class MenuManager:
 
                 elif event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == self.btn_guardar:
-                        configuracion.guardar_configuracion(self.vol_musica, self.vol_efectos)
+                        config.guardar_configuracion(self.vol_musica, self.vol_efectos)
                         self.opciones_cargadas = False # Limpiar para la próxima vez
                         self.estado = "PRINCIPAL"
                     elif event.ui_element == self.btn_volver:
@@ -220,7 +221,7 @@ class MenuManager:
         pygame.display.flip()
 
     def _lanzar_juego(self):
-        from juego.juego_principal import Juego
+        from src.core.engine import Juego
         self.am.detener_musica("skyfire_theme")
 
         juego = Juego(self.pantalla, self.vol_musica, self.vol_efectos, self.clasificacion, self.rm)

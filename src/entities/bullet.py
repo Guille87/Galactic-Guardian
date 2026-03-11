@@ -1,4 +1,4 @@
-from entidades.proyectil_base import Proyectil
+from src.entities.base.projectile_base import Proyectil
 
 
 class Bala(Proyectil):

@@ -3,17 +3,17 @@ import random
 import pygame
 import pygame.freetype
 
-from entidades.enemigo import EnemigoTipo2, EnemigoTipo3, Jefe
-from entidades.jugador import Jugador
-from juego.audio_manager import AudioManager
-from juego.background_manager import ScrollingBackground
-from juego.collision_manager import CollisionManager
-from juego.effect_manager import EffectManager
-from juego.entity_manager import EntityManager
-from juego.input_handler import InputHandler
-from juego.render_manager import RenderManager
-from juego.ui_manager import UIManager
-from juego.wave_manager import WaveManager
+from src.entities.enemies import Jefe
+from src.entities.player import Jugador
+from src.core.audio import AudioManager
+from src.visual.background import ScrollingBackground
+from src.managers.collision import CollisionManager
+from src.managers.effects import EffectManager
+from src.managers.entities import EntityManager
+from src.core.input import InputHandler
+from src.managers.render import RenderManager
+from src.ui.hud import UIManager
+from src.managers.waves import WaveManager
 
 
 class Juego:
@@ -233,7 +233,7 @@ class Juego:
         # Iniciar música de fondo del menú si aún no se ha iniciado
         self.audio_manager.reproducir_musica("skyfire_theme")
 
-        from juego.menu import MenuManager
+        from src.ui.menu import MenuManager
         menu = MenuManager(self.pantalla, self.rm, self.audio_manager, self.clasificacion)
         menu.ejecutar()
 
@@ -243,7 +243,7 @@ class Juego:
 
     def mostrar_opciones_juego(self):
         """Muestra el menú principal del juego."""
-        from juego.menu import MenuManager
+        from src.ui.menu import MenuManager
         menu = MenuManager(self.pantalla, self.rm, self.audio_manager, self.clasificacion)
 
         menu.mostrar_solo_opciones()

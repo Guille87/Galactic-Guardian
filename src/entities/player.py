@@ -1,6 +1,6 @@
 import pygame
 
-from .bala import Bala
+from .bullet import Bala
 
 
 class Jugador(pygame.sprite.Sprite):
