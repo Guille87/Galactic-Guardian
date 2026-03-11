@@ -1,6 +1,6 @@
 import pygame
 
-from entidades.enemigo import EnemigoTipo1, EnemigoTipo2, EnemigoTipo3, Jefe
+from entidades.enemigo import Jefe
 from entidades.item import Item
 
 
@@ -16,6 +16,7 @@ class CollisionManager:
         self._colisiones_jugador_items()
 
     def _colisiones_bala_jugador(self):
+        """Balas del jugador impactando enemigos."""
         em = self.juego.entity_manager
         for bala in em.balas[:]:
             for enemigo in em.enemigos[:]:
@@ -46,15 +47,11 @@ class CollisionManager:
         tipo_item = enemigo.die(self.juego.jugador, self.juego.enemigos_eliminados)
 
         if tipo_item:
-            img = self.juego.rm.get_image_scaled(tipo_item, Item.TAMANO_ESTANDAR)
-            nuevo_item = Item(tipo_item, img, enemigo.rect.centerx, enemigo.rect.centery)
-
-            self.juego.all_sprites.add(nuevo_item)
+            self._spawnear_item(tipo_item, enemigo.rect.center)
             self.juego.enemigos_eliminados = 0
 
         # Puntuación y lógica de Jefe
-        puntuacion = self._obtener_puntuacion(enemigo)
-        self.juego.puntuacion += puntuacion * self.juego.nivel
+        self.juego.puntuacion += enemigo.valor_puntuacion * self.juego.nivel
         self.juego.enemigos_activos -= 1
 
         if isinstance(enemigo, Jefe):
@@ -62,15 +59,13 @@ class CollisionManager:
             self.juego.jefe = None
             self.juego.reiniciar_juego()
 
-    @staticmethod
-    def _obtener_puntuacion(enemigo):
-        if isinstance(enemigo, EnemigoTipo1): return 1
-        if isinstance(enemigo, EnemigoTipo2): return 2
-        if isinstance(enemigo, EnemigoTipo3): return 3
-        if isinstance(enemigo, Jefe): return 1000
-        return 0
+    def _spawnear_item(self, tipo, posicion):
+        img = self.juego.rm.get_image_scaled(tipo, Item.TAMANO_ESTANDAR)
+        nuevo_item = Item(tipo, img, posicion[0], posicion[1])
+        self.juego.all_sprites.add(nuevo_item)
 
     def _colisiones_bala_enemigo(self):
+        """Balas enemigas impactando al jugador."""
         em = self.juego.entity_manager
         for bala in em.balas_enemigo[:]:
             if bala.comprobar_colision(self.juego.jugador):
@@ -81,6 +76,7 @@ class CollisionManager:
                 self.juego.audio_manager.reproducir_efecto("golpe")
 
     def _colisiones_jugador_enemigo(self):
+        """Colisión directa entre naves."""
         em = self.juego.entity_manager
         tiempo_actual = pygame.time.get_ticks()
 
@@ -103,6 +99,7 @@ class CollisionManager:
                     self._eliminar_enemigo(enemigo)
 
     def _colisiones_jugador_items(self):
+        """Recogida de power-ups."""
         for sprite in self.juego.all_sprites:
             if isinstance(sprite, Item) and self.juego.jugador.rect.colliderect(sprite.rect):
                 self.juego.audio_manager.reproducir_efecto("item")

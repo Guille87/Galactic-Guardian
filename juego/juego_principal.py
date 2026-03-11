@@ -98,11 +98,7 @@ class Juego:
         self.jugador.tiempo_invulnerable += tiempo_pausado  # Actualizar el tiempo de invulnerabilidad del jugador
 
         for enemigo in self.entity_manager.enemigos:
-            if isinstance(enemigo, (EnemigoTipo2, EnemigoTipo3)):
-                enemigo.tiempo_ultimo_ataque += tiempo_pausado
-            if isinstance(enemigo, Jefe):
-                enemigo.ultimo_disparo_normal += tiempo_pausado
-                enemigo.ultimo_disparo_rapido += tiempo_pausado
+            enemigo.actualizar_pausa(tiempo_pausado)
 
     def reiniciar_juego(self):
         """Restablece el estado para una nueva partida o nivel."""

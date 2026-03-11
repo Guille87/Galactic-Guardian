@@ -15,6 +15,7 @@ class EnemigoBase(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(x=x, y=y)
         self.pantalla_ancho = pantalla_ancho
         self.radio = 16
+        self.valor_puntuacion = 1
 
         # Escalado de salud por nivel: Salud * 2^(nivel-1)
         self.salud_maxima = salud_base * (2 ** (nivel - 1))
@@ -78,6 +79,10 @@ class EnemigoBase(pygame.sprite.Sprite):
         bala.girar(angulo)
         return bala
 
+    def actualizar_pausa(self, tiempo_pausado):
+        """Función base para ajustar cronómetros tras una pausa."""
+        pass
+
 
 class EnemigoTipo1(EnemigoBase):
     def __init__(self, imagen, x, y, pantalla_ancho, nivel):
@@ -93,12 +98,16 @@ class EnemigoTipo2(EnemigoBase):
         self.jugador = jugador  # Guarda la referencia al jugador
         self.tiempo_ultimo_ataque = 0  # Inicializa el tiempo del último ataque
         self.cadencia = 3000
+        self.valor_puntuacion = 2
 
     def disparo_enemigo(self, ahora, ruta_bala):
         if ahora - self.tiempo_ultimo_ataque > self.cadencia:
             self.tiempo_ultimo_ataque = ahora
             return self._crear_proyectil_hacia_jugador(ruta_bala, 2, 4, self.jugador)
         return None
+
+    def actualizar_pausa(self, tiempo_pausado):
+        self.tiempo_ultimo_ataque += tiempo_pausado
 
 
 class EnemigoTipo3(EnemigoBase):
@@ -109,12 +118,16 @@ class EnemigoTipo3(EnemigoBase):
         self.velocidad_y = random.uniform(3, 6)
         self.tiempo_ultimo_ataque = 0
         self.cadencia = 1500
+        self.valor_puntuacion = 3
 
     def disparo_enemigo(self, ahora, ruta_bala):
         if ahora - self.tiempo_ultimo_ataque > self.cadencia:
             self.tiempo_ultimo_ataque = ahora
             return self._crear_proyectil_hacia_jugador(ruta_bala, 2, 7, self.jugador)
         return None
+
+    def actualizar_pausa(self, tiempo_pausado):
+        self.tiempo_ultimo_ataque += tiempo_pausado
 
 
 class Jefe(EnemigoBase):
@@ -130,6 +143,7 @@ class Jefe(EnemigoBase):
         self.velocidad_x = 3  # Velocidad lateral tras llegar a su posición
         self.ultimo_disparo_normal = 0
         self.ultimo_disparo_rapido = 0
+        self.valor_puntuacion = 1000
 
     def movimiento_enemigo(self):
         """
@@ -162,3 +176,7 @@ class Jefe(EnemigoBase):
             return self._crear_proyectil_hacia_jugador(ruta_bala, 1, 4, self.jugador)
         else:
             return None
+
+    def actualizar_pausa(self, tiempo_pausado):
+        self.ultimo_disparo_normal += tiempo_pausado
+        self.ultimo_disparo_rapido += tiempo_pausado

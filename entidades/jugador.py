@@ -137,3 +137,9 @@ class Jugador(pygame.sprite.Sprite):
             if self.destello_constante:
                 self.destello_constante.kill()
                 self.destello_constante = None
+
+    def actualizar_pausa(self, tiempo_pausado):
+        """Ajusta todos los temporizadores internos del jugador."""
+        self.ultimo_disparo += tiempo_pausado
+        if self.invulnerable:
+            self.tiempo_invulnerable += tiempo_pausado
