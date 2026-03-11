@@ -4,11 +4,16 @@ import pygame
 class UIManager:
     def __init__(self, juego):
         self.juego = juego
-        self.fuente_pequena = pygame.font.SysFont(None, 24)
-        self.fuente_media = pygame.font.SysFont(None, 36)
+        self.fuente_pequena = pygame.font.SysFont(None, 22, bold=True)
+        self.fuente_media = pygame.font.SysFont(None, 32, bold=True)
+
+        # Colores y Configuración
+        self.COLOR_TEXTO = (240, 240, 240)
+        self.COLOR_BORDE = (200, 200, 200)
+        self.COLOR_FONDO_BARRA = (40, 40, 40)
 
         # Colores consistentes
-        self.colores_atributos = {
+        self.COLORES_STATS = {
             "Ataque": (255, 0, 0),
             "Vel. Ataque": (0, 255, 0),
             "Velocidad": (0, 0, 255)
@@ -16,61 +21,98 @@ class UIManager:
 
     def dibujar_interfaz(self, pantalla):
         """Coordina el dibujo de todos los elementos de la UI."""
-        self._mostrar_estadisticas(pantalla)
-        self._dibujar_barras_jugador(pantalla)
-        if self.juego.jefe is not None:
+        self._dibujar_hud_basico(pantalla)
+        self._dibujar_barras_atributos(pantalla)
+        self._dibujar_indicador_salud_nave(pantalla)
+
+        if self.juego.jefe:
             self._dibujar_barra_salud_jefe(pantalla)
+
         self._mostrar_fps(pantalla)
 
-    def _mostrar_estadisticas(self, pantalla):
-        color = (128, 128, 128) if self.juego.pausado else (255, 255, 255)
+    def _dibujar_hud_basico(self, pantalla):
+        """Dibuja puntuación y vidas en las esquinas."""
+        color = (150, 150, 150) if self.juego.pausado else self.COLOR_TEXTO
 
-        # Vidas y Puntuación
-        self._dibujar_texto(pantalla, f"Vidas: {self.juego.jugador.vidas}", (10, 10), color)
-        self._dibujar_texto(pantalla, f"Puntuación: {self.juego.puntuacion}", (10, 40), color)
+        # Puntuación arriba a la derecha para que no estorbe a los stats
+        txt_puntos = self.fuente_media.render(f"{self.juego.puntuacion:06d}", True, color)
+        pantalla.blit(txt_puntos, (self.juego.pantalla_ancho - txt_puntos.get_width() - 20, 40))
 
-        # Atributos con barras
-        self._dibujar_atributo(pantalla, "Ataque", self.juego.jugador.danio,
-                               self.juego.jugador.danio_maximo, (10, 70), self.colores_atributos["Ataque"])
+        # Vidas arriba a la izquierda
+        txt_vidas = self.fuente_pequena.render(f"VIDAS: {self.juego.jugador.vidas}", True, color)
+        pantalla.blit(txt_vidas, (20, 20))
 
-        # Cálculo de cadencia (puedes mover esta lógica al jugador luego)
-        cadencia_val = round(1 / (self.juego.jugador.cadencia_disparo / 1000), 2)
-        cadencia_max = round(1 / (self.juego.jugador.cadencia_disparo_maxima / 1000), 2)
-        self._dibujar_atributo(pantalla, "Vel. Ataque", cadencia_val, cadencia_max, (10, 120),
-                               self.colores_atributos["Vel. Ataque"])
+    def _dibujar_barras_atributos(self, pantalla):
+        """Dibuja los paneles de estadísticas del jugador."""
+        jugador = self.juego.jugador
+        # Agrupamos los datos para iterar (Evita repetir código de dibujo)
+        # Nota: La cadencia ahora se pide al jugador, él sabe cómo calcularla
+        stats = [
+            ("Ataque", jugador.danio, jugador.danio_maximo),
+            ("Vel. Ataque", jugador.obtener_cadencia_visual(), jugador.obtener_cadencia_max_visual()),
+            ("Velocidad", jugador.velocidad, jugador.CONFIG["vel_max"])
+        ]
 
-        self._dibujar_atributo(pantalla, "Velocidad", self.juego.jugador.velocidad,
-                               self.juego.jugador.CONFIG["vel_max"], (10, 170), self.colores_atributos["Velocidad"])
+        start_y = 60
+        for nombre, val, max_val in stats:
+            self._dibujar_barra_con_etiqueta(
+                pantalla, nombre, val, max_val,
+                (20, start_y), self.COLORES_STATS[nombre]
+            )
+            start_y += 45
 
-    def _dibujar_barras_jugador(self, pantalla):
-        """Dibuja las mini-barras de salud bajo la nave."""
-        barra_x = self.juego.jugador.rect.centerx - 25
-        barra_y = self.juego.jugador.rect.bottom + 10
+    def _dibujar_barra_con_etiqueta(self, pantalla, etiqueta, valor, maximo, pos, color):
+        """Dibuja una barra de progreso estandarizada con su nombre."""
+        # Etiqueta
+        txt = self.fuente_pequena.render(etiqueta, True, self.COLOR_TEXTO)
+        pantalla.blit(txt, pos)
 
-        for i in range(self.juego.jugador.salud_maxima):
-            color = (0, 255, 0) if i < self.juego.jugador.salud else (150, 150, 150)
-            pygame.draw.rect(pantalla, color, (barra_x + i * 10, barra_y, 8, 10))
+        # Dimensiones de la barra
+        bx, by = pos[0], pos[1] + 22
+        ancho, alto = 120, 8
 
-        # Borde exterior
-        rect_borde = pygame.Rect(barra_x, barra_y, self.juego.jugador.salud_maxima * 10, 10)
-        pygame.draw.rect(pantalla, (255, 255, 255), rect_borde, 1)
+        # Dibujo
+        pygame.draw.rect(pantalla, self.COLOR_FONDO_BARRA, (bx, by, ancho, alto))
+        # Calculamos el llenado (asegurando que no sea mayor al 100%)
+        llenado = (min(valor, maximo) / maximo) * ancho
+        pygame.draw.rect(pantalla, color, (bx, by, llenado, alto))
+        pygame.draw.rect(pantalla, self.COLOR_BORDE, (bx, by, ancho, alto), 1)
+
+    def _dibujar_indicador_salud_nave(self, pantalla):
+        """Muestra puntos de salud directamente bajo la nave del jugador."""
+        jugador = self.juego.jugador
+        # Centramos los puntos bajo la nave
+        ancho_punto = 8
+        espacio = 2
+        ancho_total = (jugador.salud_maxima * (ancho_punto + espacio)) - espacio
+
+        x_inicio = jugador.rect.centerx - (ancho_total // 2)
+        y = jugador.rect.bottom + 12
+
+        for i in range(jugador.salud_maxima):
+            color = (0, 255, 100) if i < jugador.salud else (60, 60, 60)
+            pygame.draw.rect(pantalla, color, (x_inicio + i * (ancho_punto + espacio), y, ancho_punto, 6))
 
     def _dibujar_barra_salud_jefe(self, pantalla):
+        """Barra de salud cinemática para el jefe."""
         jefe = self.juego.jefe
-        # Posición fija en la parte superior central
-        ancho_total = 400
-        barra_x = (self.juego.pantalla_ancho - ancho_total) // 2
-        barra_y = 50
+        ancho_pantalla = self.juego.pantalla_ancho
 
-        ancho_actual = ancho_total * (max(0, jefe.salud) / jefe.salud_maxima)
+        # Barra grande arriba
+        ancho_barra = ancho_pantalla - 200
+        x = (ancho_pantalla - ancho_barra) // 2
+        y = 30
 
-        # Dibujar nombre del jefe arriba de la barra
-        texto_jefe = self.fuente_pequena.render("JEFE", True, (255, 255, 255))
-        pantalla.blit(texto_jefe, (barra_x, barra_y - 20))
+        porcentaje = max(0, jefe.salud) / jefe.salud_maxima
 
-        # Fondo rojo (salud actual) y borde blanco
-        pygame.draw.rect(pantalla, (255, 0, 0), (barra_x, barra_y, ancho_actual, 15))
-        pygame.draw.rect(pantalla, (255, 255, 255), (barra_x, barra_y, ancho_total, 15), 1)
+        # Nombre del Jefe con sombra para legibilidad
+        txt_nombre = self.fuente_media.render("UNIDAD DE COMBATE PESADA", True, (255, 50, 50))
+        pantalla.blit(txt_nombre, (x, y - 25))
+
+        # Fondo y Salud
+        pygame.draw.rect(pantalla, (20, 20, 20), (x, y, ancho_barra, 12))
+        pygame.draw.rect(pantalla, (255, 0, 0), (x, y, ancho_barra * porcentaje, 12))
+        pygame.draw.rect(pantalla, (255, 255, 255), (x, y, ancho_barra, 12), 1)
 
     def _dibujar_atributo(self, pantalla, nombre, valor, maximo, pos, color):
         texto = self.fuente_pequena.render(f"{nombre}: {valor}", True, (255, 255, 255))
@@ -90,10 +132,9 @@ class UIManager:
             pygame.draw.line(pantalla, (255, 255, 255), (x, pos[1] + 21), (x, pos[1] + 29), 1)
 
     def _mostrar_fps(self, pantalla):
-        fps = int(self.juego.reloj.get_fps())
-        color = (128, 128, 128) if self.juego.pausado else (255, 255, 255)
-        texto = self.fuente_pequena.render(f"FPS: {fps}", True, color)
-        pantalla.blit(texto, (self.juego.pantalla_ancho - texto.get_width() - 10, 10))
+        fps = str(int(self.juego.reloj.get_fps()))
+        txt = self.fuente_pequena.render(f"FPS: {fps}", True, (100, 100, 100))
+        pantalla.blit(txt, (self.juego.pantalla_ancho - txt.get_width() - 10, 5))
 
     def _dibujar_texto(self, pantalla, texto, pos, color):
         surface = self.fuente_pequena.render(texto, True, color)

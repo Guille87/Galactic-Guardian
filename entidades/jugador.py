@@ -143,3 +143,14 @@ class Jugador(pygame.sprite.Sprite):
         self.ultimo_disparo += tiempo_pausado
         if self.invulnerable:
             self.tiempo_invulnerable += tiempo_pausado
+
+    def obtener_cadencia_visual(self):
+        """
+        Convierte la cadencia (ms) en disparos por segundo para la UI.
+        Ejemplo: 250 ms -> 4.0 disparos/seg.
+        """
+        return round(1000 / self.cadencia_disparo, 1)
+
+    def obtener_cadencia_max_visual(self):
+        """Devuelve el límite máximo de disparos por segundo."""
+        return round(1000 / self.CONFIG["cadencia_max"], 1)
