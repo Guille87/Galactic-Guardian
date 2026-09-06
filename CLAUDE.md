@@ -28,6 +28,8 @@ There is no test suite, linter config, or build step. `requirements.txt` pins `p
 
 Assets live under `data/assets/` (`imagenes/`, `musica/`, `sonidos/`). Logical asset names map to relative paths in `src/core/config.py`: `RECURSOS` + `EXPLOSIONES` (images), `SONIDOS` (short SFX, loaded into RAM as `mixer.Sound`), and `MUSICA` (background tracks — only the path is registered; played via `mixer.music` streaming). Add new assets to the right dict, not by hardcoding paths.
 
+Tunable gameplay/loop constants (window size, FPS, wave-phase thresholds, spawn cadence, invuln/contact windows) live in `src/core/settings.py`. Entity-local constants stay on their class (`Jugador.CONFIG`, `EnemigoBase.TAMANO_ESTANDAR`, `Bala.TAMANO`, …).
+
 ## Architecture
 
 ### Entry point & state flow
@@ -43,8 +45,8 @@ Exit routing: the window's X button → `"SALIR"` (app quits after `pygame.quit(
 `Juego` holds all match state (score, level, `pausado`, `estado_game_over`, `pidiendo_nombre`, sprite groups, difficulty timers) and delegates behavior to managers, each of which takes `juego` (or the resource/audio managers) in its constructor and reaches back into it for shared state:
 
 - **`InputHandler`** (`src/core/input.py`) — translates pygame events into `Juego` method calls; owns the pause/game-over/name-entry input modes and the blocking quit-confirmation dialog (which now `tick(30)`s to avoid a CPU-spin). `manejar_eventos()` returns `False` to end the game loop; `QUIT` sets `salir_del_juego()` rather than killing the process. Continuous fire is a flag (`juego.disparando`) polled each frame.
-- **`EntityManager`** (`src/managers/entities.py`) — owns plain Python lists `balas`, `balas_enemigo`, `enemigos`; updates their movement, drives enemy/boss auto-fire, and culls off-screen entities. Items and explosions instead live in `juego.all_sprites` (a `pygame.sprite.Group`).
-- **`CollisionManager`** (`src/managers/collision.py`) — all collision resolution: player bullets↔enemies, enemy bullets↔player, body contact (2s per-enemy cooldown via `juego.enemigos_golpeados`), player↔items. Also handles score and loot drops. On boss death it sets `juego.pendiente_reinicio = True`; the actual `reiniciar_juego()` runs at the end of `Juego.actualizar()` (never mid-collision).
+- **`EntityManager`** (`src/managers/entities.py`) — owns five `pygame.sprite.Group`s: `balas`, `balas_enemigo`, `enemigos`, `items`, `efectos` (explosions + destellos). `actualizar(dt)` updates every group, drives enemy/boss auto-fire, and `kill()`s off-screen entities. There is **no `juego.all_sprites`** anymore; the player is a lone `Sprite` held on `juego.jugador`.
+- **`CollisionManager`** (`src/managers/collision.py`) — resolution via `pygame.sprite.groupcollide` / `spritecollide`. Bullets↔ships use `collide_circle` (needs `sprite.radius` — the attribute is `radius`, not `radio`); body contact and item pickup use rect collision (`CONTACTO_COOLDOWN_MS` per-enemy cooldown via `juego.enemigos_golpeados`, a `WeakKeyDictionary` also purged explicitly on death/despawn). `_eliminar_enemigo` guards against double-processing when several bullets kill one enemy in a frame. On boss death it sets `juego.pendiente_reinicio = True`; the actual `reiniciar_juego()` runs at the end of `Juego.actualizar()` (never mid-collision).
 - **`WaveManager`** (`src/managers/waves.py`) — time-based spawn director. Phases switch at fixed elapsed-ms thresholds (`TIEMPO_FASE_2/3/JEFE`); at the boss phase it swaps music and waits before spawning `Jefe`. Requests pre-scaled images from `ResourceManager`.
 - **`RenderManager`** (`src/managers/render.py`) — orchestrates all per-frame drawing. Real pause takes a fast path: on the first paused frame it snapshots `pantalla`, multiplies it to grey once (`_frame_pausa`), and just re-blits that + text + buttons until unpaused (any active-game render resets `_frame_pausa`). Game Over / name-entry set `juego.pausado = True` too but are excluded from that path and get their own overlay. Overlay buttons (`boton_reintentar`, `boton_salir_post`, `boton_opciones`, `boton_salir`) are created **once**, lazily, and cached on `juego`; `InputHandler` reads those attributes. Fonts are built in `__init__`. `Boton` caches its own rendered `Surface`.
 - **`EffectManager`** (`src/managers/effects.py`) — explosions and screen flashes (`src/visual/`).
@@ -53,11 +55,13 @@ Exit routing: the window's X button → `"SALIR"` (app quits after `pygame.quit(
 
 ### Game loop (`Juego.ejecutar`)
 
-Each frame at 60 FPS: `input_handler.manejar_eventos()` → if `pausado`, draw only → else `actualizar()` (player move, spawn check, `entity_manager.actualizar()`, `collision_manager.actualizar()`, background) → `all_sprites.update()` → `dibujar()`.
+Each frame: `input_handler.manejar_eventos()` → if `pausado`, draw only → else compute `dt = min(reloj.tick(FPS)/1000, 3/FPS)` and `actualizar(dt)` (player move, spawn check, `entity_manager.actualizar(dt)`, `collision_manager.actualizar()`, background) → `dibujar()`.
 
-Pause correctness depends on time bookkeeping: `pausar_juego`/`reanudar_juego` record pause duration and shift every future timestamp (spawn timers, invulnerability, and each enemy's `actualizar_pausa`). Any new time-gated behavior must add the same offset in `reanudar_juego`. (Known gap, Phase 3: `WaveManager` boss-wait timer, `Explosion`, `Item` and `Destello` timers are not yet offset.)
+**Delta time**: all movement is FPS-independent. Speeds are still expressed in px/frame-at-60fps; `MovimientoSubpixel._desplazar(vx, vy, dt)` (`src/entities/base/movimiento.py`) multiplies by `dt*FPS` and carries the sub-pixel remainder so fractional speeds aren't lost to the integer `rect`. The `rect` stays the source of truth, so code that repositions it directly (respawn, boss bounce) doesn't desync. At exactly 60 FPS behaviour is identical to the old frame-based code.
 
-The `pygame_gui` options screen uses the 0.6+ event API (`event.type == pygame_gui.UI_BUTTON_PRESSED` / `UI_HORIZONTAL_SLIDER_MOVED`), not the old `USEREVENT` + `event.user_type`. `MenuManager` keeps a single `self.clock`; only the outer loop calls `tick(60)`.
+Pause correctness: `reanudar_juego` shifts **every** future timestamp by the pause duration — engine spawn timers, plus `actualizar_pausa` on the player, `WaveManager` (boss-wait), each enemy, each effect sprite, and the `enemigos_golpeados` values. `Explosion` is now dt-timed so it needs no offset (it simply isn't updated while paused). Any new time-gated behavior must either be dt-based or add its offset here.
+
+The `pygame_gui` options screen uses the 0.6+ event API (`event.type == pygame_gui.UI_BUTTON_PRESSED` / `UI_HORIZONTAL_SLIDER_MOVED`), not the old `USEREVENT` + `event.user_type`. `MenuManager` keeps a single `self.clock`; only the outer loop calls `tick(settings.FPS)`.
 
 ### Entities
 
@@ -65,14 +69,18 @@ The `pygame_gui` options screen uses the 0.6+ event API (`event.type == pygame_g
 
 Enemies (`src/entities/enemies.py`): `EnemigoBase` → `EnemigoTipo1/2/3` and `Jefe`. Health scales as `salud_base * 2**(nivel-1)` (audit flags this as too steep — Phase 4). Loot probability rises by type (5% / 10% / 20% / 100% boss) and is forced after 10 kills; the drop pool is filtered by what the player still needs. `Jefe` overrides `movimiento_enemigo` (no-op) and drives its own patrol in `update`. The `disparo_*` methods take `(ahora, rm, nombre_bala)` and build the projectile through `rm.get_image_rotated`.
 
-Projectiles: `src/entities/base/projectile_base.py` (`Proyectil`) is the shared base for `Bala` (`bullet.py`) and `BalaEnemigo` (`bullet_enemy.py`). **They receive a cached `Surface`, never a path** — no disk I/O per shot, no per-instance rotate. Size/orientation constants: `Bala.TAMANO`/`Bala.ANGULO`, `BalaEnemigo.TAMANO`. Collision is still centre-distance vs `radio` (16 for bullets; unchanged). Player upgrades (damage/cadence/speed, `tipo_disparo` up to `"triple"`) live on `Jugador` (`src/entities/player.py`); `Item` (`src/entities/items.py`) applies power-up effects on pickup.
+Projectiles: `src/entities/base/projectile_base.py` (`Proyectil`, which mixes in `MovimientoSubpixel`) is the shared base for `Bala` (`bullet.py`) and `BalaEnemigo` (`bullet_enemy.py`). **They receive a cached `Surface`, never a path** — no disk I/O per shot, no per-instance rotate. Size/orientation constants: `Bala.TAMANO`/`Bala.ANGULO`, `BalaEnemigo.TAMANO`. Collision is `collide_circle` on `radius` (16 for bullets). Every `update(self, dt=0)` and `Jugador.mover(teclas, pantalla, dt)` takes `dt`. Player upgrades (damage/cadence/speed, `tipo_disparo` up to `"triple"`) live on `Jugador` (`src/entities/player.py`); `Item` (`src/entities/items.py`) applies power-up effects on pickup.
+
+### Still open (audit Phase 4 + deferred)
+
+Difficulty curve `salud_base * 2**(nivel-1)` (too steep), hitbox calibration, diagonal-move normalization, hit-SFX throttle, boss timing. And the "god object": managers still take the whole `juego`. See `AUDITORIA.md`.
 
 ### Directory layout
 
 ```
-src/core/      engine, config, resources, audio, input
+src/core/      engine, config, settings, resources, audio, input
 src/managers/  entities, collision, waves, render, effects
-src/entities/  player, enemies, bullet, bullet_enemy, items, base/
+src/entities/  player, enemies, bullet, bullet_enemy, items, base/ (projectile_base, movimiento)
 src/ui/        menu, hud, scoreboard, components/button.py
-src/visual/    background (parallax scroll), explosions, flash
+src/visual/    background (parallax scroll), explosions, flash, flash_constant
 ```
