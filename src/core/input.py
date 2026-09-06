@@ -67,6 +67,9 @@ class InputHandler:
         elif tecla == pygame.K_SPACE and not self.juego.pausado:
             self.juego.disparando = True
 
+        elif tecla == pygame.K_F1:
+            self.juego.debug_hitboxes = not self.juego.debug_hitboxes
+
     def _manejar_teclas_soltadas(self, tecla):
         if tecla == pygame.K_SPACE:
             self.juego.disparando = False

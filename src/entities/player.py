@@ -41,6 +41,7 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
         self.radius = settings.RADIO_JUGADOR
 
         self._init_subpixel()
+        self._vel_actual = pygame.Vector2()  # para el suavizado opcional
 
     @property
     def danio_maximo(self):
@@ -59,7 +60,20 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
         dx = (teclas[pygame.K_RIGHT] or teclas[pygame.K_d]) - (teclas[pygame.K_LEFT] or teclas[pygame.K_a])
         dy = (teclas[pygame.K_DOWN] or teclas[pygame.K_s]) - (teclas[pygame.K_UP] or teclas[pygame.K_w])
 
-        self._desplazar(dx * self.velocidad, dy * self.velocidad, dt)
+        # Normalizar la diagonal para que no sea 1.41x más rápida
+        direccion = pygame.Vector2(dx, dy)
+        if direccion.length_squared() > 0:
+            direccion.scale_to_length(1.0)
+        objetivo = direccion * self.velocidad
+
+        # Suavizado opcional (settings.JUGADOR_SUAVIZADO; 1.0 = instantáneo)
+        s = settings.JUGADOR_SUAVIZADO
+        if s >= 1.0:
+            self._vel_actual.update(objetivo)
+        else:
+            self._vel_actual = self._vel_actual.lerp(objetivo, min(1.0, s * dt * settings.FPS))
+
+        self._desplazar(self._vel_actual.x, self._vel_actual.y, dt)
 
         # Obtenemos el rect de la superficie si es necesario
         if isinstance(pantalla, pygame.Surface):

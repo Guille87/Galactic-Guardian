@@ -36,6 +36,8 @@ class RenderManager:
         if not self.juego.estado_game_over and not self.juego.pidiendo_nombre:
             self._dibujar_entidades()
             self.pantalla.blit(self.juego.jugador.image, self.juego.jugador.rect)
+            if self.juego.debug_hitboxes:
+                self._dibujar_hitboxes()
             self.juego.ui_manager.dibujar_interfaz(self.pantalla)
 
         # 3. Overlays superiores
@@ -98,6 +100,23 @@ class RenderManager:
         em = self.juego.entity_manager
         for grupo in (em.efectos, em.items, em.balas, em.balas_enemigo, em.enemigos):
             grupo.draw(self.pantalla)
+
+    def _dibujar_hitboxes(self):
+        """Overlay de depuración (tecla F1): círculos de colisión reales."""
+        em = self.juego.entity_manager
+
+        def circulo(sprite, color):
+            r = int(getattr(sprite, "radius", 0))
+            if r > 0:
+                pygame.draw.circle(self.pantalla, color, sprite.rect.center, r, 1)
+
+        circulo(self.juego.jugador, (0, 255, 0))
+        for e in em.enemigos:
+            circulo(e, (255, 80, 80))
+        for b in em.balas:
+            circulo(b, (120, 200, 255))
+        for b in em.balas_enemigo:
+            circulo(b, (255, 180, 80))
 
     # ---------------------------------------------------------------- HELPERS
     def _mostrar_texto_centralizado(self, texto, color):

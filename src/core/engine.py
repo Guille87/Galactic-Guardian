@@ -37,6 +37,7 @@ class Juego:
         self.jefe_derrotado = False
         self.disparando = False
         self.pendiente_reinicio = False  # Transición diferida (ver actualizar())
+        self.debug_hitboxes = False      # F1: dibuja los círculos de colisión
 
         # Control de la máquina de estados de alto nivel
         self.ejecutando = True
