@@ -7,6 +7,7 @@ from src.ui.menu import MenuManager
 from src.core.engine import Juego
 from src.core.audio import AudioManager
 from src.core.resources import ResourceManager
+from src.core import settings
 from src.core.config import RECURSOS, MUSICA, SONIDOS, EXPLOSIONES, DIR_ASSETS, cargar_configuracion
 from src.ui.scoreboard import SistemaClasificacion
 
@@ -35,7 +36,7 @@ def main():
     pygame.mixer.set_num_channels(16)
 
     # Crear la pantalla
-    pantalla = pygame.display.set_mode((600, 800))
+    pantalla = pygame.display.set_mode((settings.ANCHO, settings.ALTO))
 
     # Establecer el icono de la ventana
     icono_path = os.path.join(DIR_ASSETS, 'imagenes/favicon.ico')

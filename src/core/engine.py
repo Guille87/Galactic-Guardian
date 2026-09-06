@@ -3,6 +3,7 @@ import random
 import pygame
 import pygame.freetype
 
+from src.core import settings
 from src.entities.enemies import Jefe
 from src.entities.player import Jugador
 from src.entities.bullet import Bala
@@ -44,8 +45,8 @@ class Juego:
         self.enemigos_eliminados = 0
 
         # Parámetros de dificultad
-        self.MIN_TIEMPO_GENERACION = 800
-        self.MAX_TIEMPO_GENERACION = 1000
+        self.MIN_TIEMPO_GENERACION = settings.GEN_MIN_INICIAL
+        self.MAX_TIEMPO_GENERACION = settings.GEN_MAX_INICIAL
 
         # 3. Managers (El "Cerebro" distribuido)
         self.audio_manager = audio_manager  # Compartido con el menú (inyectado)
@@ -114,12 +115,15 @@ class Juego:
             self.jefe_derrotado = False
 
             # Aumentar dificultad
-            self.MIN_TIEMPO_GENERACION = max(200, self.MIN_TIEMPO_GENERACION - 200)
-            self.MAX_TIEMPO_GENERACION = max(200, self.MAX_TIEMPO_GENERACION - 200)
+            self.MIN_TIEMPO_GENERACION = max(settings.GEN_MIN_SUELO,
+                                             self.MIN_TIEMPO_GENERACION - settings.GEN_DECREMENTO_NIVEL)
+            self.MAX_TIEMPO_GENERACION = max(settings.GEN_MIN_SUELO,
+                                             self.MAX_TIEMPO_GENERACION - settings.GEN_DECREMENTO_NIVEL)
         else:
             # Partida desde cero
             self.jugador = Jugador(self.rm.get_image_scaled("jugador", Jugador.CONFIG["tamano"]), self.pantalla_ancho, self.pantalla_alto, self.all_sprites)
-            self.MIN_TIEMPO_GENERACION, self.MAX_TIEMPO_GENERACION = 800, 1000
+            self.MIN_TIEMPO_GENERACION = settings.GEN_MIN_INICIAL
+            self.MAX_TIEMPO_GENERACION = settings.GEN_MAX_INICIAL
             self.puntuacion = 0
 
         # Reiniciar todos los valores del juego a sus estados iniciales
@@ -162,7 +166,7 @@ class Juego:
 
         if self.jugador.vidas > 0:
             self.jugador.invulnerable = True
-            self.jugador.tiempo_invulnerable = pygame.time.get_ticks() + 3000
+            self.jugador.tiempo_invulnerable = pygame.time.get_ticks() + settings.JUGADOR_INVULNERABLE_MS
             self.jugador.curar(self.jugador.salud_maxima)
             self.effect_manager.crear_destello_invulnerabilidad()
 
@@ -277,14 +281,14 @@ class Juego:
             # Si el juego está pausado, solo dibujar la pantalla y continuar al siguiente ciclo
             if self.pausado:
                 self.dibujar()
-                self.reloj.tick(60)
+                self.reloj.tick(settings.FPS)
                 continue
 
             # Actualizar el juego solo si el juego no está pausado
             self.actualizar()
             self.all_sprites.update()  # Actualizar todos los sprites
             self.dibujar()
-            self.reloj.tick(60)
+            self.reloj.tick(settings.FPS)
 
         # Limpieza única de audio al abandonar la partida
         self.audio_manager.detener_toda_la_musica()

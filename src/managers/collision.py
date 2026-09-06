@@ -1,5 +1,6 @@
 import pygame
 
+from src.core import settings
 from src.entities.enemies import Jefe
 from src.entities.items import Item
 
@@ -90,7 +91,7 @@ class CollisionManager:
             if self.juego.jugador.rect.colliderect(enemigo.rect):
                 tiempo_ultima_colision = self.juego.enemigos_golpeados.get(enemigo, 0)
 
-                if tiempo_actual - tiempo_ultima_colision >= 2000:
+                if tiempo_actual - tiempo_ultima_colision >= settings.CONTACTO_COOLDOWN_MS:
                     self.juego.jugador.recibir_danio(1)
                     self.juego.audio_manager.reproducir_efecto("golpe")
                     self.juego.enemigos_golpeados[enemigo] = tiempo_actual

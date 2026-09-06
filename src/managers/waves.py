@@ -1,5 +1,7 @@
 import pygame
 import random
+
+from src.core import settings
 from src.entities.enemies import EnemigoTipo1, EnemigoTipo2, EnemigoTipo3, Jefe, EnemigoBase
 
 
@@ -11,13 +13,13 @@ class WaveManager:
         self.alto = pantalla_alto
 
         # Tiempos de fase (en milisegundos)
-        self.TIEMPO_FASE_2 = 22000
-        self.TIEMPO_FASE_3 = 42000
-        self.TIEMPO_JEFE = 62000
+        self.TIEMPO_FASE_2 = settings.TIEMPO_FASE_2
+        self.TIEMPO_FASE_3 = settings.TIEMPO_FASE_3
+        self.TIEMPO_JEFE = settings.TIEMPO_JEFE
 
         self.jefe_generado = False
         self.tiempo_inicio_espera_jefe = 0
-        self.tiempo_espera_jefe = 5000
+        self.tiempo_espera_jefe = settings.TIEMPO_ESPERA_JEFE
 
     def spawn_enemigo(self, tiempo_actual, jugador, nivel):
         """

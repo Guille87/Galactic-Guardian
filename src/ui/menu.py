@@ -3,7 +3,7 @@ import time
 import pygame
 import pygame_gui
 
-from src.core import config
+from src.core import config, settings
 from src.ui.components.button import Boton
 
 
@@ -62,7 +62,7 @@ class MenuManager:
         self._preparar_musica()  # Solo activamos la música aquí, al lanzar el menú completo
 
         while self.ejecutando:
-            time_delta = self.clock.tick(60) / 1000.0
+            time_delta = self.clock.tick(settings.FPS) / 1000.0
 
             if self.estado == "PRINCIPAL":
                 self._menu_principal()
@@ -103,7 +103,7 @@ class MenuManager:
 
     def _inicializar_interfaz_opciones(self):
         """Crea el UIManager y los elementos de la interfaz solo una vez."""
-        self.ui_manager = pygame_gui.UIManager((600, 800))
+        self.ui_manager = pygame_gui.UIManager((settings.ANCHO, settings.ALTO))
 
         # Sliders
         self.slider_musica = pygame_gui.elements.UIHorizontalSlider(
@@ -191,7 +191,7 @@ class MenuManager:
 
         bucle_opciones = True
         while bucle_opciones:
-            time_delta = self.clock.tick(60) / 1000.0
+            time_delta = self.clock.tick(settings.FPS) / 1000.0
             self._menu_opciones(time_delta)
 
             # Salida normal: Guardar o Volver dejan el estado en PRINCIPAL
