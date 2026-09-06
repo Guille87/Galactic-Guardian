@@ -41,18 +41,24 @@ class EnemigoBase(pygame.sprite.Sprite, MovimientoSubpixel):
         """Determina si suelta un ítem al morir."""
         return self.generate_item(jugador, enemigos_eliminados)
 
+    CANDIDATOS_LOOT = ("potenciador_danio", "potenciador_cadencia", "potenciador_velocidad", "curacion")
+
+    @staticmethod
+    def _loot_util(tipo, jugador):
+        """¿Le sirve al jugador este power-up ahora mismo?"""
+        if tipo == "curacion":
+            return jugador.salud < jugador.salud_maxima
+        if tipo == "potenciador_velocidad":
+            return jugador.velocidad < jugador.velocidad_maxima
+        if tipo == "potenciador_cadencia":
+            return jugador.cadencia_disparo > jugador.cadencia_disparo_maxima
+        if tipo == "potenciador_danio":
+            return jugador.tipo_disparo != "triple"
+        return True
+
     def generate_item(self, jugador, enemigos_eliminados):
         """Lógica de probabilidad de loot basada en el estado del jugador."""
-        pool = ["potenciador_danio", "potenciador_cadencia", "potenciador_velocidad", "curacion"]
-
-        if jugador.salud >= jugador.salud_maxima:
-            pool.remove("curacion")
-        if jugador.velocidad >= jugador.velocidad_maxima:
-            pool.remove("potenciador_velocidad")
-        if jugador.cadencia_disparo <= jugador.cadencia_disparo_maxima:
-            pool.remove("potenciador_cadencia")
-        if jugador.tipo_disparo == "triple":
-            pool.remove("potenciador_danio")
+        pool = [t for t in self.CANDIDATOS_LOOT if self._loot_util(t, jugador)]
 
         if not pool: return None
 

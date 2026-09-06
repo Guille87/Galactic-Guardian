@@ -31,9 +31,12 @@ class CollisionManager:
         for bala, enemigos_tocados in impactos.items():
             enemigo = enemigos_tocados[0]  # una bala daña a un solo enemigo
             enemigo.take_damage(bala.danio)
-            self.juego.audio_manager.reproducir_efecto("golpe")
             if enemigo.salud <= 0:
                 self._eliminar_enemigo(enemigo)
+
+        # Un solo "golpe" por frame, no uno por bala (evita saturar el mixer)
+        if impactos:
+            self.juego.audio_manager.reproducir_efecto("golpe")
 
     def _balas_enemigo_vs_jugador(self):
         em = self.juego.entity_manager
@@ -43,8 +46,10 @@ class CollisionManager:
         )
         for bala in tocadas:
             self.juego.jugador.recibir_danio(bala.danio)
-            self.juego.audio_manager.reproducir_efecto("golpe")
             self.juego.manejar_impacto_jugador()
+
+        if tocadas:
+            self.juego.audio_manager.reproducir_efecto("golpe")
 
     def _contacto_cuerpo_a_cuerpo(self):
         em = self.juego.entity_manager
