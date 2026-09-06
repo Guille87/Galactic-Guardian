@@ -197,19 +197,19 @@ class Juego:
             if i == 0:  # Reproduce el sonido solo para la primera bala
                 self.audio_manager.reproducir_efecto("disparo")
 
-    def actualizar(self):
-        """Actualiza el estado del juego."""
+    def actualizar(self, dt):
+        """Actualiza el estado del juego. `dt` en segundos."""
         if self.jugador.vidas <= 0:
             self.juego_terminado()
             return
 
         # 1. Entradas y Generación
         teclas = pygame.key.get_pressed()
-        self.jugador.mover(teclas, self.pantalla)
+        self.jugador.mover(teclas, self.pantalla, dt)
         self._gestionar_generacion_enemigos()
 
         # 2. Física y Colisiones
-        self.entity_manager.actualizar()
+        self.entity_manager.actualizar(dt)
         self.collision_manager.actualizar()
 
         # 2b. Transición diferida: si el jefe murió durante la resolución de
@@ -220,8 +220,8 @@ class Juego:
             return
 
         # 3. Cosmética
-        self.background.update()
-        self.jugador.update()
+        self.background.update(dt)
+        self.jugador.update(dt)
 
     def _gestionar_generacion_enemigos(self):
         """Maneja el timing para spawnear enemigos mediante el WaveManager."""
@@ -294,10 +294,12 @@ class Juego:
                 self.reloj.tick(settings.FPS)
                 continue
 
-            # Actualizar el juego solo si el juego no está pausado
-            self.actualizar()
+            # dt en segundos, acotado para evitar saltos tras un parón (breakpoint,
+            # arrastre de ventana, primer frame...)
+            dt = min(self.reloj.tick(settings.FPS) / 1000.0, 3.0 / settings.FPS)
+
+            self.actualizar(dt)
             self.dibujar()
-            self.reloj.tick(settings.FPS)
 
         # Limpieza única de audio al abandonar la partida
         self.audio_manager.detener_toda_la_musica()

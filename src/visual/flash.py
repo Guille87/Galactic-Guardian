@@ -1,22 +1,34 @@
 import pygame
 
+from src.core import settings
+
 
 class Destello(pygame.sprite.Sprite):
+    """Destello rojo efímero sobre el jugador al recibir daño."""
+
     def __init__(self, jugador):
         super().__init__()
-        self.radius = 30  # Radio del destello
-        self.image = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA)
-        pygame.draw.circle(self.image, (255, 0, 0, 200), (self.radius, self.radius), self.radius)  # Círculo rojo semitransparente
-        self.rect = self.image.get_rect(center=jugador.rect.center)  # Posición inicial centrada en el jugador
-        self.alpha = 255  # Transparencia inicial
-        self.fade_speed = 10  # Velocidad de atenuación
-        self.jugador = jugador  # Referencia al jugador
+        self.radius = 30
+        self.jugador = jugador
+        self._color = (255, 0, 0)
+        self.alpha = 200.0
+        self.fade_speed = 10  # alpha/frame-a-60fps
 
-    def update(self):
-        # Actualizar la posición del destello para que siga al jugador
+        self.image = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA)
+        self.rect = self.image.get_rect(center=jugador.rect.center)
+        self._redibujar()
+
+    def _redibujar(self):
+        self.image.fill((0, 0, 0, 0))
+        pygame.draw.circle(
+            self.image, (*self._color, int(max(0, self.alpha))),
+            (self.radius, self.radius), self.radius
+        )
+
+    def update(self, dt=0):
         self.rect.center = self.jugador.rect.center
-        self.alpha -= self.fade_speed  # Reducir la transparencia
+        self.alpha -= self.fade_speed * dt * settings.FPS
         if self.alpha <= 0:
-            self.kill()  # Eliminar el destello si la transparencia es menor o igual a 0
+            self.kill()
         else:
-            self.image.set_alpha(self.alpha)  # Actualizar la transparencia del destello
+            self._redibujar()

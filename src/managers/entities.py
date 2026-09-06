@@ -28,21 +28,21 @@ class EntityManager:
             self.balas_enemigo.add(bala)
 
     # --- Ciclo por frame ---
-    def actualizar(self):
+    def actualizar(self, dt):
         """Actualiza el movimiento y la lógica de todas las entidades."""
-        self.balas.update()
-        self.balas_enemigo.update()
-        self._actualizar_enemigos()
-        self.items.update()
-        self.efectos.update()
+        self.balas.update(dt)
+        self.balas_enemigo.update(dt)
+        self._actualizar_enemigos(dt)
+        self.items.update(dt)
+        self.efectos.update(dt)
         self._limpiar_entidades_fuera()
 
-    def _actualizar_enemigos(self):
+    def _actualizar_enemigos(self, dt):
         ahora = pygame.time.get_ticks()
 
         for enemigo in self.enemigos:
-            enemigo.movimiento_enemigo()
-            enemigo.update()
+            enemigo.movimiento_enemigo(dt)
+            enemigo.update(dt)
 
             # Disparo automático de los tipos 2 y 3
             if isinstance(enemigo, (EnemigoTipo2, EnemigoTipo3)):

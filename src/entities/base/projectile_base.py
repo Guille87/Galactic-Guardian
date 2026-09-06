@@ -1,7 +1,9 @@
 import pygame
 
+from .movimiento import MovimientoSubpixel
 
-class Proyectil(pygame.sprite.Sprite):
+
+class Proyectil(pygame.sprite.Sprite, MovimientoSubpixel):
     """Base común de balas. Recibe una `Surface` ya escalada y orientada
     (cacheada por el `ResourceManager`); nunca carga desde disco.
 
@@ -17,7 +19,8 @@ class Proyectil(pygame.sprite.Sprite):
         self.danio = danio
         self.velocidad = velocidad
         self.radius = 16  # Hitbox circular estándar
+        self._init_subpixel()
 
-    def update(self):
+    def update(self, dt=0):
         """Función que sobreescribirán los hijos."""
         pass

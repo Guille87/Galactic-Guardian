@@ -1,9 +1,10 @@
 import pygame
 
 from .bullet import Bala
+from .base.movimiento import MovimientoSubpixel
 
 
-class Jugador(pygame.sprite.Sprite):
+class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
     # Constantes de clase para configuración (Mantenible)
     CONFIG = {
         "tamano": (50, 50),
@@ -38,6 +39,8 @@ class Jugador(pygame.sprite.Sprite):
         self.destello_constante = None
         self.radius = 16
 
+        self._init_subpixel()
+
     @property
     def danio_maximo(self):
         return self.CONFIG["danio_max"]
@@ -50,13 +53,12 @@ class Jugador(pygame.sprite.Sprite):
     def cadencia_disparo_maxima(self):
         return self.CONFIG["cadencia_max"]
 
-    def mover(self, teclas, pantalla):
-        """Mueve al jugador según las teclas presionadas."""
+    def mover(self, teclas, pantalla, dt):
+        """Mueve al jugador según las teclas presionadas (independiente de FPS)."""
         dx = (teclas[pygame.K_RIGHT] or teclas[pygame.K_d]) - (teclas[pygame.K_LEFT] or teclas[pygame.K_a])
         dy = (teclas[pygame.K_DOWN] or teclas[pygame.K_s]) - (teclas[pygame.K_UP] or teclas[pygame.K_w])
 
-        self.rect.x += dx * self.velocidad
-        self.rect.y += dy * self.velocidad
+        self._desplazar(dx * self.velocidad, dy * self.velocidad, dt)
 
         # Obtenemos el rect de la superficie si es necesario
         if isinstance(pantalla, pygame.Surface):
@@ -127,7 +129,7 @@ class Jugador(pygame.sprite.Sprite):
     def reducir_vidas(self, cantidad):
         self.vidas = max(0, self.vidas - cantidad)
 
-    def update(self):
+    def update(self, dt=0):
         """Actualiza el estado del jugador en cada fotograma."""
         # Comprobar si la invulnerabilidad ha expirado
         if self.invulnerable and pygame.time.get_ticks() > self.tiempo_invulnerable:

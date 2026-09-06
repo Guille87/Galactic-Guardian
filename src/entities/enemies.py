@@ -4,9 +4,10 @@ import random
 import pygame
 
 from .bullet_enemy import BalaEnemigo
+from .base.movimiento import MovimientoSubpixel
 
 
-class EnemigoBase(pygame.sprite.Sprite):
+class EnemigoBase(pygame.sprite.Sprite, MovimientoSubpixel):
     TAMANO_ESTANDAR = (48, 48)
 
     def __init__(self, imagen_surface, x, y, pantalla_ancho, nivel, salud_base):
@@ -16,6 +17,7 @@ class EnemigoBase(pygame.sprite.Sprite):
         self.pantalla_ancho = pantalla_ancho
         self.radius = 16
         self.valor_puntuacion = 1
+        self._init_subpixel()
 
         # Escalado de salud por nivel: Salud * 2^(nivel-1)
         self.salud_maxima = salud_base * (2 ** (nivel - 1))
@@ -24,10 +26,9 @@ class EnemigoBase(pygame.sprite.Sprite):
         self.velocidad_x = random.uniform(-2, 2)
         self.velocidad_y = random.uniform(2, 4)
 
-    def movimiento_enemigo(self):
-        """Lógica de rebote lateral y descenso."""
-        self.rect.y += self.velocidad_y
-        self.rect.x += self.velocidad_x
+    def movimiento_enemigo(self, dt):
+        """Lógica de rebote lateral y descenso (independiente de FPS)."""
+        self._desplazar(self.velocidad_x, self.velocidad_y, dt)
 
         # Revisa si el enemigo alcanza los bordes de la pantalla
         if self.rect.left < 0 or self.rect.right > self.pantalla_ancho:
@@ -146,21 +147,21 @@ class Jefe(EnemigoBase):
         self.ultimo_disparo_rapido = 0
         self.valor_puntuacion = 1000
 
-    def movimiento_enemigo(self):
+    def movimiento_enemigo(self, dt):
         """
         Anulamos el movimiento base.
         El jefe maneja su propia posición en update.
         """
         pass
 
-    def update(self):
-        """Lógica de patrulla del Jefe."""
+    def update(self, dt=0):
+        """Lógica de patrulla del Jefe (independiente de FPS)."""
         # Descenso inicial
         if self.rect.y < self.pantalla_alto // 4:
-            self.rect.y += self.velocidad_y
+            self._desplazar(0, self.velocidad_y, dt)
         else:
             # Movimiento lateral
-            self.rect.x += self.velocidad_x
+            self._desplazar(self.velocidad_x, 0, dt)
             if self.rect.left < 0 or self.rect.right > self.pantalla_ancho:
                 self.velocidad_x *= -1
 

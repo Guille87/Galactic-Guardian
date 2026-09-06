@@ -10,7 +10,6 @@ class BalaEnemigo(Proyectil):
         self.dir_x = dir_x
         self.dir_y = dir_y
 
-    def update(self):
-        """Movimiento basado en vector de dirección."""
-        self.rect.x += self.velocidad * self.dir_x
-        self.rect.y += self.velocidad * self.dir_y
+    def update(self, dt=0):
+        """Movimiento según vector de dirección (independiente de FPS)."""
+        self._desplazar(self.velocidad * self.dir_x, self.velocidad * self.dir_y, dt)
