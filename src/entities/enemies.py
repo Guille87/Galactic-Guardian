@@ -14,7 +14,7 @@ class EnemigoBase(pygame.sprite.Sprite):
         self.image = imagen_surface
         self.rect = self.image.get_rect(x=x, y=y)
         self.pantalla_ancho = pantalla_ancho
-        self.radio = 16
+        self.radius = 16
         self.valor_puntuacion = 1
 
         # Escalado de salud por nivel: Salud * 2^(nivel-1)
@@ -139,7 +139,7 @@ class Jefe(EnemigoBase):
         # Atributos específicos del jefe
         self.pantalla_alto = pantalla_alto
         self.jugador = jugador
-        self.radio = 80  # Definir el radio de la hitbox circular del jefe
+        self.radius = 80  # Definir el radio de la hitbox circular del jefe
         self.velocidad_y = 2  # Velocidad vertical de descenso
         self.velocidad_x = 3  # Velocidad lateral tras llegar a su posición
         self.ultimo_disparo_normal = 0

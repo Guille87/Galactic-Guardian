@@ -94,17 +94,10 @@ class RenderManager:
 
     # ------------------------------------------------------------- ENTIDADES
     def _dibujar_entidades(self):
-        """Dibuja explosiones/ítems y luego balas y enemigos."""
+        """Dibuja los grupos de sprites en orden de capas (de atrás a delante)."""
         em = self.juego.entity_manager
-
-        for sprite in self.juego.all_sprites:
-            if sprite is not self.juego.jugador:
-                self.pantalla.blit(sprite.image, sprite.rect)
-
-        for lista in (em.balas, em.balas_enemigo, em.enemigos):
-            for elemento in lista:
-                if elemento:
-                    self.pantalla.blit(elemento.image, elemento.rect)
+        for grupo in (em.efectos, em.items, em.balas, em.balas_enemigo, em.enemigos):
+            grupo.draw(self.pantalla)
 
     # ---------------------------------------------------------------- HELPERS
     def _mostrar_texto_centralizado(self, texto, color):

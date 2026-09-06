@@ -14,8 +14,8 @@ class Jugador(pygame.sprite.Sprite):
         "danio_max": 3
     }
 
-    def __init__(self, imagen, pantalla_ancho, pantalla_alto, grupo_sprites):
-        super().__init__(grupo_sprites)
+    def __init__(self, imagen, pantalla_ancho, pantalla_alto):
+        super().__init__()
         # Recibimos la Surface ya escalada y cacheada por el ResourceManager
         self.image = imagen
         self.rect = self.image.get_rect(centerx=pantalla_ancho // 2, bottom=pantalla_alto - 10)
@@ -36,7 +36,7 @@ class Jugador(pygame.sprite.Sprite):
         self.invulnerable = False
         self.tiempo_invulnerable = 0
         self.destello_constante = None
-        self.radio = 16
+        self.radius = 16
 
     @property
     def danio_maximo(self):

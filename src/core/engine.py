@@ -41,7 +41,6 @@ class Juego:
         # Control de la máquina de estados de alto nivel
         self.ejecutando = True
         self.resultado = "MENU"  # "MENU" | "SALIR"
-        self.all_sprites = pygame.sprite.Group()
         self.enemigos_eliminados = 0  # contador de "piedad" para el loot
 
         # Parámetros de dificultad
@@ -68,7 +67,6 @@ class Juego:
             self.rm.get_image_scaled("jugador", Jugador.CONFIG["tamano"]),
             self.pantalla_ancho,
             self.pantalla_alto,
-            self.all_sprites
         )
 
         # 5. Control de Tiempos y Flujo
@@ -115,8 +113,8 @@ class Juego:
             enemigo.actualizar_pausa(tiempo_pausado)
 
         # Explosiones / destellos y demás sprites con cronómetro
-        for sprite in self.all_sprites:
-            if sprite is not self.jugador and hasattr(sprite, "actualizar_pausa"):
+        for sprite in self.entity_manager.efectos:
+            if hasattr(sprite, "actualizar_pausa"):
                 sprite.actualizar_pausa(tiempo_pausado)
 
         # Timestamps del cooldown de daño por contacto
@@ -136,15 +134,13 @@ class Juego:
                                              self.MAX_TIEMPO_GENERACION - settings.GEN_DECREMENTO_NIVEL)
         else:
             # Partida desde cero
-            self.jugador = Jugador(self.rm.get_image_scaled("jugador", Jugador.CONFIG["tamano"]), self.pantalla_ancho, self.pantalla_alto, self.all_sprites)
+            self.jugador = Jugador(self.rm.get_image_scaled("jugador", Jugador.CONFIG["tamano"]), self.pantalla_ancho, self.pantalla_alto)
             self.MIN_TIEMPO_GENERACION = settings.GEN_MIN_INICIAL
             self.MAX_TIEMPO_GENERACION = settings.GEN_MAX_INICIAL
             self.puntuacion = 0
 
         # Reiniciar todos los valores del juego a sus estados iniciales
         self.entity_manager.vaciar_todo()
-        self.all_sprites.empty()
-        self.all_sprites.add(self.jugador)
         self.enemigos_golpeados = weakref.WeakKeyDictionary()
         self.tiempo_proximo_enemigo = 0
         self.inicio_juego = pygame.time.get_ticks()
@@ -300,7 +296,6 @@ class Juego:
 
             # Actualizar el juego solo si el juego no está pausado
             self.actualizar()
-            self.all_sprites.update()  # Actualizar todos los sprites
             self.dibujar()
             self.reloj.tick(settings.FPS)
 
