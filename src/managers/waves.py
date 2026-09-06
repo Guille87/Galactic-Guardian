@@ -21,6 +21,11 @@ class WaveManager:
         self.tiempo_inicio_espera_jefe = 0
         self.tiempo_espera_jefe = settings.TIEMPO_ESPERA_JEFE
 
+    def actualizar_pausa(self, tiempo_pausado):
+        """Desplaza el cronómetro de espera del jefe si estaba en marcha."""
+        if self.tiempo_inicio_espera_jefe:
+            self.tiempo_inicio_espera_jefe += tiempo_pausado
+
     def spawn_enemigo(self, tiempo_actual, jugador, nivel):
         """
         Decide y crea la instancia del enemigo correspondiente.

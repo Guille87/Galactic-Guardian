@@ -11,6 +11,9 @@ class Explosion(pygame.sprite.Sprite):
         self.last_update = pygame.time.get_ticks()
         self.frame_rate = 40  # Velocidad de la animación
 
+    def actualizar_pausa(self, tiempo_pausado):
+        self.last_update += tiempo_pausado
+
     def update(self):
         now = pygame.time.get_ticks()
         if now - self.last_update > self.frame_rate:

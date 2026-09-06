@@ -62,7 +62,7 @@ class EntityManager:
                 if b2: self.agregar_bala_enemigo(b2)
 
     def _limpiar_entidades_fuera(self):
-        """Elimina lo que sobra y actualiza contadores del juego."""
+        """Descarta enemigos y balas que se han salido de la pantalla."""
 
         def esta_fuera(rect):
             return (
@@ -70,11 +70,11 @@ class EntityManager:
                     rect.right < 0 or rect.left > self.juego.pantalla_ancho
             )
 
-        # Filtrar enemigos que se salen
-        salidos = [e for e in self.enemigos if esta_fuera(e.rect)]
-        self.juego.enemigos_activos -= len(salidos)
+        # Los enemigos que se van dejan de contar para el cooldown de contacto
+        for e in self.enemigos:
+            if esta_fuera(e.rect):
+                self.juego.enemigos_golpeados.pop(e, None)
 
-        # Reasignar listas filtrando las que NO están fuera
         self.enemigos = [e for e in self.enemigos if not esta_fuera(e.rect)]
         self.balas = [b for b in self.balas if not esta_fuera(b.rect)]
         self.balas_enemigo = [b for b in self.balas_enemigo if not esta_fuera(b.rect)]

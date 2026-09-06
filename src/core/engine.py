@@ -1,4 +1,5 @@
 import random
+import weakref
 
 import pygame
 import pygame.freetype
@@ -41,8 +42,7 @@ class Juego:
         self.ejecutando = True
         self.resultado = "MENU"  # "MENU" | "SALIR"
         self.all_sprites = pygame.sprite.Group()
-        self.enemigos_activos = 0
-        self.enemigos_eliminados = 0
+        self.enemigos_eliminados = 0  # contador de "piedad" para el loot
 
         # Parámetros de dificultad
         self.MIN_TIEMPO_GENERACION = settings.GEN_MIN_INICIAL
@@ -76,7 +76,9 @@ class Juego:
         self.tiempo_proximo_enemigo = 0
         self.tiempo_pausa = 0
         self.tiempo_entre_enemigos = 0
-        self.enemigos_golpeados = {}
+        # {enemigo: ts del último contacto}. WeakKeyDictionary: si el enemigo se
+        # destruye, su entrada desaparece sola (además de purgarse al morir/salir).
+        self.enemigos_golpeados = weakref.WeakKeyDictionary()
 
         # 6. Inicialización de Estado de Juego
         self.audio_manager.reproducir_musica("rain_of_lasers")
@@ -96,17 +98,30 @@ class Juego:
         self.tiempo_pausa = pygame.time.get_ticks()
 
     def reanudar_juego(self):
-        """Reanuda el juego y ajusta los tiempos para sincronizarlos con el tiempo pausado."""
+        """Reanuda el juego desplazando TODOS los temporizadores por la duración
+        de la pausa, para que ninguna cuenta atrás salte de golpe."""
         self.pausado = False
-        tiempo_actual = pygame.time.get_ticks()
-        tiempo_pausado = tiempo_actual - self.tiempo_pausa
+        tiempo_pausado = pygame.time.get_ticks() - self.tiempo_pausa
 
+        # Temporizadores propios del motor
         self.tiempo_proximo_enemigo += tiempo_pausado
         self.tiempo_entre_enemigos += tiempo_pausado
-        self.jugador.tiempo_invulnerable += tiempo_pausado  # Actualizar el tiempo de invulnerabilidad del jugador
+
+        # Cada objeto ajusta sus propios cronómetros
+        self.jugador.actualizar_pausa(tiempo_pausado)
+        self.wave_manager.actualizar_pausa(tiempo_pausado)
 
         for enemigo in self.entity_manager.enemigos:
             enemigo.actualizar_pausa(tiempo_pausado)
+
+        # Explosiones / destellos y demás sprites con cronómetro
+        for sprite in self.all_sprites:
+            if sprite is not self.jugador and hasattr(sprite, "actualizar_pausa"):
+                sprite.actualizar_pausa(tiempo_pausado)
+
+        # Timestamps del cooldown de daño por contacto
+        for enemigo in list(self.enemigos_golpeados):
+            self.enemigos_golpeados[enemigo] += tiempo_pausado
 
     def reiniciar_juego(self):
         """Restablece el estado para una nueva partida o nivel."""
@@ -130,10 +145,9 @@ class Juego:
         self.entity_manager.vaciar_todo()
         self.all_sprites.empty()
         self.all_sprites.add(self.jugador)
-        self.enemigos_golpeados = {}
+        self.enemigos_golpeados = weakref.WeakKeyDictionary()
         self.tiempo_proximo_enemigo = 0
         self.inicio_juego = pygame.time.get_ticks()
-        self.enemigos_activos = 0
         self.tiempo_entre_enemigos = 0
         self.pausado = False
         self.estado_game_over = False

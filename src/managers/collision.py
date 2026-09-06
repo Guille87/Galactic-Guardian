@@ -40,6 +40,9 @@ class CollisionManager:
         if enemigo in self.juego.entity_manager.enemigos:
             self.juego.entity_manager.enemigos.remove(enemigo)
 
+        # Deja de contar para el cooldown de daño por contacto
+        self.juego.enemigos_golpeados.pop(enemigo, None)
+
         # Efectos visuales
         self.juego.effect_manager.crear_explosion(enemigo.rect.center)
 
@@ -53,7 +56,6 @@ class CollisionManager:
 
         # Puntuación y lógica de Jefe
         self.juego.puntuacion += enemigo.valor_puntuacion * self.juego.nivel
-        self.juego.enemigos_activos -= 1
 
         if isinstance(enemigo, Jefe):
             self.juego.jefe_derrotado = True
