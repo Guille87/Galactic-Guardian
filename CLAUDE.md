@@ -67,13 +67,15 @@ The `pygame_gui` options screen uses the 0.6+ event API (`event.type == pygame_g
 
 `ResourceManager` (`src/core/resources.py`) is a `__new__`-based singleton. `load_image` runs `.convert()` / `.convert_alpha()` at load (so blits don't convert per-frame). `get_image_scaled` caches by `name_WxH`; `get_image_rotated(name, size, angle)` caches by `name_WxH_r<deg>` — projectiles now get a ready-made oriented `Surface` from here instead of loading/scaling/rotating per bullet. `get_image_path` still exists for other callers; `get_music_path` / `load_music` register music paths without decoding.
 
-Enemies (`src/entities/enemies.py`): `EnemigoBase` → `EnemigoTipo1/2/3` and `Jefe`. Health scales as `salud_base * 2**(nivel-1)` (audit flags this as too steep — Phase 4). Loot probability rises by type (5% / 10% / 20% / 100% boss) and is forced after 10 kills; the drop pool is filtered by what the player still needs. `Jefe` overrides `movimiento_enemigo` (no-op) and drives its own patrol in `update`. The `disparo_*` methods take `(ahora, rm, nombre_bala)` and build the projectile through `rm.get_image_rotated`.
+Enemies (`src/entities/enemies.py`): `EnemigoBase` → `EnemigoTipo1/2/3` and `Jefe`. Health scales **linearly**: `salud_base * (1 + FACTOR_NIVEL*(nivel-1))`, `FACTOR_NIVEL` a class attr (`settings.DIFICULTAD_FACTOR_ENEMIGO` / `_JEFE`). Loot probability rises by type (5% / 10% / 20% / 100% boss) and is forced after 10 kills; `generate_item` filters `CANDIDATOS_LOOT` by `_loot_util` (no list mutation). `Jefe` overrides `movimiento_enemigo` (no-op) and drives its own patrol in `update`. The `disparo_*` methods take `(ahora, rm, nombre_bala)`, read damage/speed from `settings`, and build the projectile through `rm.get_image_rotated`.
 
-Projectiles: `src/entities/base/projectile_base.py` (`Proyectil`, which mixes in `MovimientoSubpixel`) is the shared base for `Bala` (`bullet.py`) and `BalaEnemigo` (`bullet_enemy.py`). **They receive a cached `Surface`, never a path** — no disk I/O per shot, no per-instance rotate. Size/orientation constants: `Bala.TAMANO`/`Bala.ANGULO`, `BalaEnemigo.TAMANO`. Collision is `collide_circle` on `radius` (16 for bullets). Every `update(self, dt=0)` and `Jugador.mover(teclas, pantalla, dt)` takes `dt`. Player upgrades (damage/cadence/speed, `tipo_disparo` up to `"triple"`) live on `Jugador` (`src/entities/player.py`); `Item` (`src/entities/items.py`) applies power-up effects on pickup.
+Projectiles: `src/entities/base/projectile_base.py` (`Proyectil`, which mixes in `MovimientoSubpixel`) is the shared base for `Bala` (`bullet.py`) and `BalaEnemigo` (`bullet_enemy.py`). **They receive a cached `Surface`, never a path** — no disk I/O per shot, no per-instance rotate. Size/orientation constants: `Bala.TAMANO`/`Bala.ANGULO`, `BalaEnemigo.TAMANO`. Collision is `collide_circle` on `radius`, set per class from `RADIUS` (`settings.RADIO_*`). Every `update(self, dt=0)` and `Jugador.mover(teclas, pantalla, dt)` takes `dt`. `Jugador.mover` normalizes the diagonal and applies optional smoothing (`settings.JUGADOR_SUAVIZADO`). Player upgrades (damage/cadence/speed, `tipo_disparo` up to `"triple"`) live on `Jugador` (`src/entities/player.py`); `Item` (`src/entities/items.py`) applies power-up effects on pickup.
 
-### Still open (audit Phase 4 + deferred)
+**F1** toggles `juego.debug_hitboxes` → `RenderManager._dibujar_hitboxes` draws the real collision circles.
 
-Difficulty curve `salud_base * 2**(nivel-1)` (too steep), hitbox calibration, diagonal-move normalization, hit-SFX throttle, boss timing. And the "god object": managers still take the whole `juego`. See `AUDITORIA.md`.
+### Still open
+
+The "god object": managers still take the whole `juego` (audit item 14). Balance values in `settings.py` are first-pass and want playtesting. See `AUDITORIA.md`.
 
 ### Directory layout
 

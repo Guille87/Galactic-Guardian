@@ -12,13 +12,17 @@ Rama `auditoria-fases-1-2` (contiene también la Fase 3).
 - **Fase 1 (estabilidad) — HECHA**: C4, C5, C6, C7, C8, C3, B1, B2 + ruta del icono.
 - **Fase 2 (rendimiento) — HECHA**: C1, C2, P1, P4, P5, P6 (+ `SONIDOS`/`MUSICA` separados, tamaños de bala saneados).
 - **Fase 3 (arquitectura) — HECHA**: `settings.py` (13), C9, C11, B3, P2, P3 (grupos de sprites + `groupcollide`/`collide_circle`, `radio`→`radius`), C10 (`dt` + `MovimientoSubpixel`). Bonus: P7 (fundido del `Destello`).
-  - **Pendiente de Fase 3**: item 14 (adelgazar el objeto-Dios — los managers siguen recibiendo `juego` entero). Refactor grande y de bajo beneficio inmediato; se deja para más adelante.
-- **Fase 4 (jugabilidad) — pendiente**: J1, J2, J3, J4, J5, J6, J7.
+- **Fase 4 (jugabilidad) — HECHA**: J1 (dificultad lineal), J2 (timing del jefe comprimido por nivel), J3 (hitboxes recalibradas + overlay F1), J4 (diagonal normalizada + suavizado opcional), J5 (anti-spam SFX), J6 (escala de daño coherente), J7 (loot pool sin mutación).
+- **Pendiente**: item 14 (adelgazar el objeto-Dios — los managers siguen recibiendo `juego` entero). Refactor grande y de bajo beneficio inmediato.
 
-> Verificado con un harness de integración headless (11 escenarios: arranque, disparo,
-> movimiento por `dt` a 30/60 fps, colisiones, muerte del jefe, daño/reaparición,
-> pausa/reanudación, 1500 frames de estabilidad, fugas de memoria). Sin pruebas
-> con hardware real ni jugabilidad interactiva.
+> Todo el balance de la Fase 4 vive en `src/core/settings.py` y es un primer
+> ajuste "a ciegas": **necesita playtest**. Pulsa **F1** en partida para ver los
+> círculos de colisión y calibrar los radios.
+>
+> Verificado con un harness de integración headless (14 escenarios: arranque, disparo,
+> movimiento por `dt` a 30/60 fps, diagonal normalizada, colisiones, muerte del jefe,
+> daño/reaparición, pausa/reanudación, 1500 frames de estabilidad, fugas de memoria,
+> overlay de debug). Sin pruebas con hardware real ni jugabilidad interactiva.
 
 ---
 
