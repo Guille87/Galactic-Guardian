@@ -5,6 +5,7 @@ import pygame.freetype
 
 from src.entities.enemies import Jefe
 from src.entities.player import Jugador
+from src.entities.bullet import Bala
 from src.visual.background import ScrollingBackground
 from src.managers.collision import CollisionManager
 from src.managers.effects import EffectManager
@@ -63,7 +64,7 @@ class Juego:
             self.pantalla_alto
         )
         self.jugador = Jugador(
-            self.rm.get_image_path("jugador"),
+            self.rm.get_image_scaled("jugador", Jugador.CONFIG["tamano"]),
             self.pantalla_ancho,
             self.pantalla_alto,
             self.all_sprites
@@ -82,9 +83,11 @@ class Juego:
 
         self.jefe = None
 
-        # Inicialización de botones
+        # Botones de overlays (los crea RenderManager una sola vez y los cachea)
         self.boton_opciones = None
         self.boton_salir = None
+        self.boton_reintentar = None
+        self.boton_salir_post = None
 
     def pausar_juego(self):
         """Pausa el juego y guarda el tiempo en que se pausó."""
@@ -115,7 +118,7 @@ class Juego:
             self.MAX_TIEMPO_GENERACION = max(200, self.MAX_TIEMPO_GENERACION - 200)
         else:
             # Partida desde cero
-            self.jugador = Jugador(self.rm.get_image_path("jugador"), self.pantalla_ancho, self.pantalla_alto, self.all_sprites)
+            self.jugador = Jugador(self.rm.get_image_scaled("jugador", Jugador.CONFIG["tamano"]), self.pantalla_ancho, self.pantalla_alto, self.all_sprites)
             self.MIN_TIEMPO_GENERACION, self.MAX_TIEMPO_GENERACION = 800, 1000
             self.puntuacion = 0
 
@@ -168,11 +171,11 @@ class Juego:
         # 1. Obtenemos el tiempo actual
         ahora = pygame.time.get_ticks()
 
-        # 2. Obtenemos la ruta de la imagen desde el RM que ya tiene Juego
-        ruta_bala = self.rm.get_image_path("bala_jugador1")
+        # 2. Superficie de la bala ya escalada y orientada (cacheada en el RM)
+        imagen_bala = self.rm.get_image_rotated("bala_jugador1", Bala.TAMANO, Bala.ANGULO)
 
         # Llama a la función disparar del jugador para obtener las nuevas balas
-        nuevas_balas = self.jugador.disparar(ahora, ruta_bala)
+        nuevas_balas = self.jugador.disparar(ahora, imagen_bala)
 
         # Verifica si hay nuevas balas y las agrega a la lista de balas
         for i, bala in enumerate(nuevas_balas):

@@ -9,18 +9,33 @@ class ResourceManager:
             cls._instance = super().__new__(cls)
             cls._instance.resources = {}
             cls._instance.image_paths = {}
+            cls._instance.music_paths = {}
         return cls._instance
 
     def __init__(self):
         if not hasattr(self, 'scaled_resources'):
-            self.scaled_resources = {}  # Cache para versiones reescalada
+            self.scaled_resources = {}  # Cache para versiones reescaladas / rotadas
 
     def load_image(self, name, path):
-        self.resources[name] = pygame.image.load(path)
+        """Carga una imagen y la convierte al formato de la pantalla.
+
+        `convert()` / `convert_alpha()` evitan que cada blit tenga que convertir
+        el formato al vuelo (imprescindible para el fondo a pantalla completa).
+        """
+        surface = pygame.image.load(path)
+        if surface.get_flags() & pygame.SRCALPHA or surface.get_alpha() is not None:
+            surface = surface.convert_alpha()
+        else:
+            surface = surface.convert()
+        self.resources[name] = surface
         self.image_paths[name] = path  # Guarda la ruta de la imagen asociada
 
     def load_sound(self, name, path):
         self.resources[name] = pygame.mixer.Sound(path)
+
+    def load_music(self, name, path):
+        """Registra la ruta de una pista de música (no se carga en memoria)."""
+        self.music_paths[name] = path
 
     def get_image(self, name):
         return self.resources.get(name)
@@ -41,8 +56,28 @@ class ResourceManager:
 
         return self.scaled_resources[cache_key]
 
+    def get_image_rotated(self, name, size, angle):
+        """Devuelve la imagen escalada y rotada, cacheada por (nombre, tamaño, ángulo).
+
+        Evita reescalar/rotar una `Surface` por cada proyectil creado.
+        """
+        ang = int(round(angle)) % 360
+        cache_key = f"{name}_{size[0]}x{size[1]}_r{ang}"
+
+        cached = self.scaled_resources.get(cache_key)
+        if cached is None:
+            base = self.get_image_scaled(name, size)
+            if base is None:
+                return None
+            cached = pygame.transform.rotate(base, ang) if ang else base
+            self.scaled_resources[cache_key] = cached
+        return cached
+
     def get_image_path(self, name):
         return self.image_paths.get(name)
+
+    def get_music_path(self, name):
+        return self.music_paths.get(name)
 
     def get_sound(self, name):
         # Devuelve el sonido correspondiente al nombre dado, si existe

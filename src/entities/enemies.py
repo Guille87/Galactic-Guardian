@@ -64,7 +64,7 @@ class EnemigoBase(pygame.sprite.Sprite):
             return random.choice(pool)
         return None
 
-    def _crear_proyectil_hacia_jugador(self, ruta_imagen, danio, velocidad, jugador):
+    def _crear_proyectil_hacia_jugador(self, rm, nombre_bala, danio, velocidad, jugador):
         dx = jugador.rect.centerx - self.rect.centerx
         dy = jugador.rect.centery - self.rect.centery
         distancia = math.hypot(dx, dy)
@@ -75,9 +75,10 @@ class EnemigoBase(pygame.sprite.Sprite):
         ux, uy = dx / distancia, dy / distancia
         angulo = math.degrees(math.atan2(-uy, ux))
 
-        bala = BalaEnemigo(ruta_imagen, self.rect.centerx, self.rect.bottom, ux, uy, danio, velocidad)
-        bala.girar(angulo)
-        return bala
+        # Imagen ya escalada y rotada (cacheada por el ResourceManager)
+        imagen = rm.get_image_rotated(nombre_bala, BalaEnemigo.TAMANO, angulo)
+
+        return BalaEnemigo(imagen, self.rect.centerx, self.rect.bottom, ux, uy, danio, velocidad)
 
     def actualizar_pausa(self, tiempo_pausado):
         """Función base para ajustar cronómetros tras una pausa."""
@@ -100,10 +101,10 @@ class EnemigoTipo2(EnemigoBase):
         self.cadencia = 3000
         self.valor_puntuacion = 2
 
-    def disparo_enemigo(self, ahora, ruta_bala):
+    def disparo_enemigo(self, ahora, rm, nombre_bala):
         if ahora - self.tiempo_ultimo_ataque > self.cadencia:
             self.tiempo_ultimo_ataque = ahora
-            return self._crear_proyectil_hacia_jugador(ruta_bala, 2, 4, self.jugador)
+            return self._crear_proyectil_hacia_jugador(rm, nombre_bala, 2, 4, self.jugador)
         return None
 
     def actualizar_pausa(self, tiempo_pausado):
@@ -120,10 +121,10 @@ class EnemigoTipo3(EnemigoBase):
         self.cadencia = 1500
         self.valor_puntuacion = 3
 
-    def disparo_enemigo(self, ahora, ruta_bala):
+    def disparo_enemigo(self, ahora, rm, nombre_bala):
         if ahora - self.tiempo_ultimo_ataque > self.cadencia:
             self.tiempo_ultimo_ataque = ahora
-            return self._crear_proyectil_hacia_jugador(ruta_bala, 2, 7, self.jugador)
+            return self._crear_proyectil_hacia_jugador(rm, nombre_bala, 2, 7, self.jugador)
         return None
 
     def actualizar_pausa(self, tiempo_pausado):
@@ -163,17 +164,17 @@ class Jefe(EnemigoBase):
             if self.rect.left < 0 or self.rect.right > self.pantalla_ancho:
                 self.velocidad_x *= -1
 
-    def disparo_jefe(self, ahora, ruta_bala):
+    def disparo_jefe(self, ahora, rm, nombre_bala):
         if ahora - self.ultimo_disparo_normal > 1500:
             self.ultimo_disparo_normal = ahora
-            return self._crear_proyectil_hacia_jugador(ruta_bala, 3, 7, self.jugador)
+            return self._crear_proyectil_hacia_jugador(rm, nombre_bala, 3, 7, self.jugador)
         else:
             return None
 
-    def disparo_rapido(self, ahora, ruta_bala):
+    def disparo_rapido(self, ahora, rm, nombre_bala):
         if ahora - self.ultimo_disparo_rapido > 250:
             self.ultimo_disparo_rapido = ahora
-            return self._crear_proyectil_hacia_jugador(ruta_bala, 1, 4, self.jugador)
+            return self._crear_proyectil_hacia_jugador(rm, nombre_bala, 1, 4, self.jugador)
         else:
             return None
 

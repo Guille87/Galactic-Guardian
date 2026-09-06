@@ -5,6 +5,15 @@
 
 ---
 
+## Estado de implementación
+
+- **Fase 1 (estabilidad) — HECHA** (rama `fase-1-estabilidad`): C4, C5, C6, C7, C8, C3, B1, B2 + ruta del icono.
+- **Fase 2 (rendimiento) — HECHA**: C1, C2, P1, P4, P5, P6 (+ `SONIDOS`/`MUSICA` separados, tamaños de bala saneados).
+- **Fase 3 (arquitectura) — pendiente**: P2, P3, C9, C11, B3, `dt` (C10), módulo `settings`, adelgazar el objeto-Dios.
+- **Fase 4 (jugabilidad) — pendiente**: J1, J2, J3, J4, J5, J6, J7.
+
+---
+
 ## 1. Resumen general del estado del proyecto
 
 El proyecto está **funcional y razonablemente organizado** para su tamaño (~2.000 líneas). La refactorización reciente introdujo un patrón de *managers* (`EntityManager`, `CollisionManager`, `WaveManager`, `RenderManager`, `EffectManager`, `UIManager`, `AudioManager`, `InputHandler`) que separa bien las responsabilidades **a nivel de intención**. La estructura de carpetas (`core`, `managers`, `entities`, `ui`, `visual`) es clara.

@@ -14,11 +14,10 @@ class Jugador(pygame.sprite.Sprite):
         "danio_max": 3
     }
 
-    def __init__(self, ruta_imagen, pantalla_ancho, pantalla_alto, grupo_sprites):
+    def __init__(self, imagen, pantalla_ancho, pantalla_alto, grupo_sprites):
         super().__init__(grupo_sprites)
-        # 1. Configuración de Imagen (Recibimos la ruta, pero cargamos vía Pygame o pasamos la superficie)
-        # Nota: Idealmente el ResourceManager debería darte el Surface directamente
-        self.image = pygame.transform.scale(pygame.image.load(ruta_imagen), self.CONFIG["tamano"])
+        # Recibimos la Surface ya escalada y cacheada por el ResourceManager
+        self.image = imagen
         self.rect = self.image.get_rect(centerx=pantalla_ancho // 2, bottom=pantalla_alto - 10)
 
         # 2. Atributos de Estado (Estadísticas)
@@ -68,18 +67,19 @@ class Jugador(pygame.sprite.Sprite):
         # Limita el movimiento del jugador para que no salga de los bordes de la pantalla
         self.rect.clamp_ip(rect_limite.inflate(-15, -45))
 
-    def disparar(self, tiempo_actual, ruta_bala):
+    def disparar(self, tiempo_actual, imagen_bala):
         """Lógica de control de tiempo para disparar."""
         if tiempo_actual - self.ultimo_disparo > self.cadencia_disparo:
             self.ultimo_disparo = tiempo_actual
-            return self._generar_balas(ruta_bala)
+            return self._generar_balas(imagen_bala)
         return []
 
-    def _generar_balas(self, ruta_bala):
-        """Crea las instancias de balas según el power-up actual."""
+    def _generar_balas(self, imagen_bala):
+        """Crea las instancias de balas según el power-up actual.
+
+        `imagen_bala` es la `Surface` ya escalada y orientada (cacheada por el
+        ResourceManager)."""
         balas = []
-        # Ángulo por defecto (hacia arriba)
-        angulo = 90
 
         pos_x = self.rect.centerx
         pos_y = self.rect.top + 10
@@ -92,9 +92,7 @@ class Jugador(pygame.sprite.Sprite):
             offsets = [0]
 
         for offset in offsets:
-            b = Bala(ruta_bala, pos_x + offset, pos_y, self.danio)
-            b.girar(angulo)
-            balas.append(b)
+            balas.append(Bala(imagen_bala, pos_x + offset, pos_y, self.danio))
 
         return balas
 

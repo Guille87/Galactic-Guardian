@@ -7,24 +7,32 @@ from src.ui.menu import MenuManager
 from src.core.engine import Juego
 from src.core.audio import AudioManager
 from src.core.resources import ResourceManager
-from src.core.config import RECURSOS, SONIDOS, EXPLOSIONES, DIR_ASSETS, cargar_configuracion
+from src.core.config import RECURSOS, MUSICA, SONIDOS, EXPLOSIONES, DIR_ASSETS, cargar_configuracion
 from src.ui.scoreboard import SistemaClasificacion
 
 
 def cargar_activos_del_juego(rm):
-    """Carga todas las imágenes y sonidos en el ResourceManager."""
+    """Carga imágenes y efectos en memoria; la música solo registra su ruta."""
     # Cargar Imágenes
     for nombre, ruta in {** RECURSOS, ** EXPLOSIONES}.items():
         rm.load_image(nombre, os.path.join(DIR_ASSETS, ruta))
 
-    # Cargar Sonidos
+    # Cargar Efectos de sonido
     for nombre, ruta in SONIDOS.items():
         rm.load_sound(nombre, os.path.join(DIR_ASSETS, ruta))
 
+    # Registrar pistas de música (streaming, no se cargan en RAM)
+    for nombre, ruta in MUSICA.items():
+        rm.load_music(nombre, os.path.join(DIR_ASSETS, ruta))
+
 
 def main():
+    # Buffer de audio pequeño ANTES de pygame.init() para reducir la latencia
+    pygame.mixer.pre_init(44100, -16, 2, 512)
+
     # Inicializar Pygame
     pygame.init()
+    pygame.mixer.set_num_channels(16)
 
     # Crear la pantalla
     pantalla = pygame.display.set_mode((600, 800))
