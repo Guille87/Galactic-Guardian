@@ -8,8 +8,10 @@ class Proyectil(pygame.sprite.Sprite, MovimientoSubpixel):
     (cacheada por el `ResourceManager`); nunca carga desde disco.
 
     La colisión la resuelve `CollisionManager` con `pygame.sprite.collide_circle`,
-    que usa el atributo `radius`.
+    que usa el atributo `radius` (lo fija cada subclase con `RADIUS`).
     """
+
+    RADIUS = 16
 
     def __init__(self, imagen, x, y, danio, velocidad):
         super().__init__()
@@ -18,7 +20,7 @@ class Proyectil(pygame.sprite.Sprite, MovimientoSubpixel):
 
         self.danio = danio
         self.velocidad = velocidad
-        self.radius = 16  # Hitbox circular estándar
+        self.radius = self.RADIUS
         self._init_subpixel()
 
     def update(self, dt=0):

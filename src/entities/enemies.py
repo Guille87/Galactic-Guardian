@@ -3,24 +3,26 @@ import random
 
 import pygame
 
+from src.core import settings
 from .bullet_enemy import BalaEnemigo
 from .base.movimiento import MovimientoSubpixel
 
 
 class EnemigoBase(pygame.sprite.Sprite, MovimientoSubpixel):
     TAMANO_ESTANDAR = (48, 48)
+    FACTOR_NIVEL = settings.DIFICULTAD_FACTOR_ENEMIGO
 
     def __init__(self, imagen_surface, x, y, pantalla_ancho, nivel, salud_base):
         super().__init__()
         self.image = imagen_surface
         self.rect = self.image.get_rect(x=x, y=y)
         self.pantalla_ancho = pantalla_ancho
-        self.radius = 16
+        self.radius = settings.RADIO_ENEMIGO
         self.valor_puntuacion = 1
         self._init_subpixel()
 
-        # Escalado de salud por nivel: Salud * 2^(nivel-1)
-        self.salud_maxima = salud_base * (2 ** (nivel - 1))
+        # Escalado de salud lineal por nivel: base * (1 + FACTOR * (nivel - 1))
+        self.salud_maxima = max(1, round(salud_base * (1 + self.FACTOR_NIVEL * (nivel - 1))))
         self.salud = self.salud_maxima
 
         self.velocidad_x = random.uniform(-2, 2)
@@ -111,7 +113,8 @@ class EnemigoTipo2(EnemigoBase):
     def disparo_enemigo(self, ahora, rm, nombre_bala):
         if ahora - self.tiempo_ultimo_ataque > self.cadencia:
             self.tiempo_ultimo_ataque = ahora
-            return self._crear_proyectil_hacia_jugador(rm, nombre_bala, 2, 4, self.jugador)
+            return self._crear_proyectil_hacia_jugador(
+                rm, nombre_bala, settings.DANIO_BALA_TIPO2, settings.VEL_BALA_TIPO2, self.jugador)
         return None
 
     def actualizar_pausa(self, tiempo_pausado):
@@ -131,7 +134,8 @@ class EnemigoTipo3(EnemigoBase):
     def disparo_enemigo(self, ahora, rm, nombre_bala):
         if ahora - self.tiempo_ultimo_ataque > self.cadencia:
             self.tiempo_ultimo_ataque = ahora
-            return self._crear_proyectil_hacia_jugador(rm, nombre_bala, 2, 7, self.jugador)
+            return self._crear_proyectil_hacia_jugador(
+                rm, nombre_bala, settings.DANIO_BALA_TIPO3, settings.VEL_BALA_TIPO3, self.jugador)
         return None
 
     def actualizar_pausa(self, tiempo_pausado):
@@ -140,13 +144,14 @@ class EnemigoTipo3(EnemigoBase):
 
 class Jefe(EnemigoBase):
     TAMANO_JEFE = (200, 200)
+    FACTOR_NIVEL = settings.DIFICULTAD_FACTOR_JEFE
 
     def __init__(self, imagen_surface, x, y, pantalla_ancho, pantalla_alto, nivel, jugador):
         super().__init__(imagen_surface, x, y, pantalla_ancho, nivel, salud_base=100)
         # Atributos específicos del jefe
         self.pantalla_alto = pantalla_alto
         self.jugador = jugador
-        self.radius = 80  # Definir el radio de la hitbox circular del jefe
+        self.radius = settings.RADIO_JEFE  # hitbox circular del jefe
         self.velocidad_y = 2  # Velocidad vertical de descenso
         self.velocidad_x = 3  # Velocidad lateral tras llegar a su posición
         self.ultimo_disparo_normal = 0
@@ -174,14 +179,16 @@ class Jefe(EnemigoBase):
     def disparo_jefe(self, ahora, rm, nombre_bala):
         if ahora - self.ultimo_disparo_normal > 1500:
             self.ultimo_disparo_normal = ahora
-            return self._crear_proyectil_hacia_jugador(rm, nombre_bala, 3, 7, self.jugador)
+            return self._crear_proyectil_hacia_jugador(
+                rm, nombre_bala, settings.DANIO_JEFE_NORMAL, settings.VEL_JEFE_NORMAL, self.jugador)
         else:
             return None
 
     def disparo_rapido(self, ahora, rm, nombre_bala):
         if ahora - self.ultimo_disparo_rapido > 250:
             self.ultimo_disparo_rapido = ahora
-            return self._crear_proyectil_hacia_jugador(rm, nombre_bala, 1, 4, self.jugador)
+            return self._crear_proyectil_hacia_jugador(
+                rm, nombre_bala, settings.DANIO_JEFE_RAPIDA, settings.VEL_JEFE_RAPIDA, self.jugador)
         else:
             return None
 

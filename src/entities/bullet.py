@@ -7,6 +7,7 @@ class Bala(Proyectil):
     TAMANO = (18, 18)
     # Ángulo fijo de la bala del jugador (siempre hacia arriba).
     ANGULO = 90
+    RADIUS = settings.RADIO_BALA_JUGADOR
 
     def __init__(self, imagen, x, y, danio):
         super().__init__(imagen, x, y, danio, velocidad=10)

@@ -1,5 +1,6 @@
 import pygame
 
+from src.core import settings
 from .bullet import Bala
 from .base.movimiento import MovimientoSubpixel
 
@@ -37,7 +38,7 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
         self.invulnerable = False
         self.tiempo_invulnerable = 0
         self.destello_constante = None
-        self.radius = 16
+        self.radius = settings.RADIO_JUGADOR
 
         self._init_subpixel()
 

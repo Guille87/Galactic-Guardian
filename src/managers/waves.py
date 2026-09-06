@@ -31,7 +31,7 @@ class WaveManager:
         Decide y crea la instancia del enemigo correspondiente.
         Retorna la instancia del enemigo o None.
         """
-        tipo_clase, nombre_recurso, es_jefe = self._obtener_config_enemigo(tiempo_actual)
+        tipo_clase, nombre_recurso, es_jefe = self._obtener_config_enemigo(tiempo_actual, nivel)
 
         if not tipo_clase:
             return None
@@ -60,24 +60,32 @@ class WaveManager:
         # Tipos 2 y 3 comparten firma de constructor
         return tipo_clase(img_final, x, y, self.ancho, nivel, jugador)
 
-    def _obtener_config_enemigo(self, tiempo_actual):
+    @staticmethod
+    def _escala_nivel(nivel):
+        """Los umbrales de fase se comprimen a niveles altos (el jefe llega antes)."""
+        return max(settings.TIEMPO_ESCALA_SUELO,
+                   1 - settings.TIEMPO_ESCALA_NIVEL * (nivel - 1))
+
+    def _obtener_config_enemigo(self, tiempo_actual, nivel):
         """
         Decide qué enemigo toca generar según el tiempo.
         Retorna (ClaseEnemigo, ruta_imagen, es_jefe)
         """
+        f = self._escala_nivel(nivel)
+
         # Fase Jefe
-        if tiempo_actual >= self.TIEMPO_JEFE:
+        if tiempo_actual >= self.TIEMPO_JEFE * f:
             if not self.jefe_generado:
                 return self._procesar_fase_jefe()
             return None, None, False
 
         # Fase 3 (Mezcla de los 3 tipos)
-        if tiempo_actual >= self.TIEMPO_FASE_3:
+        if tiempo_actual >= self.TIEMPO_FASE_3 * f:
             tipo = random.choice([EnemigoTipo1, EnemigoTipo2, EnemigoTipo3])
             return tipo, self._get_ruta(tipo), False
 
         # Fase 2 (Tipo 1 y 2)
-        if tiempo_actual >= self.TIEMPO_FASE_2:
+        if tiempo_actual >= self.TIEMPO_FASE_2 * f:
             tipo = random.choice([EnemigoTipo1, EnemigoTipo2])
             return tipo, self._get_ruta(tipo), False
 
