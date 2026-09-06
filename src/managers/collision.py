@@ -57,7 +57,9 @@ class CollisionManager:
         if isinstance(enemigo, Jefe):
             self.juego.jefe_derrotado = True
             self.juego.jefe = None
-            self.juego.reiniciar_juego()
+            # No reiniciamos aquí: marcamos la transición y el motor la ejecuta
+            # de forma segura al terminar la resolución de colisiones.
+            self.juego.pendiente_reinicio = True
 
     def _spawnear_item(self, tipo, posicion):
         img = self.juego.rm.get_image_scaled(tipo, Item.TAMANO_ESTANDAR)

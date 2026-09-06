@@ -5,7 +5,6 @@ import pygame.freetype
 
 from src.entities.enemies import Jefe
 from src.entities.player import Jugador
-from src.core.audio import AudioManager
 from src.visual.background import ScrollingBackground
 from src.managers.collision import CollisionManager
 from src.managers.effects import EffectManager
@@ -17,7 +16,7 @@ from src.managers.waves import WaveManager
 
 
 class Juego:
-    def __init__(self, pantalla, volumen_musica, volumen_efectos, clasificacion, resource_manager):
+    def __init__(self, pantalla, audio_manager, clasificacion, resource_manager):
         # 1. Configuración básica y Hardware
         self.rm = resource_manager
         self.pantalla = pantalla
@@ -34,6 +33,11 @@ class Juego:
         self.nombre_entrada = ""
         self.jefe_derrotado = False
         self.disparando = False
+        self.pendiente_reinicio = False  # Transición diferida (ver actualizar())
+
+        # Control de la máquina de estados de alto nivel
+        self.ejecutando = True
+        self.resultado = "MENU"  # "MENU" | "SALIR"
         self.all_sprites = pygame.sprite.Group()
         self.enemigos_activos = 0
         self.enemigos_eliminados = 0
@@ -43,7 +47,7 @@ class Juego:
         self.MAX_TIEMPO_GENERACION = 1000
 
         # 3. Managers (El "Cerebro" distribuido)
-        self.audio_manager = AudioManager(self.rm, volumen_musica, volumen_efectos)
+        self.audio_manager = audio_manager  # Compartido con el menú (inyectado)
         self.entity_manager = EntityManager(self)
         self.effect_manager = EffectManager(self)
         self.ui_manager = UIManager(self)
@@ -130,6 +134,7 @@ class Juego:
         # Resetear el WaveManager para que el jefe pueda volver a salir en el siguiente nivel
         self.wave_manager.jefe_generado = False
         self.wave_manager.tiempo_inicio_espera_jefe = 0
+        self.pendiente_reinicio = False
 
         # Detenemos la música
         self.audio_manager.detener_toda_la_musica()
@@ -190,6 +195,13 @@ class Juego:
         self.entity_manager.actualizar()
         self.collision_manager.actualizar()
 
+        # 2b. Transición diferida: si el jefe murió durante la resolución de
+        # colisiones, reiniciamos aquí (nunca desde dentro de un manager).
+        if self.pendiente_reinicio:
+            self.pendiente_reinicio = False
+            self.reiniciar_juego()
+            return
+
         # 3. Cosmética
         self.background.update()
         self.jugador.update()
@@ -225,43 +237,38 @@ class Juego:
         else:
             self.estado_game_over = True
 
-    def mostrar_menu_principal(self):
-        """Muestra el menú principal del juego."""
-        # Detener música
-        self.audio_manager.detener_toda_la_musica()
+    def volver_al_menu(self):
+        """Solicita terminar la partida y devolver el control al menú principal."""
+        self.resultado = "MENU"
+        self.ejecutando = False
 
-        # Iniciar música de fondo del menú si aún no se ha iniciado
-        self.audio_manager.reproducir_musica("skyfire_theme")
-
-        from src.ui.menu import MenuManager
-        menu = MenuManager(self.pantalla, self.rm, self.audio_manager, self.clasificacion)
-        menu.ejecutar()
-
-        pygame.quit()
-        import sys
-        sys.exit()
+    def salir_del_juego(self):
+        """Solicita cerrar la aplicación por completo."""
+        self.resultado = "SALIR"
+        self.ejecutando = False
 
     def mostrar_opciones_juego(self):
-        """Muestra el menú principal del juego."""
+        """Abre la pantalla de opciones sobre la pausa de la partida."""
         from src.ui.menu import MenuManager
         menu = MenuManager(self.pantalla, self.rm, self.audio_manager, self.clasificacion)
 
-        menu.mostrar_solo_opciones()
+        if menu.mostrar_solo_opciones() == "SALIR":
+            self.salir_del_juego()
 
     def dibujar(self):
         """Lógica de dibujo delegada al RenderManager."""
         self.render_manager.renderizar_todo()
 
     def ejecutar(self):
-        """Ejecuta el juego."""
-        ejecutando = True
+        """Ejecuta el bucle de la partida. Devuelve el siguiente estado ("MENU"/"SALIR")."""
+        self.ejecutando = True
 
-        while ejecutando:
+        while self.ejecutando:
             pygame.display.set_caption("Galactic Guardian")
 
             # Si manejar_eventos() devuelve False, salimos del bucle
             if not self.input_handler.manejar_eventos():
-                ejecutando = False
+                self.ejecutando = False
                 continue
 
             # Si el juego está pausado, solo dibujar la pantalla y continuar al siguiente ciclo
@@ -276,4 +283,6 @@ class Juego:
             self.dibujar()
             self.reloj.tick(60)
 
-        self.audio_manager.detener_musica("rain_of_lasers")
+        # Limpieza única de audio al abandonar la partida
+        self.audio_manager.detener_toda_la_musica()
+        return self.resultado
