@@ -56,8 +56,8 @@ DIFICULTAD_FACTOR_JEFE = 0.6
 RADIO_JUGADOR = 8       # pequeño y permisivo (estilo shmup)
 RADIO_ENEMIGO = 20      # ~ tamaño visible
 RADIO_JEFE = 95
-RADIO_BALA_JUGADOR = 5
-RADIO_BALA_ENEMIGO = 7
+RADIO_BALA_JUGADOR = 7
+RADIO_BALA_ENEMIGO = 9
 
 # --- Movimiento del jugador ---
 # 1.0 = respuesta instantánea (comportamiento clásico). < 1.0 suaviza el

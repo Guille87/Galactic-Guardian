@@ -62,9 +62,11 @@ class UIManager:
             start_y += 45
 
     def _dibujar_barra_con_etiqueta(self, pantalla, etiqueta, valor, maximo, pos, color):
-        """Dibuja una barra de progreso estandarizada con su nombre."""
-        # Etiqueta
-        txt = self.fuente_pequena.render(etiqueta, True, self.COLOR_TEXTO)
+        """Dibuja una barra de progreso estandarizada con su nombre y valor."""
+        # Etiqueta + valor actual / máximo (`:g` quita ceros de más: 4.0 -> 4)
+        txt = self.fuente_pequena.render(
+            f"{etiqueta}: {valor:g}/{maximo:g}", True, self.COLOR_TEXTO
+        )
         pantalla.blit(txt, pos)
 
         # Dimensiones de la barra
