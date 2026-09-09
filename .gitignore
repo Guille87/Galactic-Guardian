@@ -1,20 +1,42 @@
-.idea/
-__pycache__/
-*.pyc
+# Entornos virtuales
 venv/
 .venv/
-*.json
-*.ini
+env/
+
+# Caché y bytecode de Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Configuración local del IDE
+.idea/
+.vscode/
+
+# Datos generados en tiempo de ejecución (se recrean solos)
+/config.ini
+/data/saves/
+
+# Tests y cobertura
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Herramientas de análisis
+.ruff_cache/
+.mypy_cache/
 
 # Distribución / Empaquetado
 dist/
 build/
 *.egg-info/
+*.spec
 
 # Variables de entorno
 .env
 
-# Archivos específicos de SO (evita subir basura de Windows/Mac)
+# Archivos específicos de SO
 Thumbs.db
 .DS_Store
 

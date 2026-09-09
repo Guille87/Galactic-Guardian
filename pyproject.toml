@@ -1,0 +1,44 @@
+# Galactic Guardian — configuración de herramientas.
+#
+# El juego se ejecuta desde el código fuente (`python main.py`), no se instala
+# como paquete, así que no hay [build-system]. Las dependencias de runtime siguen
+# viviendo en requirements.txt (fuente de verdad para `pip install -r`); aquí se
+# reflejan solo como metadatos.
+
+[project]
+name = "galactic-guardian"
+version = "0.1.0"
+description = "Juego de naves 2D (shoot 'em up) hecho con pygame-ce."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Guillermo Amado" }]
+dependencies = [
+    "pygame-ce==2.5.7",
+    "pygame-gui==0.6.14",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra"
+
+[tool.coverage.run]
+relative_files = true
+source = ["src", "main"]
+omit = ["*/__pycache__/*", "tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]

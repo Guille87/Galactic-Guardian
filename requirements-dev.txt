@@ -1,0 +1,5 @@
+# Dependencias de desarrollo (tests). Instala también las de runtime.
+-r requirements.txt
+
+pytest>=8.0
+pytest-cov>=5.0
