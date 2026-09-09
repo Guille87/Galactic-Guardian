@@ -1,5 +1,7 @@
 import pygame
 
+from src.core import settings
+
 
 class UIManager:
     def __init__(self, juego):
@@ -47,26 +49,36 @@ class UIManager:
         jugador = self.juego.jugador
         # Agrupamos los datos para iterar (Evita repetir código de dibujo)
         # Nota: La cadencia ahora se pide al jugador, él sabe cómo calcularla
+        # `extra`: texto opcional solo-debug. En "Velocidad" mostramos los píxeles
+        # realmente movidos el último frame (para detectar asimetrías de movimiento).
+        vel_real = jugador._ultimo_desplazamiento.length() if hasattr(jugador, "_ultimo_desplazamiento") else 0.0
         stats = [
-            ("Ataque", jugador.danio, jugador.danio_maximo),
-            ("Vel. Ataque", jugador.obtener_cadencia_visual(), jugador.obtener_cadencia_max_visual()),
-            ("Velocidad", jugador.velocidad, jugador.CONFIG["vel_max"])
+            ("Ataque", jugador.danio, jugador.danio_maximo, None),
+            ("Vel. Ataque", jugador.obtener_cadencia_visual(), jugador.obtener_cadencia_max_visual(), None),
+            ("Velocidad", jugador.velocidad, jugador.CONFIG["vel_max"], f"real {vel_real:.2f} px/frame"),
         ]
 
         start_y = 60
-        for nombre, val, max_val in stats:
+        for nombre, val, max_val, extra in stats:
             self._dibujar_barra_con_etiqueta(
                 pantalla, nombre, val, max_val,
-                (20, start_y), self.COLORES_STATS[nombre]
+                (20, start_y), self.COLORES_STATS[nombre], extra
             )
             start_y += 45
 
-    def _dibujar_barra_con_etiqueta(self, pantalla, etiqueta, valor, maximo, pos, color):
-        """Dibuja una barra de progreso estandarizada con su nombre y valor."""
-        # Etiqueta + valor actual / máximo (`:g` quita ceros de más: 4.0 -> 4)
-        txt = self.fuente_pequena.render(
-            f"{etiqueta}: {valor:g}/{maximo:g}", True, self.COLOR_TEXTO
-        )
+    def _dibujar_barra_con_etiqueta(self, pantalla, etiqueta, valor, maximo, pos, color, extra=None):
+        """Dibuja una barra de progreso estandarizada con su nombre.
+
+        En modo DEBUG (ejecución desde el IDE) añade el valor numérico y, si se
+        pasa, un `extra` de diagnóstico.
+        """
+        if settings.DEBUG:
+            texto = f"{etiqueta}: {valor:g}/{maximo:g}"      # `:g` quita ceros de más
+            if extra:
+                texto += f"  [{extra}]"
+        else:
+            texto = etiqueta
+        txt = self.fuente_pequena.render(texto, True, self.COLOR_TEXTO)
         pantalla.blit(txt, pos)
 
         # Dimensiones de la barra

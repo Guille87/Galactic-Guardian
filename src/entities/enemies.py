@@ -37,16 +37,18 @@ class EnemigoBase(pygame.sprite.Sprite, MovimientoSubpixel):
         """Rebote lateral con recolocación en el borde.
 
         Se fija la posición al borde y se fuerza la dirección hacia dentro con
-        abs()/-abs() (no `*= -1`): así un frame lento que empuje al sprite varios
-        píxeles fuera no lo deja oscilando pegado al borde.
+        un módulo mínimo (`REBOTE_MIN_VX`): así ni un frame lento que empuje al
+        sprite varios píxeles fuera, ni un enemigo con giro casi vertical, lo
+        dejan pegado a la pared.
         """
+        vx = max(abs(self.velocidad_x), settings.REBOTE_MIN_VX)
         if self.rect.left < 0:
             self.rect.left = 0
-            self.velocidad_x = abs(self.velocidad_x)
+            self.velocidad_x = vx
             self._resto.x = 0.0
         elif self.rect.right > self.pantalla_ancho:
             self.rect.right = self.pantalla_ancho
-            self.velocidad_x = -abs(self.velocidad_x)
+            self.velocidad_x = -vx
             self._resto.x = 0.0
 
     def take_damage(self, damage):
@@ -87,8 +89,12 @@ class EnemigoBase(pygame.sprite.Sprite, MovimientoSubpixel):
         return None
 
     def _crear_proyectil_hacia_jugador(self, rm, nombre_bala, danio, velocidad, jugador):
-        dx = jugador.rect.centerx - self.rect.centerx
-        dy = jugador.rect.centery - self.rect.centery
+        # La bala aparece en la parte baja del enemigo: el vector director se
+        # calcula DESDE ese mismo punto (antes se calculaba desde el centro y la
+        # bala salía desviada, sobre todo con el jugador muy a un lado).
+        origen_x, origen_y = self.rect.centerx, self.rect.bottom
+        dx = jugador.rect.centerx - origen_x
+        dy = jugador.rect.centery - origen_y
         distancia = math.hypot(dx, dy)
 
         if distancia == 0: return None
@@ -100,7 +106,7 @@ class EnemigoBase(pygame.sprite.Sprite, MovimientoSubpixel):
         # Imagen ya escalada y rotada (cacheada por el ResourceManager)
         imagen = rm.get_image_rotated(nombre_bala, BalaEnemigo.TAMANO, angulo)
 
-        return BalaEnemigo(imagen, self.rect.centerx, self.rect.bottom, ux, uy, danio, velocidad)
+        return BalaEnemigo(imagen, origen_x, origen_y, ux, uy, danio, velocidad)
 
     def actualizar_pausa(self, tiempo_pausado):
         """Función base para ajustar cronómetros tras una pausa."""

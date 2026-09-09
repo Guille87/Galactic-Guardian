@@ -128,6 +128,7 @@ class Juego:
 
     def reiniciar_juego(self):
         """Restablece el estado para una nueva partida o nivel."""
+        avance_nivel = self.jefe_derrotado
         if self.jefe_derrotado:
             self.nivel += 1
             self.jefe_derrotado = False
@@ -145,7 +146,7 @@ class Juego:
             self.puntuacion = 0
 
         # Reiniciar todos los valores del juego a sus estados iniciales
-        self.entity_manager.vaciar_todo()
+        self.entity_manager.vaciar_todo(avance_nivel=avance_nivel)
         self.enemigos_golpeados = weakref.WeakKeyDictionary()
         self.tiempo_proximo_enemigo = 0
         self.inicio_juego = pygame.time.get_ticks()

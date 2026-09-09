@@ -6,6 +6,12 @@ Las constantes propias de una entidad concreta siguen viviendo en su clase
 (`Jugador.CONFIG`, `EnemigoBase.TAMANO_ESTANDAR`, `Bala.TAMANO`, ...).
 """
 
+import sys
+
+# True al ejecutar desde el código fuente (IDE); False en un build empaquetado
+# (PyInstaller pone sys.frozen). Activa ayudas de desarrollo en el HUD.
+DEBUG = not getattr(sys, "frozen", False)
+
 # --- Ventana / bucle ---
 ANCHO = 600
 ALTO = 800
@@ -63,3 +69,8 @@ RADIO_BALA_ENEMIGO = 9
 # 1.0 = respuesta instantánea (comportamiento clásico). < 1.0 suaviza el
 # arranque/parada (p. ej. 0.5). La diagonal siempre se normaliza.
 JUGADOR_SUAVIZADO = 1.0
+
+# --- Rebote de enemigos en los bordes laterales ---
+# Velocidad horizontal mínima (px/frame-a-60fps) tras rebotar: evita que un
+# enemigo con giro casi vertical se quede "pegado" a la pared.
+REBOTE_MIN_VX = 1.2

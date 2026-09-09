@@ -75,6 +75,15 @@ class EntityManager:
             if esta_fuera(bala.rect):
                 bala.kill()
 
-    def vaciar_todo(self):
-        for grupo in (self.balas, self.balas_enemigo, self.enemigos, self.items, self.efectos):
+    def vaciar_todo(self, avance_nivel=False):
+        """Vacía los grupos de sprites.
+
+        Con `avance_nivel=True` (se acaba de derrotar al jefe) se conservan las
+        balas enemigas y los efectos ya en vuelo: así las balas del jefe no
+        desaparecen de golpe al destruirlo y la explosión termina su animación.
+        """
+        grupos = [self.balas, self.enemigos, self.items]
+        if not avance_nivel:
+            grupos += [self.balas_enemigo, self.efectos]
+        for grupo in grupos:
             grupo.empty()
