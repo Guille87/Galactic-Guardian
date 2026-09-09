@@ -103,6 +103,10 @@ class Juego:
         tiempo_pausado = pygame.time.get_ticks() - self.tiempo_pausa
 
         # Temporizadores propios del motor
+        # inicio_juego marca el "tiempo 0" del nivel; el WaveManager decide la
+        # fase con (ahora - inicio_juego), así que desplazarlo es lo que hace
+        # que la pausa realmente congele la progresión de oleadas / jefe.
+        self.inicio_juego += tiempo_pausado
         self.tiempo_proximo_enemigo += tiempo_pausado
         self.tiempo_entre_enemigos += tiempo_pausado
 

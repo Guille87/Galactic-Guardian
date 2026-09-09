@@ -31,10 +31,23 @@ class EnemigoBase(pygame.sprite.Sprite, MovimientoSubpixel):
     def movimiento_enemigo(self, dt):
         """Lógica de rebote lateral y descenso (independiente de FPS)."""
         self._desplazar(self.velocidad_x, self.velocidad_y, dt)
+        self._rebotar_en_bordes()
 
-        # Revisa si el enemigo alcanza los bordes de la pantalla
-        if self.rect.left < 0 or self.rect.right > self.pantalla_ancho:
-            self.velocidad_x *= -1  # Invierte la dirección horizontal si alcanza un borde
+    def _rebotar_en_bordes(self):
+        """Rebote lateral con recolocación en el borde.
+
+        Se fija la posición al borde y se fuerza la dirección hacia dentro con
+        abs()/-abs() (no `*= -1`): así un frame lento que empuje al sprite varios
+        píxeles fuera no lo deja oscilando pegado al borde.
+        """
+        if self.rect.left < 0:
+            self.rect.left = 0
+            self.velocidad_x = abs(self.velocidad_x)
+            self._resto.x = 0.0
+        elif self.rect.right > self.pantalla_ancho:
+            self.rect.right = self.pantalla_ancho
+            self.velocidad_x = -abs(self.velocidad_x)
+            self._resto.x = 0.0
 
     def take_damage(self, damage):
         self.salud -= damage
@@ -171,10 +184,9 @@ class Jefe(EnemigoBase):
         if self.rect.y < self.pantalla_alto // 4:
             self._desplazar(0, self.velocidad_y, dt)
         else:
-            # Movimiento lateral
+            # Movimiento lateral con rebote que no se atasca en el borde
             self._desplazar(self.velocidad_x, 0, dt)
-            if self.rect.left < 0 or self.rect.right > self.pantalla_ancho:
-                self.velocidad_x *= -1
+            self._rebotar_en_bordes()
 
     def disparo_jefe(self, ahora, rm, nombre_bala):
         if ahora - self.ultimo_disparo_normal > 1500:
