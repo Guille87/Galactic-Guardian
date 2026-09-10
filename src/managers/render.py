@@ -9,6 +9,7 @@ class RenderManager:
         self.font_pausa = pygame.font.SysFont(None, 48)
         self.font_botones = pygame.font.SysFont(None, 30)
         self.font_game_over = pygame.font.SysFont(None, 72)
+        self.font_debug = pygame.font.SysFont(None, 20)
 
         # Snapshot desaturado de la pausa (se genera una sola vez por pausa)
         self._frame_pausa = None
@@ -117,6 +118,10 @@ class RenderManager:
             circulo(b, (120, 200, 255))
         for b in em.balas_enemigo:
             circulo(b, (255, 180, 80))
+
+        # Aviso: cómo salir del modo debug (por si se pulsó F1 sin querer)
+        aviso = self.font_debug.render("F1: modo debug ACTIVADO — pulsa F1 para ocultarlo", True, (0, 255, 0))
+        self.pantalla.blit(aviso, (10, self.juego.pantalla_alto - aviso.get_height() - 8))
 
     # ---------------------------------------------------------------- HELPERS
     def _mostrar_texto_centralizado(self, texto, color):
