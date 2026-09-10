@@ -4,7 +4,7 @@ from src.entities.base.projectile_base import Proyectil
 
 class BalaEnemigo(Proyectil):
     # Tamaño al que se escala la imagen de las balas enemigas.
-    TAMANO = (36, 36)
+    TAMANO = (50, 50)
     RADIUS = settings.RADIO_BALA_ENEMIGO
 
     def __init__(self, imagen, x, y, dir_x, dir_y, danio, velocidad):

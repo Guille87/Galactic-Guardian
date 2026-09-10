@@ -128,6 +128,14 @@ class UIManager:
         pygame.draw.rect(pantalla, (255, 0, 0), (x, y, ancho_barra * porcentaje, 12))
         pygame.draw.rect(pantalla, (255, 255, 255), (x, y, ancho_barra, 12), 1)
 
+        # Vida en números (solo desarrollo)
+        if settings.DEBUG:
+            txt_hp = self.fuente_pequena.render(
+                f"{max(0, int(jefe.salud))} / {jefe.salud_maxima}  (nivel {self.juego.nivel})",
+                True, self.COLOR_TEXTO
+            )
+            pantalla.blit(txt_hp, (x, y + 16))
+
     def _dibujar_atributo(self, pantalla, nombre, valor, maximo, pos, color):
         texto = self.fuente_pequena.render(f"{nombre}: {valor}", True, (255, 255, 255))
         pantalla.blit(texto, pos)
