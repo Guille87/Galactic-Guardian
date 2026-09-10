@@ -55,10 +55,12 @@ def test_vaciar_todo(juego, rm):
     assert len(em.enemigos) == 0 and len(em.balas_enemigo) == 0
 
 
-def test_vaciar_todo_avance_nivel_conserva_balas_enemigas(juego, rm):
+def test_vaciar_todo_avance_nivel_conserva_balas(juego, rm):
     em = juego.entity_manager
     em.agregar_enemigo(_enemigo(rm))
     em.agregar_bala_enemigo(_enemigo(rm))
+    em.agregar_bala_jugador(_enemigo(rm))
     em.vaciar_todo(avance_nivel=True)
     assert len(em.enemigos) == 0            # los enemigos sí se limpian
     assert len(em.balas_enemigo) == 1       # las balas del jefe siguen volando
+    assert len(em.balas) == 1               # las balas del jugador también

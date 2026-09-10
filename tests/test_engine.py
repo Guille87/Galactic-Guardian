@@ -45,18 +45,37 @@ def test_reiniciar_avance_de_nivel(juego, rm):
     juego.jefe_derrotado = True
     bala_ficticia = EnemigoTipo1(rm.get_image_scaled("enemigo1", (48, 48)), 0, 0, 600, 1)
     juego.entity_manager.agregar_bala_enemigo(bala_ficticia)
+    juego.entity_manager.agregar_bala_jugador(
+        EnemigoTipo1(rm.get_image_scaled("enemigo1", (48, 48)), 0, 0, 600, 1)
+    )
     juego.reiniciar_juego()
     assert juego.nivel == 2
     assert len(juego.entity_manager.balas_enemigo) == 1   # balas del jefe conservadas
+    assert len(juego.entity_manager.balas) == 1           # balas del jugador conservadas
 
 
 def test_reiniciar_desde_cero(juego):
     juego.puntuacion = 500
     jugador_viejo = juego.jugador
+    juego.jugador.mejorar_danio()
+    juego.jugador.vidas = 1
     juego.jefe_derrotado = False
     juego.reiniciar_juego()
     assert juego.puntuacion == 0
-    assert juego.jugador is not jugador_viejo
+    # El jugador se restablece in situ: misma instancia, estado inicial (item 14).
+    assert juego.jugador is jugador_viejo
+    assert juego.jugador.vidas == juego.jugador.CONFIG["vidas_init"]
+    assert juego.jugador.danio == 1
+
+
+def test_reiniciar_desde_cero_limpia_enemigos_golpeados(juego, rm):
+    enemigo = EnemigoTipo1(rm.get_image_scaled("enemigo1", (48, 48)), 0, 0, 600, 1)
+    golpeados = juego.enemigos_golpeados
+    juego.enemigos_golpeados[enemigo] = 123.0
+    juego.jefe_derrotado = False
+    juego.reiniciar_juego()
+    assert juego.enemigos_golpeados is golpeados   # misma instancia, vaciada
+    assert len(juego.enemigos_golpeados) == 0
 
 
 def test_disparar_añade_balas(juego):

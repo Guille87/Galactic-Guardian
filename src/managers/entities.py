@@ -79,11 +79,12 @@ class EntityManager:
         """Vacía los grupos de sprites.
 
         Con `avance_nivel=True` (se acaba de derrotar al jefe) se conservan las
-        balas enemigas y los efectos ya en vuelo: así las balas del jefe no
-        desaparecen de golpe al destruirlo y la explosión termina su animación.
+        balas (del jugador y enemigas) y los efectos ya en vuelo: así ningún
+        proyectil desaparece de golpe al destruir al jefe y la explosión termina
+        su animación.
         """
-        grupos = [self.balas, self.enemigos, self.items]
+        grupos = [self.enemigos, self.items]
         if not avance_nivel:
-            grupos += [self.balas_enemigo, self.efectos]
+            grupos += [self.balas, self.balas_enemigo, self.efectos]
         for grupo in grupos:
             grupo.empty()

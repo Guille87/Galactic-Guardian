@@ -32,6 +32,13 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Backlog / ideas
 
+- **Actualización automática** — al abrir el menú, comprobar si hay una versión
+  publicada más reciente que la instalada. Si la hay, mostrar un aviso con un botón
+  **Actualizar**: al pulsarlo, el juego se actualiza solo (descarga y aplica el
+  parche, se reinicia si hace falta) sin que el usuario tenga que salir a ninguna
+  web ni descargar nada a mano. Comprobación en segundo plano y silenciosa si no
+  hay red (sin conexión se puede seguir jugando con la versión actual). Depende del
+  **empaquetado y distribución** (define el formato del artefacto a actualizar).
 - **Empaquetado y distribución** — build con PyInstaller; publicación (itch.io u otro).
 - **Game Design Document** formal.
 - Más tipos de enemigo y patrones de disparo; jefes con fases.

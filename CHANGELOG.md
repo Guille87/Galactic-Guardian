@@ -7,6 +7,14 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Changed
+
+- Al derrotar al jefe y pasar de nivel ya no desaparece **ninguna** bala en
+  vuelo (antes solo se conservaban las del jefe; ahora también las del jugador).
+- Interno: al reiniciar una partida el jugador se restablece "in situ" en vez de
+  recrearse (primer paso para reducir el objeto-Dios `Juego`, item 14 de la
+  auditoría). Sin cambios visibles.
+
 ## [0.1.1] - 2026-09-10
 
 Correcciones de bugs y pulido posteriores a la 0.1.0. Sin cambios incompatibles.
