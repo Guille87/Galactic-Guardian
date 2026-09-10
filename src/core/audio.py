@@ -1,10 +1,13 @@
+import io
+
 import pygame
 
 
 class AudioManager:
     """Gestión de audio del juego.
 
-    - Música: streaming vía ``pygame.mixer.music`` (una sola pista simultánea).
+    - Música: ``pygame.mixer.music`` (una sola pista), cargada desde los bytes en
+      RAM del ResourceManager para que cambiar de pista no bloquee el hilo.
     - Efectos: ``pygame.mixer.Sound`` cacheados en memoria.
     """
 
@@ -50,24 +53,29 @@ class AudioManager:
         if nombre == self.pista_actual:
             return
 
-        ruta = self.resource_manager.get_music_path(nombre)
-        if not ruta:
+        datos = self.resource_manager.get_music_data(nombre)
+        if not datos:
             return
 
-        pygame.mixer.music.load(ruta)
+        pygame.mixer.music.load(io.BytesIO(datos))
         pygame.mixer.music.set_volume(self.vol_musica)
         pygame.mixer.music.play(loops=loops, fade_ms=fade_ms)
         self.pista_actual = nombre
 
-    def detener_musica(self, nombre=None, fade_ms=300):
+    def detener_musica(self, nombre=None):
         """Detiene la música. El parámetro ``nombre`` se mantiene por
         compatibilidad: si se indica y no coincide con la pista actual, no hace
-        nada."""
+        nada.
+
+        Corte seco (no `fadeout`): un `fadeout` deja el mixer en estado de fundido
+        y el siguiente `music.load()` se bloquea hasta que termina (~200-300 ms de
+        tirón). La pista nueva entra con fade-in en `reproducir_musica`.
+        """
         if nombre is None or nombre == self.pista_actual:
-            pygame.mixer.music.fadeout(fade_ms)
+            pygame.mixer.music.stop()
             self.pista_actual = None
 
-    def detener_toda_la_musica(self, fade_ms=200):
-        """Detiene cualquier música en reproducción."""
-        pygame.mixer.music.fadeout(fade_ms)
+    def detener_toda_la_musica(self):
+        """Detiene cualquier música en reproducción (corte seco, ver arriba)."""
+        pygame.mixer.music.stop()
         self.pista_actual = None

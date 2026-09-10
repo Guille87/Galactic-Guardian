@@ -1,4 +1,5 @@
-"""src/core/audio.py — AudioManager (música en streaming + efectos)."""
+"""src/core/audio.py — AudioManager (música desde RAM + efectos)."""
+import pygame
 
 
 def test_reproducir_musica_fija_pista_actual(audio):
@@ -16,6 +17,15 @@ def test_cambiar_de_pista(audio):
     audio.reproducir_musica("skyfire_theme")
     audio.reproducir_musica("rain_of_lasers")
     assert audio.pista_actual == "rain_of_lasers"
+
+
+def test_transicion_detener_y_reproducir(audio):
+    """La secuencia real en las transiciones (jefe, Game Over): parar + poner otra."""
+    audio.reproducir_musica("rain_of_lasers")
+    audio.detener_musica("rain_of_lasers")
+    audio.reproducir_musica("deathmatch_theme")
+    assert audio.pista_actual == "deathmatch_theme"
+    assert pygame.mixer.music.get_busy()
 
 
 def test_detener_musica(audio):
