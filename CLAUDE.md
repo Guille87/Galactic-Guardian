@@ -76,7 +76,7 @@ Each frame: `input_handler.manejar_eventos()` → if `pausado`, draw only → el
 
 **Restart (`reiniciar_juego`)**: two paths. Level advance (`jefe_derrotado`) keeps the same `Jugador` and its upgrades, bumps `nivel`, tightens spawn cadence, and `EntityManager.vaciar_todo(avance_nivel=True)` clears only enemies + items — **every projectile (player and enemy bullets) and effect already in flight survives** so nothing pops out on boss death. Full restart resets the `Jugador` **in place** via `Jugador.reiniciar(ancho, alto)` (same instance — managers may hold the reference; audit item 14) and `vaciar_todo()` clears everything. `enemigos_golpeados` is `.clear()`ed, never reassigned, for the same reason.
 
-The `pygame_gui` options screen uses the 0.6+ event API (`event.type == pygame_gui.UI_BUTTON_PRESSED` / `UI_HORIZONTAL_SLIDER_MOVED`), not the old `USEREVENT` + `event.user_type`. `MenuManager` keeps a single `self.clock`; only the outer loop calls `tick(settings.FPS)`.
+The `pygame_gui` options screen uses the 0.6+ event API (`event.type == pygame_gui.UI_BUTTON_PRESSED` / `UI_HORIZONTAL_SLIDER_MOVED`), not the old `USEREVENT` + `event.user_type`. `MenuManager` keeps a single `self.clock` (only the outer loop `tick`s) and a single `self.ui_manager`, built lazily once by `_inicializar_interfaz_opciones` and re-synced on each entry by `_abrir_opciones`. All volume changes (drag *and* the ◄ ► arrows of **both** sliders) funnel through `UI_HORIZONTAL_SLIDER_MOVED`; every value passes `_sanear_volumen` (clamp to `[0,1]`, snap to `VOLUMEN_PASO`) and is pushed back with `set_current_value` — a value outside `[0,1]`, even by `1e-17`, makes `pygame_gui` silently freeze the slider.
 
 ### Entities
 

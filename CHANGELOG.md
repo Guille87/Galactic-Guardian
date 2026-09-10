@@ -12,6 +12,18 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 - La versión del juego se muestra en el título de la ventana y en la esquina del
   menú principal (`src/core/version.py` como fuente única).
 
+### Fixed
+
+- Menú de opciones: las flechas ◄ ► acumulaban error de coma flotante
+  (`0`, `2.7e-17`, `0.30000000000000004`…) y un valor que se salía de `[0, 1]`
+  por un `1e-17` dejaba el slider **sin responder** al reabrir las opciones.
+  Ahora todos los volúmenes se redondean al escalón (0.0, 0.1, …, 1.0) y se
+  recortan a `[0, 1]` en cada cambio; el `config.ini` guarda valores limpios.
+- Menú de opciones: las flechas del slider de **música** no cambiaban el volumen
+  (solo funcionaba arrastrando la barra).
+- Menú de opciones: la interfaz (`pygame_gui`) se reconstruía en cada entrada,
+  dejando varios gestores vivos; ahora se crea una sola vez.
+
 ### Changed
 
 - Rutas centralizadas en `src/core/paths.py`, preparadas para el empaquetado:
