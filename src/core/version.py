@@ -5,4 +5,4 @@ comprobador de actualizaciones. Al publicar una versión hay que actualizar este
 número **y** el de `pyproject.toml` (ver `CONTRIBUTING.md`).
 """
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
