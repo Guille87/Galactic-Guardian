@@ -114,15 +114,16 @@ class Juego:
             self.MAX_TIEMPO_GENERACION = max(settings.GEN_MIN_SUELO,
                                              self.MAX_TIEMPO_GENERACION - settings.GEN_DECREMENTO_NIVEL)
         else:
-            # Partida desde cero
-            self.jugador = Jugador(self.rm.get_image_scaled("jugador", Jugador.CONFIG["tamano"]), self.pantalla_ancho, self.pantalla_alto)
+            # Partida desde cero: se restablece al jugador in situ (sin recrearlo)
+            # para que los managers puedan conservar su referencia.
+            self.jugador.reiniciar(self.pantalla_ancho, self.pantalla_alto)
             self.MIN_TIEMPO_GENERACION = settings.GEN_MIN_INICIAL
             self.MAX_TIEMPO_GENERACION = settings.GEN_MAX_INICIAL
             self.puntuacion = 0
 
         # Reiniciar todos los valores del juego a sus estados iniciales
         self.entity_manager.vaciar_todo(avance_nivel=avance_nivel)
-        self.enemigos_golpeados = weakref.WeakKeyDictionary()
+        self.enemigos_golpeados.clear()
         self.tiempo_proximo_enemigo = 0
         self.tiempo_juego = 0.0
         self.inicio_juego = 0.0

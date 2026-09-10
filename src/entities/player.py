@@ -20,7 +20,24 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
         super().__init__()
         # Recibimos la Surface ya escalada y cacheada por el ResourceManager
         self.image = imagen
-        self.rect = self.image.get_rect(centerx=pantalla_ancho // 2, bottom=pantalla_alto - 10)
+        self.rect = self.image.get_rect()
+
+        self._init_subpixel()
+        self._vel_actual = pygame.Vector2()  # para el suavizado opcional
+
+        # Estado de partida (posición, estadísticas, armas, timers): se fija en
+        # `reiniciar` para poder restablecerlo sin recrear el objeto.
+        self.reiniciar(pantalla_ancho, pantalla_alto)
+
+    def reiniciar(self, pantalla_ancho, pantalla_alto):
+        """Restablece al jugador a su estado inicial de una partida nueva.
+
+        No recrea el objeto: `engine.reiniciar_juego` lo llama en la ruta "partida
+        desde cero" para que los managers puedan conservar la referencia al
+        jugador (ver auditoría, item 14)."""
+        # 1. Posición inicial
+        self.rect.centerx = pantalla_ancho // 2
+        self.rect.bottom = pantalla_alto - 10
 
         # 2. Atributos de Estado (Estadísticas)
         self.vidas = self.CONFIG["vidas_init"]
@@ -40,8 +57,10 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
         self.destello_constante = None
         self.radius = settings.RADIO_JUGADOR
 
-        self._init_subpixel()
-        self._vel_actual = pygame.Vector2()  # para el suavizado opcional
+        # 5. Acumuladores de movimiento sub-pixel
+        self._resto.update(0, 0)
+        self._ultimo_desplazamiento.update(0, 0)
+        self._vel_actual.update(0, 0)
 
     @property
     def danio_maximo(self):

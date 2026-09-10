@@ -118,6 +118,35 @@ def test_no_se_sale_de_la_pantalla(jugador):
     assert jugador.rect.bottom <= 800
 
 
+# --- Reinicio in situ ---
+
+def test_reiniciar_restaura_estado(jugador):
+    jugador.mejorar_danio()
+    jugador.mejorar_velocidad(2)
+    jugador.tipo_disparo = "triple"
+    jugador.vidas = 1
+    jugador.salud = 1
+    jugador.invulnerable = True
+    jugador.tiempo_invulnerable = 5000
+    jugador.ultimo_disparo = 4321
+    jugador.rect.topleft = (0, 0)
+    jugador._resto.update(0.4, 0.3)
+
+    jugador.reiniciar(600, 800)
+
+    assert jugador.vidas == jugador.CONFIG["vidas_init"]
+    assert jugador.salud == jugador.salud_maxima
+    assert jugador.danio == 1
+    assert jugador.velocidad == 4
+    assert jugador.tipo_disparo == "simple"
+    assert jugador.invulnerable is False
+    assert jugador.tiempo_invulnerable == 0
+    assert jugador.ultimo_disparo == 0
+    assert jugador.rect.centerx == 300 and jugador.rect.bottom == 790
+    assert jugador._resto.length() == 0
+    assert jugador._ultimo_desplazamiento.length() == 0
+
+
 # --- Lecturas para el HUD ---
 
 def test_cadencia_visual(jugador):
