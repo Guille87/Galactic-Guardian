@@ -8,9 +8,9 @@
 | src/core/audio.py                     |       39 |        2 |     95% |     31-32 |
 | src/core/config.py                    |       23 |        0 |    100% |           |
 | src/core/engine.py                    |      186 |       33 |     82% |122-123, 127, 209-210, 243, 249-261, 275-279, 287-312 |
-| src/core/input.py                     |       93 |       46 |     51% |47-48, 51-52, 79-109, 112-113, 118-141 |
+| src/core/input.py                     |       92 |       44 |     52% |47-48, 51-52, 86-116, 121-144 |
 | src/core/resources.py                 |       57 |        4 |     93% |71, 77, 87, 90 |
-| src/core/settings.py                  |       35 |        0 |    100% |           |
+| src/core/settings.py                  |       36 |        0 |    100% |           |
 | src/entities/base/movimiento.py       |       18 |        0 |    100% |           |
 | src/entities/base/projectile\_base.py |       14 |        1 |     93% |        28 |
 | src/entities/bullet.py                |       10 |        0 |    100% |           |
@@ -24,14 +24,14 @@
 | src/managers/render.py                |       80 |        1 |     99% |       120 |
 | src/managers/waves.py                 |       64 |        9 |     86% |27, 37, 47-48, 55, 61, 80, 84-85 |
 | src/ui/components/button.py           |       40 |        7 |     82% | 34-39, 51 |
-| src/ui/hud.py                         |      114 |       24 |     79% |80, 140-154, 162-163, 168-186 |
-| src/ui/menu.py                        |      150 |      134 |     11% |20-42, 46, 49-52, 57-74, 77-102, 106-125, 129-135, 140-181, 189-206, 211-243 |
+| src/ui/hud.py                         |      101 |       13 |     87% |80, 147-165 |
+| src/ui/menu.py                        |      160 |       79 |     51% |69-72, 77-102, 146, 160, 166-168, 172-178, 187-193, 214-231, 236-268 |
 | src/ui/scoreboard.py                  |       33 |        2 |     94% |     37-38 |
 | src/visual/background.py              |       22 |        2 |     91% |    27, 30 |
 | src/visual/explosions.py              |       20 |        0 |    100% |           |
 | src/visual/flash.py                   |       22 |        5 |     77% |     29-34 |
 | src/visual/flash\_constant.py         |       11 |        1 |     91% |        17 |
-| **TOTAL**                             | **1497** |  **337** | **77%** |           |
+| **TOTAL**                             | **1494** |  **269** | **82%** |           |
 
 
 ## Setup coverage badge
