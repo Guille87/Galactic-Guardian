@@ -8,6 +8,8 @@ import os
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+# Que la suite no consulte la API de GitHub al crear un MenuManager.
+os.environ.setdefault("GG_SIN_COMPROBAR_ACTUALIZACIONES", "1")
 
 import pygame  # noqa: E402
 import pytest  # noqa: E402

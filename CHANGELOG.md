@@ -7,6 +7,14 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+
+- Aviso de nueva versión: al abrir el menú se comprueba en segundo plano la
+  última Release de GitHub y, si hay una más nueva, el menú muestra un banner con
+  un botón que abre la página de descargas. Best-effort: silencioso sin red, una
+  consulta al día como mucho (cacheada). Se puede desactivar con la variable de
+  entorno `GG_SIN_COMPROBAR_ACTUALIZACIONES`.
+
 ## [0.1.3] - 2026-09-10
 
 Primera versión con ejecutable descargable para Windows y pulido del menú de
