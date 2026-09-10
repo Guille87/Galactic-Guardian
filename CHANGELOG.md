@@ -11,6 +11,9 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 - La versión del juego se muestra en el título de la ventana y en la esquina del
   menú principal (`src/core/version.py` como fuente única).
+- Empaquetado con PyInstaller: `GalacticGuardian.spec` (build en carpeta para
+  Windows), `requirements-build.txt` y `main.py --smoke` (arranque headless que
+  valida un ejecutable compilado). Ver `CONTRIBUTING.md`.
 
 ### Fixed
 

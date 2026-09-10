@@ -9,6 +9,7 @@ from src.core.audio import AudioManager
 from src.core.resources import ResourceManager
 from src.core import settings
 from src.core.config import RECURSOS, MUSICA, SONIDOS, EXPLOSIONES, DIR_ASSETS, cargar_configuracion
+from src.core.version import __version__
 from src.ui.scoreboard import SistemaClasificacion
 
 
@@ -27,7 +28,50 @@ def cargar_activos_del_juego(rm):
         rm.load_music(nombre, os.path.join(DIR_ASSETS, ruta))
 
 
+def _smoke(frames=120):
+    """Arranque headless para verificar un build (`main.py --smoke`).
+
+    Carga todos los recursos, hace unos frames de menú y de partida y sale con
+    código 0 si nada ha fallado. Lo usa el workflow de compilación para saber que
+    el ejecutable empaquetado encuentra sus assets y sus datos de `pygame_gui`.
+    """
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+
+    pygame.mixer.pre_init(44100, -16, 2, 512)
+    pygame.init()
+    try:
+        pygame.mixer.set_num_channels(16)
+    except pygame.error:
+        pass
+
+    pantalla = pygame.display.set_mode((settings.ANCHO, settings.ALTO))
+    resource_manager = ResourceManager()
+    cargar_activos_del_juego(resource_manager)
+    audio_manager = AudioManager(resource_manager, 0.2, 0.2)
+    sistema_clasificacion = SistemaClasificacion()
+
+    menu = MenuManager(pantalla, resource_manager, audio_manager, sistema_clasificacion)
+    menu._menu_principal()
+    menu._abrir_opciones()
+    for _ in range(5):
+        menu._menu_opciones(1 / settings.FPS)
+
+    juego = Juego(pantalla, audio_manager, sistema_clasificacion, resource_manager)
+    juego.jugador.vidas = 999  # que no acabe la partida durante el humo
+    for _ in range(frames):
+        juego.actualizar(1 / settings.FPS)
+        juego.dibujar()
+
+    pygame.quit()
+    print(f"smoke OK ({frames} frames, v{__version__})")
+
+
 def main():
+    if "--smoke" in sys.argv:
+        _smoke()
+        return
+
     # Buffer de audio pequeño ANTES de pygame.init() para reducir la latencia
     pygame.mixer.pre_init(44100, -16, 2, 512)
 
