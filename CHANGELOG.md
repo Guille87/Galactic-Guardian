@@ -7,6 +7,19 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+
+- La versión del juego se muestra en el título de la ventana y en la esquina del
+  menú principal (`src/core/version.py` como fuente única).
+
+### Changed
+
+- Rutas centralizadas en `src/core/paths.py`, preparadas para el empaquetado:
+  los recursos se resuelven contra la carpeta del bundle y los datos de usuario
+  (`config.ini`, puntuaciones) contra una ruta escribible. En desarrollo no
+  cambia nada salvo que las rutas pasan a ser absolutas (ya no dependen del
+  directorio desde el que se lanza el juego).
+
 ## [0.1.2] - 2026-09-10
 
 Refactor interno (cierre del item 14 de la auditoría) y un ajuste de jugabilidad.

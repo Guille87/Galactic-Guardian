@@ -5,6 +5,7 @@ import pygame
 import pygame.freetype
 
 from src.core import settings
+from src.core.version import __version__
 from src.entities.enemies import Jefe
 from src.entities.player import Jugador
 from src.entities.bullet import Bala
@@ -302,7 +303,7 @@ class Juego:
         self.ejecutando = True
 
         while self.ejecutando:
-            pygame.display.set_caption("Galactic Guardian")
+            pygame.display.set_caption(f"Galactic Guardian v{__version__}")
 
             # Si manejar_eventos() devuelve False, salimos del bucle
             if not self.input_handler.manejar_eventos():

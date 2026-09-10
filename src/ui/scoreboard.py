@@ -1,10 +1,14 @@
 import json
 import os
 
+from src.core import paths
+
 
 class SistemaClasificacion:
-    def __init__(self, ruta_archivo="data/saves/puntuaciones.json"):
-        self.ruta_archivo = ruta_archivo
+    def __init__(self, ruta_archivo=None):
+        self.ruta_archivo = ruta_archivo or os.path.join(
+            paths.dir_datos_usuario(), "data", "saves", "puntuaciones.json"
+        )
         self._asegurar_directorio()
         self.puntuaciones = self.cargar_puntuaciones()
 

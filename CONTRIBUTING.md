@@ -61,7 +61,8 @@ El proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/): `MAJO
 para cambios incompatibles, `MINOR` para funcionalidad nueva compatible, `PATCH`
 para correcciones.
 
-1. Sube `version` en `pyproject.toml`.
+1. Sube `version` en `pyproject.toml` **y** `__version__` en `src/core/version.py`
+   (un test comprueba que coinciden).
 2. En [`CHANGELOG.md`](CHANGELOG.md), mueve las entradas de *Unreleased* a una
    nueva sección `## [X.Y.Z] - AAAA-MM-DD` y actualiza los enlaces de comparación
    del pie.
