@@ -24,6 +24,9 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
   (solo funcionaba arrastrando la barra).
 - Menú de opciones: la interfaz (`pygame_gui`) se reconstruía en cada entrada,
   dejando varios gestores vivos; ahora se crea una sola vez.
+- Menú de opciones: mantener pulsada una flecha ◄ ► arrancaba el desplazamiento
+  rápido de `pygame_gui` y el volumen se "disparaba" antes de asentarse en el
+  escalón. Ahora un clic (aunque se mantenga) hace un único paso limpio.
 
 ### Changed
 

@@ -73,10 +73,10 @@ class MenuManager:
         # Control de feedback sonoro
         self.sonido_reproduciendose = False
         self.tiempo_final_reproduccion = 0
-        # Destinos ("musica"/"efectos") cuyo próximo UI_HORIZONTAL_SLIDER_MOVED
-        # hay que ignorar porque lo provocó una flecha ◄ ► que ya aplicamos (el
-        # evento llega un frame después del UI_BUTTON_PRESSED).
-        self._ignorar_moved = set()
+        # (destino, sube) mientras esperamos el UI_HORIZONTAL_SLIDER_MOVED que
+        # pygame_gui emite tras pulsar una flecha ◄ ►; ese MOVED se cuadra al
+        # escalón en vez de aplicarse tal cual.
+        self._flecha_pendiente = None
 
     def _preparar_musica(self):
         """Usa el AudioManager para gestionar la música del menú."""
@@ -148,7 +148,7 @@ class MenuManager:
         """Entra en la pantalla de opciones: crea la UI (una vez) y sincroniza
         los sliders con los volúmenes actuales, ya saneados."""
         self.estado = "OPCIONES"
-        self._ignorar_moved.clear()
+        self._flecha_pendiente = None
         # Recortar antes de crear/tocar el slider: un valor fuera de [0, 1]
         # (aunque sea por 1e-17) hace que pygame_gui lo ignore y el slider quede
         # descuadrado y sin responder.
@@ -249,21 +249,20 @@ class MenuManager:
 
             # --- Eventos de pygame_gui (API 0.6+: cada evento con su propio type) ---
             elif event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element in flechas:
-                # Flecha ◄ ►: saltamos al múltiplo de 0.1 anterior/siguiente al
-                # valor actual (no un simple ±0.1, para "cuadrar" un valor libre)
-                # e ignoramos el MOVED que pygame_gui emitirá acto seguido.
-                destino, sube = flechas[event.ui_element]
-                actual = self.vol_musica if destino == "musica" else self.vol_efectos
-                self._fijar_volumen(destino, _paso_volumen(actual, sube),
-                                    feedback_reiniciar=True)
-                self._ignorar_moved.add(destino)
+                # Solo marcamos la dirección. pygame_gui moverá el slider ±0.1 y
+                # emitirá un MOVED (siguiente frame); ahí lo cuadramos al escalón.
+                self._flecha_pendiente = flechas[event.ui_element]
 
             elif event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED and event.ui_element in sliders:
                 destino = sliders[event.ui_element]
-                if destino in self._ignorar_moved:
-                    self._ignorar_moved.discard(destino)          # era de nuestra flecha
-                    event.ui_element.set_current_value(
-                        self.vol_musica if destino == "musica" else self.vol_efectos)
+                pend = self._flecha_pendiente
+                if pend and pend[0] == destino:
+                    # Flecha ◄ ►: al múltiplo de 0.1 anterior/siguiente al valor
+                    # que había (cuadra un valor libre; 0.27 -> 0.3 o 0.2).
+                    self._flecha_pendiente = None
+                    actual = self.vol_musica if destino == "musica" else self.vol_efectos
+                    self._fijar_volumen(destino, _paso_volumen(actual, pend[1]),
+                                        feedback_reiniciar=True)
                 else:
                     # Arrastre de la barra: valor libre, solo recortado.
                     self._fijar_volumen(destino, _clamp_volumen(event.ui_element.get_current_value()))
@@ -279,6 +278,14 @@ class MenuManager:
 
         # Dibujado
         self.ui_manager.update(time_delta)
+
+        # pygame_gui, al MANTENER pulsada una flecha >0.2 s, arranca un
+        # desplazamiento continuo y rápido del slider (se ve "dispararse" el
+        # volumen antes de cuadrarse). Reseteamos su acumulador mientras la
+        # flecha siga pulsada para que solo cuente el clic limpio.
+        for sl in (self.slider_musica, self.slider_efectos):
+            if sl.left_button.held or sl.right_button.held:
+                sl.button_held_repeat_acc = 0.0
         self.pantalla.blit(fondo, (0, 0))
 
         # Renderizar textos (Título, etiquetas de sliders)
