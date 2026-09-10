@@ -7,6 +7,11 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-09-11
+
+Actualización desde el propio juego e instalador de Windows. Sin cambios
+incompatibles.
+
 ### Added
 
 - **Actualización desde el menú.** Al abrir el menú se comprueba en segundo plano
@@ -184,7 +189,8 @@ puesta a punto del repositorio (licencia, tests, integración continua, document
   los grupos tipados y `groupcollide`).
 - `__init__.py` vacío en la raíz del repositorio.
 
-[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.1.4...HEAD
+[0.1.4]: https://github.com/Guille87/Galactic-Guardian/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/Guille87/Galactic-Guardian/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/Guille87/Galactic-Guardian/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/Guille87/Galactic-Guardian/compare/v0.1.0...v0.1.1
