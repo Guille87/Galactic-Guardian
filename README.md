@@ -5,7 +5,7 @@
 | Name                                  |    Stmts |     Miss |   Cover |   Missing |
 |-------------------------------------- | -------: | -------: | ------: | --------: |
 | main.py                               |       41 |       23 |     44% |     32-75 |
-| src/core/audio.py                     |       40 |        2 |     95% |     34-35 |
+| src/core/audio.py                     |       40 |        0 |    100% |           |
 | src/core/config.py                    |       23 |        0 |    100% |           |
 | src/core/engine.py                    |      190 |       30 |     84% |222-223, 259, 265-277, 291-295, 303-328 |
 | src/core/input.py                     |       92 |       44 |     52% |50-51, 54-55, 87-117, 122-145 |
@@ -27,13 +27,13 @@
 | src/managers/waves.py                 |       60 |        8 |     87% |36, 46-47, 54, 60, 79, 83-84 |
 | src/ui/components/button.py           |       40 |        7 |     82% | 34-39, 51 |
 | src/ui/hud.py                         |      107 |       13 |     88% |85, 158-176 |
-| src/ui/menu.py                        |      164 |       81 |     51% |71-74, 79-111, 155, 169, 175-177, 181-187, 196-202, 223-240, 245-277 |
+| src/ui/menu.py                        |      195 |       71 |     64% |105-108, 113-145, 205, 231, 246-248, 272-276, 297-313, 318-350 |
 | src/ui/scoreboard.py                  |       34 |        2 |     94% |     41-42 |
 | src/visual/background.py              |       22 |        2 |     91% |    27, 30 |
 | src/visual/explosions.py              |       20 |        0 |    100% |           |
 | src/visual/flash.py                   |       22 |        0 |    100% |           |
 | src/visual/flash\_constant.py         |       11 |        1 |     91% |        17 |
-| **TOTAL**                             | **1513** |  **252** | **83%** |           |
+| **TOTAL**                             | **1544** |  **240** | **84%** |           |
 
 
 ## Setup coverage badge
