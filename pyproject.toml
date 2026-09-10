@@ -7,7 +7,7 @@
 
 [project]
 name = "galactic-guardian"
-version = "0.1.2"
+version = "0.1.3"
 description = "Juego de naves 2D (shoot 'em up) hecho con pygame-ce."
 readme = "README.md"
 requires-python = ">=3.11"

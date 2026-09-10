@@ -7,6 +7,11 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-09-10
+
+Primera versión con ejecutable descargable para Windows y pulido del menú de
+opciones. Sin cambios incompatibles.
+
 ### Added
 
 - La versión del juego se muestra en el título de la ventana y en la esquina del
@@ -156,7 +161,8 @@ puesta a punto del repositorio (licencia, tests, integración continua, document
   los grupos tipados y `groupcollide`).
 - `__init__.py` vacío en la raíz del repositorio.
 
-[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/Guille87/Galactic-Guardian/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/Guille87/Galactic-Guardian/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/Guille87/Galactic-Guardian/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Guille87/Galactic-Guardian/releases/tag/v0.1.0
