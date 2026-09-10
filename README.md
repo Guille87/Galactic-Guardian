@@ -1,4 +1,10 @@
 # Galactic Guardian
+
+[![CI](https://github.com/Guille87/Galactic-Guardian/actions/workflows/ci.yml/badge.svg)](https://github.com/Guille87/Galactic-Guardian/actions/workflows/ci.yml)
+[![Cobertura](https://raw.githubusercontent.com/Guille87/Galactic-Guardian/python-coverage-comment-action-data/badge.svg)](https://github.com/Guille87/Galactic-Guardian/tree/python-coverage-comment-action-data)
+[![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
+
 ¡Bienvenido a Galactic Guardian! Un emocionante juego de naves 2D donde tu misión es sobrevivir el mayor tiempo posible y destruir a las naves enemigas mientras mejoras tu nave con increíbles potenciadores.
 ## Características principales
 **Sobrevive en el Espacio:** Enfréntate a oleadas interminables de naves enemigas y lucha por tu supervivencia.  
