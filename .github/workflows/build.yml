@@ -1,7 +1,8 @@
 name: Build
 
 # Al publicar una Release, compila el ejecutable de Windows y lo adjunta como
-# .zip. También se puede lanzar a mano contra un tag ya existente.
+# .zip. También se puede lanzar a mano (workflow_dispatch): compila el estado
+# actual de la rama y sube el .zip a la Release del tag indicado.
 
 on:
   release:
@@ -22,7 +23,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.release.tag_name || inputs.tag }}
+          # En una Release, el código exacto del tag. A mano, la rama desde la
+          # que se lanza (el tag antiguo podría no tener aún el .spec).
+          ref: ${{ github.event.release.tag_name || github.ref_name }}
 
       - uses: actions/setup-python@v7
         with:
