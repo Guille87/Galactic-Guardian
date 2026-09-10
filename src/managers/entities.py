@@ -38,7 +38,7 @@ class EntityManager:
         self._limpiar_entidades_fuera()
 
     def _actualizar_enemigos(self, dt):
-        ahora = pygame.time.get_ticks()
+        ahora = self.juego.tiempo_juego
 
         for enemigo in self.enemigos:
             enemigo.movimiento_enemigo(dt)

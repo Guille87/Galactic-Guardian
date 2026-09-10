@@ -1,4 +1,3 @@
-import pygame
 import random
 
 from src.core import settings
@@ -21,17 +20,17 @@ class WaveManager:
         self.tiempo_inicio_espera_jefe = 0
         self.tiempo_espera_jefe = settings.TIEMPO_ESPERA_JEFE
 
-    def actualizar_pausa(self, tiempo_pausado):
-        """Desplaza el cronómetro de espera del jefe si estaba en marcha."""
-        if self.tiempo_inicio_espera_jefe:
-            self.tiempo_inicio_espera_jefe += tiempo_pausado
-
-    def spawn_enemigo(self, tiempo_actual, jugador, nivel):
+    def spawn_enemigo(self, tiempo_nivel, tiempo_juego, jugador, nivel):
         """
         Decide y crea la instancia del enemigo correspondiente.
+
+        `tiempo_nivel`: ms transcurridos en el nivel actual (para las fases).
+        `tiempo_juego`: reloj de juego absoluto en ms (para la espera del jefe).
         Retorna la instancia del enemigo o None.
         """
-        tipo_clase, nombre_recurso, es_jefe = self._obtener_config_enemigo(tiempo_actual, nivel)
+        tipo_clase, nombre_recurso, es_jefe = self._obtener_config_enemigo(
+            tiempo_nivel, tiempo_juego, nivel
+        )
 
         if not tipo_clase:
             return None
@@ -66,26 +65,26 @@ class WaveManager:
         return max(settings.TIEMPO_ESCALA_SUELO,
                    1 - settings.TIEMPO_ESCALA_NIVEL * (nivel - 1))
 
-    def _obtener_config_enemigo(self, tiempo_actual, nivel):
+    def _obtener_config_enemigo(self, tiempo_nivel, tiempo_juego, nivel):
         """
-        Decide qué enemigo toca generar según el tiempo.
+        Decide qué enemigo toca generar según el tiempo del nivel.
         Retorna (ClaseEnemigo, ruta_imagen, es_jefe)
         """
         f = self._escala_nivel(nivel)
 
         # Fase Jefe
-        if tiempo_actual >= self.TIEMPO_JEFE * f:
+        if tiempo_nivel >= self.TIEMPO_JEFE * f:
             if not self.jefe_generado:
-                return self._procesar_fase_jefe()
+                return self._procesar_fase_jefe(tiempo_juego)
             return None, None, False
 
         # Fase 3 (Mezcla de los 3 tipos)
-        if tiempo_actual >= self.TIEMPO_FASE_3 * f:
+        if tiempo_nivel >= self.TIEMPO_FASE_3 * f:
             tipo = random.choice([EnemigoTipo1, EnemigoTipo2, EnemigoTipo3])
             return tipo, self._get_ruta(tipo), False
 
         # Fase 2 (Tipo 1 y 2)
-        if tiempo_actual >= self.TIEMPO_FASE_2 * f:
+        if tiempo_nivel >= self.TIEMPO_FASE_2 * f:
             tipo = random.choice([EnemigoTipo1, EnemigoTipo2])
             return tipo, self._get_ruta(tipo), False
 
@@ -102,14 +101,17 @@ class WaveManager:
         }
         return mapping[clase_enemigo]
 
-    def _procesar_fase_jefe(self):
-        """Lógica interna para el cambio de música y espera del jefe."""
+    def _procesar_fase_jefe(self, tiempo_juego):
+        """Cambio de música y margen de espera antes de que aparezca el jefe.
+
+        Usa el reloj de juego (se congela en pausa), no `get_ticks()`.
+        """
         if self.tiempo_inicio_espera_jefe == 0:
-            self.tiempo_inicio_espera_jefe = pygame.time.get_ticks()
+            self.tiempo_inicio_espera_jefe = tiempo_juego
             self.am.detener_musica("rain_of_lasers")
             self.am.reproducir_musica("deathmatch_theme")
 
-        if pygame.time.get_ticks() - self.tiempo_inicio_espera_jefe >= self.tiempo_espera_jefe:
+        if tiempo_juego - self.tiempo_inicio_espera_jefe >= self.tiempo_espera_jefe:
             self.jefe_generado = True
             return Jefe, "jefe1", True
 

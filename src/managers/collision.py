@@ -53,7 +53,7 @@ class CollisionManager:
 
     def _contacto_cuerpo_a_cuerpo(self):
         em = self.juego.entity_manager
-        ahora = pygame.time.get_ticks()
+        ahora = self.juego.tiempo_juego
 
         for enemigo in pygame.sprite.spritecollide(self.juego.jugador, em.enemigos, False):
             ultimo = self.juego.enemigos_golpeados.get(enemigo, 0)

@@ -108,9 +108,6 @@ class EnemigoBase(pygame.sprite.Sprite, MovimientoSubpixel):
 
         return BalaEnemigo(imagen, origen_x, origen_y, ux, uy, danio, velocidad)
 
-    def actualizar_pausa(self, tiempo_pausado):
-        """Función base para ajustar cronómetros tras una pausa."""
-        pass
 
 
 class EnemigoTipo1(EnemigoBase):
@@ -136,8 +133,6 @@ class EnemigoTipo2(EnemigoBase):
                 rm, nombre_bala, settings.DANIO_BALA_TIPO2, settings.VEL_BALA_TIPO2, self.jugador)
         return None
 
-    def actualizar_pausa(self, tiempo_pausado):
-        self.tiempo_ultimo_ataque += tiempo_pausado
 
 
 class EnemigoTipo3(EnemigoBase):
@@ -157,8 +152,6 @@ class EnemigoTipo3(EnemigoBase):
                 rm, nombre_bala, settings.DANIO_BALA_TIPO3, settings.VEL_BALA_TIPO3, self.jugador)
         return None
 
-    def actualizar_pausa(self, tiempo_pausado):
-        self.tiempo_ultimo_ataque += tiempo_pausado
 
 
 class Jefe(EnemigoBase):
@@ -210,6 +203,3 @@ class Jefe(EnemigoBase):
         else:
             return None
 
-    def actualizar_pausa(self, tiempo_pausado):
-        self.ultimo_disparo_normal += tiempo_pausado
-        self.ultimo_disparo_rapido += tiempo_pausado
