@@ -7,6 +7,41 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-09-10
+
+Correcciones de bugs y pulido posteriores a la 0.1.0. Sin cambios incompatibles.
+
+### Added
+
+- Menú de opciones: etiquetas **"Música"** y **"Efectos"** sobre cada slider.
+- HUD en modo desarrollo: contador de tiempo de juego (`t: N.N s`), útil para ver
+  que el reloj se detiene en pausa.
+
+### Changed
+
+- El tiempo del juego pasa a un **reloj propio** (`Juego.tiempo_juego`) que solo
+  avanza mientras se juega. Elimina de raíz la clase de bugs de pausa (disparo en
+  ráfaga al reanudar, salto directo a la pelea del jefe, invulnerabilidad
+  descuadrada). Se eliminan los métodos `actualizar_pausa`.
+
+### Fixed
+
+- **Tirón de ~200-400 ms** (imagen congelada) al cambiar de música: aparición del
+  jefe, muerte del jefe y Game Over. Los OGG se cargan desde RAM y la pista se
+  corta en seco (`stop()`) en vez de con `fadeout()`, que bloqueaba la carga
+  siguiente.
+- Menú de opciones: las flechas ◄ ► de los sliders de volumen saltaban al
+  máximo/mínimo; ahora suben/bajan de 0.10 en 0.10.
+- Menú de opciones: al pulsar las flechas del slider de efectos rápido, el sonido
+  de prueba solo se oía la primera vez.
+- Game Over: pulsar `Esc`/`P` reanudaba la partida con los temporizadores
+  descuadrados. El teclado ya no hace nada en esa pantalla.
+
+### Removed
+
+- Código muerto: `hud._dibujar_atributo`, `hud._dibujar_texto`,
+  `input._manejar_clic_soltado`.
+
 ## [0.1.0] - 2026-09-10
 
 Primera versión con versionado. Incluye el juego base más una auditoría integral
@@ -70,5 +105,6 @@ puesta a punto del repositorio (licencia, tests, integración continua, document
   los grupos tipados y `groupcollide`).
 - `__init__.py` vacío en la raíz del repositorio.
 
-[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/Guille87/Galactic-Guardian/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Guille87/Galactic-Guardian/releases/tag/v0.1.0
