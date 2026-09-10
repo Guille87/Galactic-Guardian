@@ -99,6 +99,24 @@ def test_flecha_cuadra_un_valor_libre(menu):
     assert menu.vol_efectos == pytest.approx(0.3)   # 0.27 -> 0.3, no 0.37
 
 
+def test_flecha_desde_valor_libre_sin_salto_visible(menu):
+    """El slider no debe pasar por 0.35 (±0.1 de pygame_gui) antes de cuadrar."""
+    menu._abrir_opciones()
+    _mover_slider(menu, menu.slider_musica, 0.25)
+    menu.vol_musica = 0.25
+
+    btn = menu.slider_musica.right_button
+    for tipo in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
+        pygame.event.post(pygame.event.Event(tipo, button=1, pos=btn.rect.center))
+    picos = []
+    for _ in range(6):
+        menu._menu_opciones(1 / 60)
+        picos.append(menu.slider_musica.get_current_value())
+
+    assert max(picos) <= 0.3 + 1e-6       # nunca 0.35
+    assert menu.vol_musica == pytest.approx(0.3)
+
+
 def test_mantener_pulsada_la_flecha_no_dispara_el_volumen(menu):
     """pygame_gui, al mantener la flecha, arrancaba un scroll rápido; el volumen
     se "disparaba" y luego bajaba al escalón."""
