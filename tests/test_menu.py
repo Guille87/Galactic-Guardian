@@ -4,7 +4,15 @@ import pygame_gui
 import pytest
 
 from src.core import settings
-from src.ui.menu import MenuManager, _sanear_volumen
+from src.ui.menu import MenuManager, _clamp_volumen, _paso_volumen
+
+
+def _mover_slider(menu, slider, valor):
+    """Simula un arrastre: fija el valor y emite el evento de pygame_gui."""
+    slider.set_current_value(valor)
+    pygame.event.post(pygame.event.Event(
+        pygame_gui.UI_HORIZONTAL_SLIDER_MOVED, ui_element=slider, value=valor))
+    menu._menu_opciones(0.016)
 
 
 def _click(menu, boton, frames=5):
@@ -59,28 +67,42 @@ def test_feedback_efectos_flecha_reinicia_siempre(menu):
 
 @pytest.mark.parametrize("entrada,esperado", [
     (0.5, 0.5),
-    (2.7755575615628914e-17, 0.0),      # residuo de coma flotante -> 0
-    (-1e-17, 0.0),                       # negativo minúsculo -> 0 (no fuera de rango)
-    (0.30000000000000004, 0.3),
+    (0.273843, 0.27),                    # arrastre libre: solo se redondea a 2 dec.
+    (2.7755575615628914e-17, 0.0),       # residuo de coma flotante -> 0
+    (-1e-17, 0.0),                        # negativo minúsculo -> 0 (no fuera de rango)
     (1.5, 1.0),
     ("no es un número", 0.5),
 ])
-def test_sanear_volumen(entrada, esperado):
-    assert _sanear_volumen(entrada) == esperado
+def test_clamp_volumen(entrada, esperado):
+    assert _clamp_volumen(entrada) == esperado
 
 
-def test_flecha_del_slider_de_efectos_actualiza_volumen(menu):
+@pytest.mark.parametrize("valor,sube,esperado", [
+    (0.27, True, 0.3), (0.27, False, 0.2),
+    (0.2, True, 0.3), (0.2, False, 0.1),     # en la rejilla: salta al siguiente
+    (0.0, False, 0.0), (1.0, True, 1.0),     # no se sale de [0, 1]
+])
+def test_paso_volumen(valor, sube, esperado):
+    assert _paso_volumen(valor, sube) == pytest.approx(esperado)
+
+
+def test_arrastre_permite_valores_libres(menu):
     menu._abrir_opciones()
-    menu.slider_efectos.set_current_value(0.3)
+    _mover_slider(menu, menu.slider_musica, 0.27)
+    assert menu.vol_musica == pytest.approx(0.27)   # NO se cuadra a 0.3
+
+
+def test_flecha_cuadra_un_valor_libre(menu):
+    menu._abrir_opciones()
+    _mover_slider(menu, menu.slider_efectos, 0.27)
     _click(menu, menu.slider_efectos.right_button)
-    assert menu.vol_efectos == pytest.approx(0.4)
+    assert menu.vol_efectos == pytest.approx(0.3)   # 0.27 -> 0.3, no 0.37
 
 
 def test_flecha_del_slider_de_musica_actualiza_volumen(menu):
     """Antes las flechas del slider de música no hacían nada."""
     menu._abrir_opciones()
-    menu.slider_musica.set_current_value(0.5)
-    menu.vol_musica = 0.5
+    _mover_slider(menu, menu.slider_musica, 0.5)
     _click(menu, menu.slider_musica.left_button)
     assert menu.vol_musica == pytest.approx(0.4)
 

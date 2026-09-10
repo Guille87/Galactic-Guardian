@@ -1,3 +1,4 @@
+import math
 import time
 
 import pygame
@@ -7,25 +8,33 @@ from src.core import config, settings
 from src.core.version import __version__
 from src.ui.components.button import Boton
 
-# Escalón de volumen de las flechas ◄ ► de los sliders (0.1) y decimales que
-# implica (1), para redondear sin arrastrar error de coma flotante.
+# Escalón de las flechas ◄ ► (0.1). El arrastre de la barra es libre; solo se
+# redondea a 2 decimales para no guardar basura de coma flotante.
 _PASO_VOLUMEN = settings.VOLUMEN_PASO
-_DECIMALES_VOLUMEN = len(f"{_PASO_VOLUMEN}".partition(".")[2]) or 2
+_DECIMALES_VOLUMEN = 2
 
 
-def _sanear_volumen(v):
-    """Redondea a un múltiplo limpio del paso y recorta a [0, 1].
+def _clamp_volumen(v):
+    """Recorta a [0, 1] y redondea (arrastre libre).
 
-    Las flechas de `pygame_gui` acumulan error de coma flotante (0.5 - 0.1·5 no
-    da 0 exacto); un valor fuera de [0, 1], aunque sea por 1e-17, hace que el
-    slider se cree fuera de rango y deje de responder.
+    Un valor fuera de [0, 1], aunque sea por 1e-17, hace que `pygame_gui` cree
+    el slider fuera de rango y lo deje sin responder.
     """
     try:
         v = float(v)
     except (TypeError, ValueError):
         return 0.5
-    v = min(1.0, max(0.0, v))
-    return round(round(v / _PASO_VOLUMEN) * _PASO_VOLUMEN, _DECIMALES_VOLUMEN)
+    return round(min(1.0, max(0.0, v)), _DECIMALES_VOLUMEN)
+
+
+def _paso_volumen(v, subir):
+    """Múltiplo de `_PASO_VOLUMEN` inmediatamente por encima/debajo de `v`.
+
+    0.27 → flecha arriba 0.3, flecha abajo 0.2. 0.20 → 0.3 / 0.1.
+    """
+    n = round(v / _PASO_VOLUMEN, 6)
+    objetivo = (math.floor(n) + 1 if subir else math.ceil(n) - 1) * _PASO_VOLUMEN
+    return _clamp_volumen(objetivo)
 
 
 class MenuManager:
@@ -57,16 +66,17 @@ class MenuManager:
 
         # Cargar config inicial
         vol_musica, vol_efectos = config.cargar_configuracion()
-        self.vol_musica = _sanear_volumen(vol_musica)
-        self.vol_efectos = _sanear_volumen(vol_efectos)
+        self.vol_musica = _clamp_volumen(vol_musica)
+        self.vol_efectos = _clamp_volumen(vol_efectos)
         self._crear_botones()
 
         # Control de feedback sonoro
         self.sonido_reproduciendose = False
         self.tiempo_final_reproduccion = 0
-        # El próximo UI_HORIZONTAL_SLIDER_MOVED del slider de efectos viene de una
-        # flecha ◄ ► (llega un frame después del UI_BUTTON_PRESSED).
-        self._flecha_efectos_pendiente = False
+        # Destinos ("musica"/"efectos") cuyo próximo UI_HORIZONTAL_SLIDER_MOVED
+        # hay que ignorar porque lo provocó una flecha ◄ ► que ya aplicamos (el
+        # evento llega un frame después del UI_BUTTON_PRESSED).
+        self._ignorar_moved = set()
 
     def _preparar_musica(self):
         """Usa el AudioManager para gestionar la música del menú."""
@@ -138,11 +148,12 @@ class MenuManager:
         """Entra en la pantalla de opciones: crea la UI (una vez) y sincroniza
         los sliders con los volúmenes actuales, ya saneados."""
         self.estado = "OPCIONES"
-        # Sanear antes de crear/tocar el slider: un valor fuera de [0, 1] (aunque
-        # sea por 1e-17) hace que pygame_gui lo ignore y el slider quede
+        self._ignorar_moved.clear()
+        # Recortar antes de crear/tocar el slider: un valor fuera de [0, 1]
+        # (aunque sea por 1e-17) hace que pygame_gui lo ignore y el slider quede
         # descuadrado y sin responder.
-        self.vol_musica = _sanear_volumen(self.vol_musica)
-        self.vol_efectos = _sanear_volumen(self.vol_efectos)
+        self.vol_musica = _clamp_volumen(self.vol_musica)
+        self.vol_efectos = _clamp_volumen(self.vol_efectos)
         if self.ui_manager is None:
             self._inicializar_interfaz_opciones()
         self.slider_musica.set_current_value(self.vol_musica)
@@ -201,17 +212,18 @@ class MenuManager:
         sonido.play()
         self.tiempo_final_reproduccion = ahora + sonido.get_length()
 
-    def _aplicar_volumen_musica(self):
-        """Lee el slider de música, lo sanea y lo propaga (slider + audio)."""
-        self.vol_musica = _sanear_volumen(self.slider_musica.get_current_value())
-        self.slider_musica.set_current_value(self.vol_musica)   # evita valor fuera de rango
-        self.am.actualizar_volumen_musica(self.vol_musica)
-
-    def _aplicar_volumen_efectos(self, reiniciar_feedback=False):
-        self.vol_efectos = _sanear_volumen(self.slider_efectos.get_current_value())
-        self.slider_efectos.set_current_value(self.vol_efectos)
-        self.am.actualizar_volumen_efectos(self.vol_efectos)
-        self._feedback_sonoro_efectos(reiniciar=reiniciar_feedback)
+    def _fijar_volumen(self, destino, valor, feedback_reiniciar=False):
+        """Propaga un volumen ya validado: estado + slider + audio (+ prueba)."""
+        slider = self.slider_musica if destino == "musica" else self.slider_efectos
+        if destino == "musica":
+            self.vol_musica = valor
+            self.am.actualizar_volumen_musica(valor)
+        else:
+            self.vol_efectos = valor
+            self.am.actualizar_volumen_efectos(valor)
+        slider.set_current_value(valor)   # re-fija por si pygame_gui lo descuadró
+        if destino == "efectos":
+            self._feedback_sonoro_efectos(reiniciar=feedback_reiniciar)
 
     def _menu_opciones(self, time_delta):
         """Lógica de la pantalla de opciones usando pygame_gui."""
@@ -220,7 +232,14 @@ class MenuManager:
 
         fondo = self.rm.get_image("imagen_fondo1")
 
-        flechas_efectos = (self.slider_efectos.left_button, self.slider_efectos.right_button)
+        # {botón de flecha: (destino, sube?)}
+        flechas = {
+            self.slider_musica.left_button:   ("musica", False),
+            self.slider_musica.right_button:  ("musica", True),
+            self.slider_efectos.left_button:  ("efectos", False),
+            self.slider_efectos.right_button: ("efectos", True),
+        }
+        sliders = {self.slider_musica: "musica", self.slider_efectos: "efectos"}
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -229,23 +248,28 @@ class MenuManager:
                 self.resultado = "SALIR"
 
             # --- Eventos de pygame_gui (API 0.6+: cada evento con su propio type) ---
-            # El arrastre de la barra y las flechas ◄ ► emiten ambos este evento
-            # (las flechas, un frame después de su UI_BUTTON_PRESSED), así que
-            # todo el cambio de volumen se centraliza aquí.
-            elif event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
-                if event.ui_element == self.slider_musica:
-                    self._aplicar_volumen_musica()
-                elif event.ui_element == self.slider_efectos:
-                    con_flecha = self._flecha_efectos_pendiente
-                    self._flecha_efectos_pendiente = False
-                    self._aplicar_volumen_efectos(reiniciar_feedback=con_flecha)
+            elif event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element in flechas:
+                # Flecha ◄ ►: saltamos al múltiplo de 0.1 anterior/siguiente al
+                # valor actual (no un simple ±0.1, para "cuadrar" un valor libre)
+                # e ignoramos el MOVED que pygame_gui emitirá acto seguido.
+                destino, sube = flechas[event.ui_element]
+                actual = self.vol_musica if destino == "musica" else self.vol_efectos
+                self._fijar_volumen(destino, _paso_volumen(actual, sube),
+                                    feedback_reiniciar=True)
+                self._ignorar_moved.add(destino)
+
+            elif event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED and event.ui_element in sliders:
+                destino = sliders[event.ui_element]
+                if destino in self._ignorar_moved:
+                    self._ignorar_moved.discard(destino)          # era de nuestra flecha
+                    event.ui_element.set_current_value(
+                        self.vol_musica if destino == "musica" else self.vol_efectos)
+                else:
+                    # Arrastre de la barra: valor libre, solo recortado.
+                    self._fijar_volumen(destino, _clamp_volumen(event.ui_element.get_current_value()))
 
             elif event.type == pygame_gui.UI_BUTTON_PRESSED:
-                if event.ui_element in flechas_efectos:
-                    # Marca: el MOVED que llega ahora corta y relanza el sonido de
-                    # prueba (para oír el volumen tras cada paso).
-                    self._flecha_efectos_pendiente = True
-                elif event.ui_element == self.btn_guardar:
+                if event.ui_element == self.btn_guardar:
                     config.guardar_configuracion(self.vol_musica, self.vol_efectos)
                     self.estado = "PRINCIPAL"
                 elif event.ui_element == self.btn_volver:

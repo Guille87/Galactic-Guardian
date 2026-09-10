@@ -17,8 +17,9 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 - Menú de opciones: las flechas ◄ ► acumulaban error de coma flotante
   (`0`, `2.7e-17`, `0.30000000000000004`…) y un valor que se salía de `[0, 1]`
   por un `1e-17` dejaba el slider **sin responder** al reabrir las opciones.
-  Ahora todos los volúmenes se redondean al escalón (0.0, 0.1, …, 1.0) y se
-  recortan a `[0, 1]` en cada cambio; el `config.ini` guarda valores limpios.
+  Ahora el arrastre de la barra sigue siendo libre (se guarda tal cual, redondeado
+  a 2 decimales) y las flechas saltan al múltiplo de 0.1 anterior/siguiente
+  (0.27 → 0.3 o 0.2), recortando siempre a `[0, 1]`.
 - Menú de opciones: las flechas del slider de **música** no cambiaban el volumen
   (solo funcionaba arrastrando la barra).
 - Menú de opciones: la interfaz (`pygame_gui`) se reconstruía en cada entrada,
