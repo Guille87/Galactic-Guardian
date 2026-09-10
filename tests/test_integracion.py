@@ -41,7 +41,7 @@ def test_derrota_del_jefe_sube_de_nivel(juego, rm):
     bala.rect.center = jefe.rect.center
     bala.radius = 300
 
-    juego.collision_manager.actualizar()
+    juego.collision_manager.actualizar(juego.tiempo_juego)
     nivel0 = juego.nivel
     juego.actualizar(DT60)                       # procesa pendiente_reinicio
     assert juego.nivel == nivel0 + 1

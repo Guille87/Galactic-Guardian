@@ -13,7 +13,13 @@ Rama `auditoria-fases-1-2` (contiene también la Fase 3).
 - **Fase 2 (rendimiento) — HECHA**: C1, C2, P1, P4, P5, P6 (+ `SONIDOS`/`MUSICA` separados, tamaños de bala saneados).
 - **Fase 3 (arquitectura) — HECHA**: `settings.py` (13), C9, C11, B3, P2, P3 (grupos de sprites + `groupcollide`/`collide_circle`, `radio`→`radius`), C10 (`dt` + `MovimientoSubpixel`). Bonus: P7 (fundido del `Destello`).
 - **Fase 4 (jugabilidad) — HECHA**: J1 (dificultad lineal), J2 (timing del jefe comprimido por nivel), J3 (hitboxes recalibradas + overlay F1), J4 (diagonal normalizada + suavizado opcional), J5 (anti-spam SFX), J6 (escala de daño coherente), J7 (loot pool sin mutación).
-- **Pendiente**: item 14 (adelgazar el objeto-Dios — los managers siguen recibiendo `juego` entero). Refactor grande y de bajo beneficio inmediato.
+- **Item 14 (adelgazar el objeto-Dios) — HECHO en lo esencial**: `WaveManager`,
+  `EntityManager`, `EffectManager` y `CollisionManager` reciben dependencias
+  explícitas y ya no leen/escriben atributos de `Juego`. `CollisionManager`
+  comunica los cambios de estado por el contrato `reglas`
+  (`al_eliminar_enemigo`, `manejar_impacto_jugador`). `InputHandler`,
+  `RenderManager` y `UIManager` siguen recibiendo `Juego` **a propósito**: son la
+  capa Vista/Controlador y su función es observar la partida entera.
 
 > Todo el balance de la Fase 4 vive en `src/core/settings.py` y es un primer
 > ajuste "a ciegas": **necesita playtest**. Pulsa **F1** en partida para ver los
@@ -524,7 +530,7 @@ pool = [i for i in POOL_BASE if self._item_util(i, jugador)]
 11. **C9 + C11 + B3** — `WeakKeyDictionary` para `enemigos_golpeados`; eliminar `enemigos_activos`; centralizar el ajuste de pausa (que cada objeto con timer implemente `actualizar_pausa`, incluido `WaveManager`, `Explosion`, `Item`).
 12. **C10** — introducir `dt` y posiciones `Vector2`. Es el cambio más transversal; hacerlo con los grupos ya unificados.
 13. Extraer un módulo `src/core/settings.py` con `ANCHO=600`, `ALTO=800`, `FPS=60`, velocidades, cadencias, umbrales de oleada y factores de dificultad. Hoy están repartidos como números mágicos en 8 archivos.
-14. Reducir el objeto‑Dios: los managers deberían recibir **solo lo que usan** (listas, `audio_manager`, callbacks de evento) en vez de `juego` completo; comunicar cambios de estado con eventos/retornos, no escribiendo atributos de `Juego`.
+14. Reducir el objeto‑Dios: los managers deberían recibir **solo lo que usan** (listas, `audio_manager`, callbacks de evento) en vez de `juego` completo; comunicar cambios de estado con eventos/retornos, no escribiendo atributos de `Juego`. **[Hecho]** — ver "Estado de implementación" arriba: managers mecánicos con dependencias explícitas + contrato `reglas` en `CollisionManager`; Vista/Controlador (`InputHandler`, `RenderManager`, `UIManager`) mantienen `Juego` a propósito.
 
 ### Fase 4 — Jugabilidad
 15. **J3** — recalibrar hitboxes + modo debug de colisiones.

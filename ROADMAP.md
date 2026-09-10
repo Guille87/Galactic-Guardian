@@ -18,6 +18,11 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 - **Fase 5 — bugs conocidos** — arreglados todos (menú de opciones, Game Over +
   teclado, reloj de juego que se pausa de verdad, tirón al cambiar de música,
   código muerto). Ver `CHANGELOG.md` → `[0.1.1]`.
+- **Item 14 de la auditoría — adelgazar el objeto-Dios `Juego`** — los managers
+  mecánicos (`Wave`, `Entity`, `Effect`, `Collision`) reciben dependencias
+  explícitas y ya no tocan `Juego`; `CollisionManager` habla por un contrato
+  `reglas`. La capa Vista/Controlador (`Input`, `Render`, `UI`) mantiene `Juego`
+  a propósito.
 
 ## En curso
 
@@ -26,9 +31,8 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Próximo (corto plazo)
 
-- **`v0.1.1`** + release en GitHub (Fase 5).
-- Adelgazar el "objeto-Dios" `Juego`: que los managers reciban solo lo que usan
-  (pendiente de la auditoría, item 14).
+- Playtest del refactor del item 14 y del siguiente lote de cambios; publicar la
+  versión que lo agrupe.
 
 ## Backlog / ideas
 

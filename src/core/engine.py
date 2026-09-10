@@ -8,6 +8,7 @@ from src.core import settings
 from src.entities.enemies import Jefe
 from src.entities.player import Jugador
 from src.entities.bullet import Bala
+from src.entities.items import Item
 from src.visual.background import ScrollingBackground
 from src.managers.collision import CollisionManager
 from src.managers.effects import EffectManager
@@ -75,7 +76,10 @@ class Juego:
         self.render_manager = RenderManager(self)
         self.wave_manager = WaveManager(resource_manager, self.audio_manager, self.pantalla_ancho, self.pantalla_alto)
         self.input_handler = InputHandler(self)
-        self.collision_manager = CollisionManager(self)
+        self.collision_manager = CollisionManager(
+            self.entity_manager, self.jugador, self.effect_manager,
+            self.audio_manager, self.enemigos_golpeados, self,
+        )
 
         # 5. Control de Tiempos y Flujo
         # Reloj de juego en ms. Solo avanza dentro de actualizar(dt), así que en
@@ -149,6 +153,32 @@ class Juego:
         # Aseguramos que suene la música principal
         self.audio_manager.reproducir_musica("rain_of_lasers")
 
+    # --- Contrato "reglas" que consume CollisionManager -------------------
+    def al_eliminar_enemigo(self, enemigo):
+        """Consecuencias de reglas al destruir un enemigo.
+
+        Lo llama `CollisionManager` tras encargarse de la parte mecánica
+        (`kill`, explosión, purga del cooldown): aquí solo van puntuación, loot
+        y la transición diferida cuando cae el jefe.
+        """
+        self.enemigos_eliminados += 1
+        tipo_item = enemigo.die(self.jugador, self.enemigos_eliminados)
+        if tipo_item:
+            self._spawnear_item(tipo_item, enemigo.rect.center)
+            self.enemigos_eliminados = 0
+
+        self.puntuacion += enemigo.valor_puntuacion * self.nivel
+
+        # Jefe derrotado -> transición diferida (la ejecuta Juego.actualizar)
+        if isinstance(enemigo, Jefe):
+            self.jefe_derrotado = True
+            self.jefe = None
+            self.pendiente_reinicio = True
+
+    def _spawnear_item(self, tipo, posicion):
+        img = self.rm.get_image_scaled(tipo, Item.TAMANO_ESTANDAR)
+        self.entity_manager.items.add(Item(tipo, img, posicion[0], posicion[1]))
+
     def manejar_impacto_jugador(self):
         """Procesa el daño visual y lógico del jugador"""
         if self.jugador.vidas <= 0: return
@@ -201,7 +231,7 @@ class Juego:
 
         # 2. Física y Colisiones
         self.entity_manager.actualizar(dt, self.tiempo_juego)
-        self.collision_manager.actualizar()
+        self.collision_manager.actualizar(self.tiempo_juego)
 
         # 2b. Transición diferida: si el jefe murió durante la resolución de
         # colisiones, reiniciamos aquí (nunca desde dentro de un manager).

@@ -78,6 +78,16 @@ def test_reiniciar_desde_cero_limpia_enemigos_golpeados(juego, rm):
     assert len(juego.enemigos_golpeados) == 0
 
 
+def test_al_eliminar_enemigo_puntua_y_suelta_loot(juego, rm):
+    enemigo = EnemigoTipo1(rm.get_image_scaled("enemigo1", (48, 48)), 0, 0, 600, 1)
+    p0 = juego.puntuacion
+    juego.enemigos_eliminados = 9          # el nº 10 fuerza el loot
+    juego.al_eliminar_enemigo(enemigo)
+    assert juego.puntuacion == p0 + enemigo.valor_puntuacion * juego.nivel
+    assert len(juego.entity_manager.items) == 1
+    assert juego.enemigos_eliminados == 0
+
+
 def test_disparar_añade_balas(juego):
     juego.jugador.ultimo_disparo = -99999
     juego.disparar()

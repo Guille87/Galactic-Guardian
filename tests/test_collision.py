@@ -1,4 +1,5 @@
 """src/managers/collision.py — resolución de colisiones."""
+from src.managers.collision import CollisionManager
 from src.entities.bullet import Bala
 from src.entities.enemies import EnemigoBase, EnemigoTipo1, Jefe
 
@@ -24,7 +25,7 @@ def test_bala_jugador_mata_enemigo(juego, rm):
     b.rect.center = e.rect.center
 
     p0 = juego.puntuacion
-    juego.collision_manager.actualizar()
+    juego.collision_manager.actualizar(juego.tiempo_juego)
 
     assert e not in em.enemigos
     assert b not in em.balas
@@ -42,7 +43,7 @@ def test_doble_bala_mismo_enemigo_no_puntua_doble(juego, rm):
         em.agregar_bala_jugador(b)
 
     p0 = juego.puntuacion
-    juego.collision_manager.actualizar()
+    juego.collision_manager.actualizar(juego.tiempo_juego)
 
     explosiones = sum(1 for s in em.efectos if type(s).__name__ == "Explosion")
     assert explosiones == 1
@@ -60,7 +61,7 @@ def test_bala_enemiga_daña_al_jugador(juego, rm):
     em.agregar_bala_enemigo(bala)
 
     salud0 = juego.jugador.salud
-    juego.collision_manager.actualizar()
+    juego.collision_manager.actualizar(juego.tiempo_juego)
 
     assert juego.jugador.salud < salud0
     assert bala not in em.balas_enemigo
@@ -79,8 +80,40 @@ def test_muerte_del_jefe_marca_pendiente_reinicio(juego, rm):
     b.radius = 300
     em.agregar_bala_jugador(b)
 
-    juego.collision_manager.actualizar()
+    juego.collision_manager.actualizar(juego.tiempo_juego)
     assert juego.pendiente_reinicio is True
+
+
+class _ReglasEspia:
+    """Doble del contrato `reglas` que consume CollisionManager."""
+    def __init__(self):
+        self.enemigos_eliminados = []
+        self.impactos_jugador = 0
+
+    def al_eliminar_enemigo(self, enemigo):
+        self.enemigos_eliminados.append(enemigo)
+
+    def manejar_impacto_jugador(self):
+        self.impactos_jugador += 1
+
+
+def test_collision_manager_no_toca_juego_usa_el_contrato_reglas(juego, rm):
+    """CollisionManager funciona con un `reglas` cualquiera, sin ver el Juego."""
+    em = juego.entity_manager
+    reglas = _ReglasEspia()
+    cm = CollisionManager(em, juego.jugador, juego.effect_manager,
+                          juego.audio_manager, juego.enemigos_golpeados, reglas)
+
+    e = _enemigo(rm, salud=1)
+    b = _bala_jugador(rm)
+    b.rect.center = e.rect.center
+    em.agregar_enemigo(e)
+    em.agregar_bala_jugador(b)
+
+    cm.actualizar(0)
+
+    assert reglas.enemigos_eliminados == [e]   # la regla se delegó, no se aplicó aquí
+    assert e not in em.enemigos                 # la parte mecánica sí
 
 
 def test_recoger_item(juego, rm):
@@ -91,7 +124,7 @@ def test_recoger_item(juego, rm):
     em.items.add(item)
 
     vel0 = juego.jugador.velocidad
-    juego.collision_manager.actualizar()
+    juego.collision_manager.actualizar(juego.tiempo_juego)
 
     assert item not in em.items
     assert juego.jugador.velocidad > vel0
