@@ -4,6 +4,7 @@ import pygame
 import pygame_gui
 
 from src.core import config, settings
+from src.core.version import __version__
 from src.ui.components.button import Boton
 
 
@@ -23,6 +24,7 @@ class MenuManager:
         self.clasificacion = sistema_clasificacion
         self.font_titulo = pygame.font.Font(None, 76)
         self.font_estandar = pygame.font.Font(None, 36)
+        self.font_version = pygame.font.Font(None, 24)
         self.opciones_cargadas = False
 
         # Reloj único de la instancia (no crear uno nuevo por frame)
@@ -74,7 +76,7 @@ class MenuManager:
         return self.resultado or "SALIR"
 
     def _menu_principal(self):
-        pygame.display.set_caption("Galactic Guardian - Menú")
+        pygame.display.set_caption(f"Galactic Guardian v{__version__} - Menú")
         fondo = self.rm.get_image("imagen_fondo1")
 
         for event in pygame.event.get():
@@ -99,6 +101,13 @@ class MenuManager:
         self.btn_jugar.dibujar(self.pantalla, self.font_estandar)
         self.btn_opciones.dibujar(self.pantalla, self.font_estandar)
         self.btn_puntos.dibujar(self.pantalla, self.font_estandar)
+
+        # Versión, esquina inferior derecha
+        txt_version = self.font_version.render(f"v{__version__}", True, (150, 150, 150))
+        self.pantalla.blit(
+            txt_version,
+            txt_version.get_rect(bottomright=(settings.ANCHO - 8, settings.ALTO - 6)),
+        )
         pygame.display.flip()
 
     def _inicializar_interfaz_opciones(self):

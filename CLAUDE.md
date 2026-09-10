@@ -27,9 +27,13 @@ pytest --cov --cov-report=term-missing
 
 ## Runtime data & config (gitignored)
 
-`.gitignore` excludes `*.ini` and `*.json`, so these files exist only locally and are recreated on demand:
+`.gitignore` excludes `/config.ini` and `/data/saves/`, so these files exist only locally and are recreated on demand:
 - `config.ini` — persisted music/effects volume (`[VOLUMEN]` section), read/written by `src/core/config.py`.
-- `data/saves/puntuaciones.json` — high-score table (`{nombre: puntos}`), managed by `SistemaClasificacion` (`src/ui/scoreboard.py`). Paths here are **relative to the current working directory**, so the game must be launched from the project root.
+- `data/saves/puntuaciones.json` — high-score table (`{nombre: puntos}`), managed by `SistemaClasificacion` (`src/ui/scoreboard.py`).
+
+Path resolution goes through **`src/core/paths.py`** (`src/core/version.py` holds `__version__`, kept in sync with `pyproject.toml`):
+- `paths.recurso(...)` → read-only bundled assets. Dev: project root. Frozen (PyInstaller): `sys._MEIPASS`.
+- `paths.dir_datos_usuario()` → writable dir for `config.ini` + saves. Dev: project root (paths are now absolute, so the CWD no longer matters). Frozen: the OS user-data dir (`%APPDATA%\GalacticGuardian`, `~/Library/Application Support/…`, `~/.local/share/…`) so user data survives an app-folder replace and works from a protected install path.
 
 Assets live under `data/assets/` (`imagenes/`, `musica/`, `sonidos/`). Logical asset names map to relative paths in `src/core/config.py`: `RECURSOS` + `EXPLOSIONES` (images), `SONIDOS` (short SFX, loaded into RAM as `mixer.Sound`), and `MUSICA` (background tracks — the raw OGG **bytes** are read into RAM at startup and played with `mixer.music.load(BytesIO(...))`; still decoded on the fly, not decompressed). Add new assets to the right dict, not by hardcoding paths.
 
