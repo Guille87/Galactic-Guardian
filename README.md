@@ -12,6 +12,7 @@
 | src/core/paths.py                     |       23 |        3 |     87% |32, 44, 46 |
 | src/core/resources.py                 |       58 |        4 |     93% |78, 84, 94, 97 |
 | src/core/settings.py                  |       36 |        0 |    100% |           |
+| src/core/updates.py                   |       71 |       15 |     79% |63-68, 72-87, 106-107, 115 |
 | src/core/version.py                   |        1 |        0 |    100% |           |
 | src/entities/base/movimiento.py       |       18 |        0 |    100% |           |
 | src/entities/base/projectile\_base.py |       14 |        1 |     93% |        28 |
@@ -25,15 +26,15 @@
 | src/managers/entities.py              |       60 |        6 |     90% |58-59, 63-64, 84-85 |
 | src/managers/render.py                |       80 |        1 |     99% |       124 |
 | src/managers/waves.py                 |       60 |        8 |     87% |36, 46-47, 54, 60, 79, 83-84 |
-| src/ui/components/button.py           |       40 |        7 |     82% | 34-39, 51 |
+| src/ui/components/button.py           |       40 |        6 |     85% |     34-39 |
 | src/ui/hud.py                         |      107 |       13 |     88% |85, 158-176 |
-| src/ui/menu.py                        |      197 |       71 |     64% |105-108, 113-145, 205, 231, 246-248, 271-275, 304-320, 325-357 |
+| src/ui/menu.py                        |      213 |       54 |     75% |115-118, 128-129, 135-137, 139, 141, 231, 257, 272-274, 297-301, 330-346, 351-383 |
 | src/ui/scoreboard.py                  |       34 |        2 |     94% |     41-42 |
 | src/visual/background.py              |       22 |        2 |     91% |    27, 30 |
 | src/visual/explosions.py              |       20 |        0 |    100% |           |
 | src/visual/flash.py                   |       22 |        0 |    100% |           |
 | src/visual/flash\_constant.py         |       11 |        1 |     91% |        17 |
-| **TOTAL**                             | **1576** |  **268** | **83%** |           |
+| **TOTAL**                             | **1663** |  **265** | **84%** |           |
 
 
 ## Setup coverage badge
