@@ -3,6 +3,10 @@ from src.ui.components.button import Boton
 
 
 class RenderManager:
+    """Capa Vista: dibuja el estado de la partida. Recibe el `Juego` completo por
+    diseño (necesita observarlo entero); solo escribe estado de UI, nunca de
+    simulación. Ver auditoría, item 14."""
+
     def __init__(self, juego):
         self.juego = juego
         self.pantalla = juego.pantalla

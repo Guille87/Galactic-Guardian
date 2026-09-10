@@ -4,6 +4,9 @@ from src.core import settings
 
 
 class UIManager:
+    """Capa Vista: HUD y overlays de texto. Recibe el `Juego` completo por diseño
+    (solo lo lee); ver auditoría, item 14."""
+
     def __init__(self, juego):
         self.juego = juego
         self.fuente_pequena = pygame.font.SysFont(None, 22, bold=True)

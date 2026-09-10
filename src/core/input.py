@@ -4,6 +4,9 @@ from src.ui.components.button import Boton
 
 
 class InputHandler:
+    """Capa Controlador: traduce eventos de pygame en llamadas a métodos del
+    `Juego`. Recibe el `Juego` completo por diseño (item 14 de la auditoría)."""
+
     def __init__(self, juego):
         self.juego = juego
 

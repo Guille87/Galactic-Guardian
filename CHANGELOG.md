@@ -13,9 +13,10 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
   vuelo (antes solo se conservaban las del jefe; ahora también las del jugador).
 - Interno (item 14 de la auditoría, reducir el objeto-Dios `Juego`): al reiniciar
   una partida el jugador se restablece "in situ" en vez de recrearse; los
-  managers `EntityManager` y `EffectManager` reciben sus dependencias explícitas
-  (recursos, dimensiones, jugador) en vez del `Juego` entero. Sin cambios
-  visibles.
+  managers mecánicos (`Entity`, `Effect`, `Collision`) reciben sus dependencias
+  explícitas en vez del `Juego` entero, y `CollisionManager` comunica los
+  cambios de estado (puntuación, loot, daño al jugador) por un contrato `reglas`
+  en lugar de escribir atributos de `Juego`. Sin cambios visibles.
 
 ## [0.1.1] - 2026-09-10
 
