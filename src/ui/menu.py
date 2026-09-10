@@ -74,10 +74,12 @@ class MenuManager:
         # Control de feedback sonoro
         self.sonido_reproduciendose = False
         self.tiempo_final_reproduccion = 0
-        # (destino, sube) mientras esperamos el UI_HORIZONTAL_SLIDER_MOVED que
-        # pygame_gui emite tras pulsar una flecha ◄ ►; ese MOVED se cuadra al
-        # escalón en vez de aplicarse tal cual.
+        # (destino, sube) de una flecha ◄ ► pulsada este frame, pendiente de
+        # cuadrar al escalón al final del frame.
         self._flecha_pendiente = None
+        # destino cuyo próximo UI_HORIZONTAL_SLIDER_MOVED hay que ignorar (es el
+        # que pygame_gui emite tras una flecha que ya hemos cuadrado).
+        self._ignorar_moved = None
 
         # Aviso de nueva versión (comprobación en segundo plano, best-effort)
         self.actualizaciones = updates.ComprobadorActualizaciones()
@@ -166,6 +168,7 @@ class MenuManager:
         los sliders con los volúmenes actuales, ya saneados."""
         self.estado = "OPCIONES"
         self._flecha_pendiente = None
+        self._ignorar_moved = None
         # Recortar antes de crear/tocar el slider: un valor fuera de [0, 1]
         # (aunque sea por 1e-17) hace que pygame_gui lo ignore y el slider quede
         # descuadrado y sin responder.
@@ -306,21 +309,17 @@ class MenuManager:
 
             # --- Eventos de pygame_gui (API 0.6+: cada evento con su propio type) ---
             elif event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element in flechas:
-                # Solo marcamos la dirección. pygame_gui moverá el slider ±0.1 y
-                # emitirá un MOVED (siguiente frame); ahí lo cuadramos al escalón.
+                # Solo marcamos la dirección; el ajuste se hace al final del frame.
                 self._flecha_pendiente = flechas[event.ui_element]
 
             elif event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED and event.ui_element in sliders:
                 destino = sliders[event.ui_element]
-                pend = self._flecha_pendiente
-                if pend and pend[0] == destino:
-                    # Flecha ◄ ►: al múltiplo de 0.1 anterior/siguiente al valor
-                    # que había (cuadra un valor libre; 0.27 -> 0.3 o 0.2).
-                    self._flecha_pendiente = None
-                    actual = self.vol_musica if destino == "musica" else self.vol_efectos
-                    self._fijar_volumen(destino, _paso_volumen(actual, pend[1]),
-                                        feedback_reiniciar=True)
-                else:
+                if self._ignorar_moved == destino:
+                    # MOVED tardío de una flecha que ya cuadramos el frame anterior.
+                    self._ignorar_moved = None
+                    event.ui_element.set_current_value(
+                        self.vol_musica if destino == "musica" else self.vol_efectos)
+                elif self._flecha_pendiente is None or self._flecha_pendiente[0] != destino:
                     # Arrastre de la barra: valor libre, solo recortado.
                     self._fijar_volumen(destino, _clamp_volumen(event.ui_element.get_current_value()))
 
@@ -333,13 +332,22 @@ class MenuManager:
 
             self.ui_manager.process_events(event)
 
-        # Dibujado
+        # Flecha ◄ ►: pygame_gui ya ha aplicado su propio ±0.1 en este mismo
+        # frame. Lo corregimos AQUÍ (antes de dibujar) al múltiplo de 0.1
+        # anterior/siguiente al valor que había, para que no se vea el salto
+        # intermedio; el MOVED que pygame_gui emite se ignora el próximo frame.
+        if self._flecha_pendiente is not None:
+            destino, sube = self._flecha_pendiente
+            self._flecha_pendiente = None
+            actual = self.vol_musica if destino == "musica" else self.vol_efectos
+            self._fijar_volumen(destino, _paso_volumen(actual, sube), feedback_reiniciar=True)
+            self._ignorar_moved = destino
+
         self.ui_manager.update(time_delta)
 
-        # pygame_gui, al MANTENER pulsada una flecha >0.2 s, arranca un
-        # desplazamiento continuo y rápido del slider (se ve "dispararse" el
-        # volumen antes de cuadrarse). Reseteamos su acumulador mientras la
-        # flecha siga pulsada para que solo cuente el clic limpio.
+        # Al MANTENER pulsada una flecha >0.2 s, pygame_gui arranca un
+        # desplazamiento continuo y rápido del slider. Reseteamos su acumulador
+        # mientras la flecha siga pulsada para que solo cuente el clic limpio.
         for sl in (self.slider_musica, self.slider_efectos):
             if sl.left_button.held or sl.right_button.held:
                 sl.button_held_repeat_acc = 0.0

@@ -23,6 +23,13 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
   UAC en `%LOCALAPPDATA%\Programs`, acceso directo y desinstalador) además del
   `.zip` portable.
 
+### Fixed
+
+- Menú de opciones: al pulsar una flecha ◄ ► con el volumen en un valor "a medias"
+  (p. ej. 0.25), el deslizador saltaba visualmente a 0.35/0.15 durante un frame
+  antes de cuadrarse a 0.3/0.2. Ahora el ajuste se aplica en el mismo frame, sin
+  ese parpadeo.
+
 ## [0.1.3] - 2026-09-10
 
 Primera versión con ejecutable descargable para Windows y pulido del menú de
