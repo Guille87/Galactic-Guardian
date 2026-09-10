@@ -27,7 +27,14 @@ jefe de cada nivel.
 Objetivo: aguanta con vida, recoge las mejoras que sueltan los enemigos y derrota al jefe
 para pasar de nivel.
 
-## Instalación
+## Descargar y jugar (Windows)
+
+En la página de [**Releases**](https://github.com/Guille87/Galactic-Guardian/releases)
+descarga el `.zip` `GalacticGuardian-vX.Y.Z-windows.zip`, descomprímelo y ejecuta
+`GalacticGuardian.exe`. No hace falta instalar nada. La configuración y las
+puntuaciones se guardan en `%APPDATA%\GalacticGuardian`.
+
+## Ejecutar desde el código
 
 Necesitas **Python 3.11 o superior**.
 
@@ -55,8 +62,8 @@ pip install -r requirements.txt
 python main.py
 ```
 
-> El juego debe ejecutarse desde la raíz del proyecto (guarda `config.ini` y las
-> puntuaciones en rutas relativas a esa carpeta).
+> Ejecutando desde el código, `config.ini` y las puntuaciones se guardan en la
+> raíz del proyecto.
 
 ## Desarrollo
 

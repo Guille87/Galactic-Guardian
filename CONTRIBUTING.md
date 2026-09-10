@@ -97,7 +97,7 @@ para correcciones.
    git push origin vX.Y.Z
    ```
 
-4. Crea la *Release* en GitHub desde el tag, con las notas del CHANGELOG.
-
-> Adjuntar el `.zip` del ejecutable a la Release todavía es manual (compílalo como
-> arriba y súbelo). El workflow que lo hace al etiquetar está en el [ROADMAP](ROADMAP.md).
+4. Crea la *Release* en GitHub desde el tag, con las notas del CHANGELOG. Al
+   **publicarla**, el workflow `build.yml` compila el ejecutable de Windows y
+   adjunta `GalacticGuardian-vX.Y.Z-windows.zip` a la Release (unos minutos).
+   Para relanzarlo contra un tag ya publicado: *Actions → Build → Run workflow*.
