@@ -1,0 +1,53 @@
+name: Build
+
+# Al publicar una Release, compila el ejecutable de Windows y lo adjunta como
+# .zip. También se puede lanzar a mano contra un tag ya existente.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag de la Release a la que adjuntar el .zip (p. ej. v0.1.3)"
+        required: true
+
+permissions:
+  contents: write        # subir el artefacto a la Release
+
+jobs:
+  windows:
+    name: Ejecutable de Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: pip install -r requirements-build.txt
+
+      - name: Compilar con PyInstaller
+        run: pyinstaller GalacticGuardian.spec --noconfirm --clean
+
+      - name: Verificar el ejecutable (--smoke)
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist\GalacticGuardian\GalacticGuardian.exe `
+               -ArgumentList "--smoke" -Wait -PassThru -NoNewWindow
+          if ($p.ExitCode -ne 0) { throw "smoke falló (exit $($p.ExitCode))" }
+
+      - name: Comprimir y adjuntar a la Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ github.event.release.tag_name || inputs.tag }}"
+          $zip = "GalacticGuardian-$tag-windows.zip"
+          Compress-Archive -Path dist\GalacticGuardian -DestinationPath $zip
+          gh release upload $tag $zip --clobber

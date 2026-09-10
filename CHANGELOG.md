@@ -14,6 +14,9 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 - Empaquetado con PyInstaller: `GalacticGuardian.spec` (build en carpeta para
   Windows), `requirements-build.txt` y `main.py --smoke` (arranque headless que
   valida un ejecutable compilado). Ver `CONTRIBUTING.md`.
+- Workflow `build.yml`: al publicar una Release compila el ejecutable de Windows
+  y adjunta `GalacticGuardian-vX.Y.Z-windows.zip`. La sección "Descargar y jugar"
+  del README apunta a las Releases.
 
 ### Fixed
 

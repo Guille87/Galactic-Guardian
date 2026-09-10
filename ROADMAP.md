@@ -24,6 +24,10 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
   `reglas`. La capa Vista/Controlador (`Input`, `Render`, `UI`) mantiene `Juego`
   a propósito.
 
+- **Empaquetado** — build con PyInstaller (`GalacticGuardian.spec`) y workflow que,
+  al publicar una Release, compila el ejecutable de Windows y adjunta el `.zip`.
+  La versión se ve en el título de la ventana y el menú.
+
 ## En curso
 
 - Ajuste fino del balance (`src/core/settings.py`) a partir del playtest: dificultad,
@@ -31,19 +35,19 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Próximo (corto plazo)
 
-- Playtest del refactor del item 14 y del siguiente lote de cambios; publicar la
-  versión que lo agrupe.
+- Publicar la versión que agrupe el refactor del item 14, el empaquetado y los
+  arreglos del menú de opciones.
 
 ## Backlog / ideas
 
 - **Actualización automática** — al abrir el menú, comprobar si hay una versión
   publicada más reciente que la instalada. Si la hay, mostrar un aviso con un botón
-  **Actualizar**: al pulsarlo, el juego se actualiza solo (descarga y aplica el
-  parche, se reinicia si hace falta) sin que el usuario tenga que salir a ninguna
-  web ni descargar nada a mano. Comprobación en segundo plano y silenciosa si no
-  hay red (sin conexión se puede seguir jugando con la versión actual). Depende del
-  **empaquetado y distribución** (define el formato del artefacto a actualizar).
-- **Empaquetado y distribución** — build con PyInstaller; publicación (itch.io u otro).
+  **Actualizar**: al pulsarlo, el juego se actualiza solo (descarga el `.zip` del
+  último Release, lo aplica y se reinicia) sin que el usuario tenga que salir a
+  ninguna web ni descargar nada a mano. Comprobación en segundo plano y silenciosa
+  si no hay red (sin conexión se puede seguir jugando con la versión actual).
+- **Distribución** — publicar también en itch.io u otra plataforma.
+- **Builds de Linux/macOS** — añadir al workflow de Release (hoy solo Windows).
 - **Game Design Document** formal.
 - Más tipos de enemigo y patrones de disparo; jefes con fases.
 - Menú de opciones ampliado: reasignar teclas, modo ventana/pantalla completa, resolución.
