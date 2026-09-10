@@ -58,6 +58,13 @@ class InputHandler:
         return True
 
     def _manejar_teclas_presionadas(self, tecla):
+        # En Game Over el teclado no hace nada: `juego.pausado` se reutiliza como
+        # "congelado" sin fijar `tiempo_pausa`, así que un `reanudar_juego()` aquí
+        # descuadraría todos los temporizadores. La pantalla de Game Over se maneja
+        # solo con el ratón.
+        if self.juego.estado_game_over:
+            return
+
         if tecla == pygame.K_ESCAPE or tecla == pygame.K_p:
             if not self.juego.pausado:
                 self.juego.pausar_juego()
@@ -107,10 +114,6 @@ class InputHandler:
             if evento.button == 1:
                 self.juego.disparando = True
         return True
-
-    def _manejar_clic_soltado(self, boton):
-        if boton == 1 and not self.juego.pausado:
-            self.juego.disparando = False
 
     def mostrar_confirmacion_salida(self):
         """Gestiona el bucle de espera para la confirmación de salida."""

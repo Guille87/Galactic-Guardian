@@ -14,11 +14,16 @@ python -m venv venv
 .\venv\Scripts\activate
 pip install -r requirements.txt
 
-# Run the game
+# Run the game (from the repo root)
 python main.py
+
+# Tests (headless; conftest.py forces the SDL dummy drivers)
+pip install -r requirements-dev.txt
+pytest
+pytest --cov --cov-report=term-missing
 ```
 
-There is no test suite, linter config, or build step. `requirements.txt` pins `pygame-ce==2.5.7` and `pygame-gui==0.6.14` (note: `pygame-ce`, not vanilla `pygame`).
+`requirements.txt` pins `pygame-ce==2.5.8` and `pygame-gui==0.6.14` (note: `pygame-ce`, not vanilla `pygame`). `requirements-dev.txt` adds `pytest` + `pytest-cov`. `pyproject.toml` holds the pytest/coverage config and `version`. CI (`.github/workflows/ci.yml`) runs the suite on Python 3.11–3.13 and refreshes the coverage badge; `main` is branch-protected (PR + green CI required). No linter is configured. See `CONTRIBUTING.md` for the workflow and release process.
 
 ## Runtime data & config (gitignored)
 
@@ -85,4 +90,6 @@ src/managers/  entities, collision, waves, render, effects
 src/entities/  player, enemies, bullet, bullet_enemy, items, base/ (projectile_base, movimiento)
 src/ui/        menu, hud, scoreboard, components/button.py
 src/visual/    background (parallax scroll), explosions, flash, flash_constant
+tests/         suite pytest headless (conftest.py + test_*.py, uno por módulo)
+.github/       workflows/ci.yml, dependabot.yml
 ```

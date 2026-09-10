@@ -105,14 +105,24 @@ class MenuManager:
         """Crea el UIManager y los elementos de la interfaz solo una vez."""
         self.ui_manager = pygame_gui.UIManager((settings.ANCHO, settings.ALTO))
 
-        # Sliders
+        # Etiquetas
+        pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect((50, 120), (200, 24)), text="Música", manager=self.ui_manager
+        )
+        pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect((50, 220), (200, 24)), text="Efectos", manager=self.ui_manager
+        )
+
+        # Sliders (click_increment: las flechas ◄ ► mueven el volumen de poco en poco)
         self.slider_musica = pygame_gui.elements.UIHorizontalSlider(
             relative_rect=pygame.Rect((50, 150), (500, 50)),
-            start_value=self.vol_musica, value_range=(0, 1), manager=self.ui_manager
+            start_value=self.vol_musica, value_range=(0, 1),
+            click_increment=settings.VOLUMEN_PASO, manager=self.ui_manager
         )
         self.slider_efectos = pygame_gui.elements.UIHorizontalSlider(
             relative_rect=pygame.Rect((50, 250), (500, 50)),
-            start_value=self.vol_efectos, value_range=(0, 1), manager=self.ui_manager
+            start_value=self.vol_efectos, value_range=(0, 1),
+            click_increment=settings.VOLUMEN_PASO, manager=self.ui_manager
         )
 
         # Botones

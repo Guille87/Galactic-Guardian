@@ -51,6 +51,18 @@ def test_no_dispara_mientras_esta_pausado(juego):
     assert len(juego.entity_manager.balas) == 0
 
 
+def test_teclas_ignoradas_en_game_over(juego):
+    """Esc/P en Game Over no deben reanudar el juego (descuadraría los timers)."""
+    juego.estado_game_over = True
+    juego.pausado = True                 # como lo deja juego_terminado()
+    ini0 = juego.inicio_juego
+    for tecla in (pygame.K_ESCAPE, pygame.K_p, pygame.K_SPACE):
+        _evento(pygame.KEYDOWN, key=tecla)
+        _procesar(juego)
+    assert juego.inicio_juego == ini0
+    assert juego.pausado is True
+
+
 def test_entrada_de_nombre_en_game_over(juego):
     juego.pidiendo_nombre = True
     juego.nombre_entrada = ""
