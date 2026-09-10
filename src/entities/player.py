@@ -144,20 +144,16 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
     def reducir_vidas(self, cantidad):
         self.vidas = max(0, self.vidas - cantidad)
 
-    def update(self, dt=0):
-        """Actualiza el estado del jugador en cada fotograma."""
-        # Comprobar si la invulnerabilidad ha expirado
-        if self.invulnerable and pygame.time.get_ticks() > self.tiempo_invulnerable:
+    def update(self, dt=0, tiempo_juego=0):
+        """Actualiza el estado del jugador en cada fotograma.
+
+        `tiempo_juego` es el reloj de juego en ms (se congela en pausa).
+        """
+        if self.invulnerable and tiempo_juego > self.tiempo_invulnerable:
             self.invulnerable = False
             if self.destello_constante:
                 self.destello_constante.kill()
                 self.destello_constante = None
-
-    def actualizar_pausa(self, tiempo_pausado):
-        """Ajusta todos los temporizadores internos del jugador."""
-        self.ultimo_disparo += tiempo_pausado
-        if self.invulnerable:
-            self.tiempo_invulnerable += tiempo_pausado
 
     def obtener_cadencia_visual(self):
         """

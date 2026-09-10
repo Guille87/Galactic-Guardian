@@ -71,10 +71,12 @@ class Juego:
         )
 
         # 5. Control de Tiempos y Flujo
-        self.inicio_juego = pygame.time.get_ticks()
+        # Reloj de juego en ms. Solo avanza dentro de actualizar(dt), así que en
+        # pausa / Game Over se congela solo: NINGÚN temporizador necesita ajuste
+        # manual al reanudar. Toda la lógica del juego lo lee en vez de get_ticks().
+        self.tiempo_juego = 0.0
+        self.inicio_juego = 0.0            # "tiempo 0" del nivel actual
         self.tiempo_proximo_enemigo = 0
-        self.tiempo_pausa = 0
-        self.tiempo_entre_enemigos = 0
         # {enemigo: ts del último contacto}. WeakKeyDictionary: si el enemigo se
         # destruye, su entrada desaparece sola (además de purgarse al morir/salir).
         self.enemigos_golpeados = weakref.WeakKeyDictionary()
@@ -92,39 +94,12 @@ class Juego:
         self.boton_salir_post = None
 
     def pausar_juego(self):
-        """Pausa el juego y guarda el tiempo en que se pausó."""
+        """Pausa el juego. `tiempo_juego` deja de avanzar solo (no se llama a
+        actualizar mientras `pausado`), así que no hay nada más que hacer."""
         self.pausado = True
-        self.tiempo_pausa = pygame.time.get_ticks()
 
     def reanudar_juego(self):
-        """Reanuda el juego desplazando TODOS los temporizadores por la duración
-        de la pausa, para que ninguna cuenta atrás salte de golpe."""
         self.pausado = False
-        tiempo_pausado = pygame.time.get_ticks() - self.tiempo_pausa
-
-        # Temporizadores propios del motor
-        # inicio_juego marca el "tiempo 0" del nivel; el WaveManager decide la
-        # fase con (ahora - inicio_juego), así que desplazarlo es lo que hace
-        # que la pausa realmente congele la progresión de oleadas / jefe.
-        self.inicio_juego += tiempo_pausado
-        self.tiempo_proximo_enemigo += tiempo_pausado
-        self.tiempo_entre_enemigos += tiempo_pausado
-
-        # Cada objeto ajusta sus propios cronómetros
-        self.jugador.actualizar_pausa(tiempo_pausado)
-        self.wave_manager.actualizar_pausa(tiempo_pausado)
-
-        for enemigo in self.entity_manager.enemigos:
-            enemigo.actualizar_pausa(tiempo_pausado)
-
-        # Explosiones / destellos y demás sprites con cronómetro
-        for sprite in self.entity_manager.efectos:
-            if hasattr(sprite, "actualizar_pausa"):
-                sprite.actualizar_pausa(tiempo_pausado)
-
-        # Timestamps del cooldown de daño por contacto
-        for enemigo in list(self.enemigos_golpeados):
-            self.enemigos_golpeados[enemigo] += tiempo_pausado
 
     def reiniciar_juego(self):
         """Restablece el estado para una nueva partida o nivel."""
@@ -149,8 +124,13 @@ class Juego:
         self.entity_manager.vaciar_todo(avance_nivel=avance_nivel)
         self.enemigos_golpeados = weakref.WeakKeyDictionary()
         self.tiempo_proximo_enemigo = 0
-        self.inicio_juego = pygame.time.get_ticks()
-        self.tiempo_entre_enemigos = 0
+        self.tiempo_juego = 0.0
+        self.inicio_juego = 0.0
+        # El avance de nivel conserva el jugador: hay que resetear sus timers
+        # para que no queden "en el pasado" respecto al reloj recién puesto a 0.
+        self.jugador.ultimo_disparo = 0
+        self.jugador.tiempo_invulnerable = 0
+        self.jugador.invulnerable = False
         self.pausado = False
         self.estado_game_over = False
 
@@ -182,20 +162,17 @@ class Juego:
 
         if self.jugador.vidas > 0:
             self.jugador.invulnerable = True
-            self.jugador.tiempo_invulnerable = pygame.time.get_ticks() + settings.JUGADOR_INVULNERABLE_MS
+            self.jugador.tiempo_invulnerable = self.tiempo_juego + settings.JUGADOR_INVULNERABLE_MS
             self.jugador.curar(self.jugador.salud_maxima)
             self.effect_manager.crear_destello_invulnerabilidad()
 
     def disparar(self):
         """Extrae las balas del jugador y las registra en el manager de entidades."""
-        # 1. Obtenemos el tiempo actual
-        ahora = pygame.time.get_ticks()
-
         # 2. Superficie de la bala ya escalada y orientada (cacheada en el RM)
         imagen_bala = self.rm.get_image_rotated("bala_jugador1", Bala.TAMANO, Bala.ANGULO)
 
         # Llama a la función disparar del jugador para obtener las nuevas balas
-        nuevas_balas = self.jugador.disparar(ahora, imagen_bala)
+        nuevas_balas = self.jugador.disparar(self.tiempo_juego, imagen_bala)
 
         # Verifica si hay nuevas balas y las agrega a la lista de balas
         for i, bala in enumerate(nuevas_balas):
@@ -208,6 +185,9 @@ class Juego:
         if self.jugador.vidas <= 0:
             self.juego_terminado()
             return
+
+        # El reloj de juego solo corre aquí: en pausa / Game Over se congela.
+        self.tiempo_juego += dt * 1000
 
         # 1. Entradas y Generación
         teclas = pygame.key.get_pressed()
@@ -227,14 +207,14 @@ class Juego:
 
         # 3. Cosmética
         self.background.update(dt)
-        self.jugador.update(dt)
+        self.jugador.update(dt, self.tiempo_juego)
 
     def _gestionar_generacion_enemigos(self):
         """Maneja el timing para spawnear enemigos mediante el WaveManager."""
-        ahora = pygame.time.get_ticks()
+        ahora = self.tiempo_juego
         if ahora > self.tiempo_proximo_enemigo:
             nuevo = self.wave_manager.spawn_enemigo(
-                ahora - self.inicio_juego, self.jugador, self.nivel
+                ahora - self.inicio_juego, ahora, self.jugador, self.nivel
             )
             if nuevo:
                 self.entity_manager.agregar_enemigo(nuevo)

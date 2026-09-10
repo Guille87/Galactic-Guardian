@@ -1,5 +1,5 @@
 """src/core/engine.py — Juego (estado de partida, pausa, transiciones)."""
-import pygame
+import pytest
 
 from src.core import settings
 from src.entities.enemies import EnemigoTipo1
@@ -14,32 +14,31 @@ def test_construccion(juego, audio):
     assert juego.resultado == "MENU"
 
 
-def test_pausa_desplaza_los_temporizadores(juego, monkeypatch):
-    reloj = {"t": 10_000}
-    monkeypatch.setattr(pygame.time, "get_ticks", lambda: reloj["t"])
-    juego.inicio_juego = reloj["t"]
+def test_el_reloj_de_juego_solo_avanza_al_actualizar(juego):
+    t0 = juego.tiempo_juego
+    for _ in range(10):
+        juego.actualizar(DT60)
+    assert juego.tiempo_juego == pytest.approx(t0 + 10 * DT60 * 1000)
 
+
+def test_la_pausa_congela_el_reloj_de_juego(juego):
+    for _ in range(20):
+        juego.actualizar(DT60)          # ~333 ms de juego
+    t = juego.tiempo_juego
     juego.pausar_juego()
-    prox0, ini0 = juego.tiempo_proximo_enemigo, juego.inicio_juego
-    reloj["t"] += 60_000                 # 60 s de pausa
+    # mientras esté pausado el bucle no llama a actualizar; el reloj no se toca
     juego.reanudar_juego()
-
-    assert juego.tiempo_proximo_enemigo == prox0 + 60_000
-    assert juego.inicio_juego == ini0 + 60_000
+    assert juego.tiempo_juego == t
 
 
-def test_pausa_no_salta_a_la_fase_del_jefe(juego, monkeypatch):
-    reloj = {"t": 5_000}
-    monkeypatch.setattr(pygame.time, "get_ticks", lambda: reloj["t"])
-    juego.inicio_juego = reloj["t"]
-
-    reloj["t"] += 10_000                 # 10 s de juego
+def test_la_cadencia_de_disparo_no_avanza_en_pausa(juego):
+    juego.jugador.ultimo_disparo = -99999
+    juego.disparar()                    # dispara, fija ultimo_disparo = tiempo_juego
+    n = len(juego.entity_manager.balas)
     juego.pausar_juego()
-    reloj["t"] += 120_000                # 2 min de pausa
-    juego.reanudar_juego()
-
-    fase = pygame.time.get_ticks() - juego.inicio_juego
-    assert fase < settings.TIEMPO_JEFE   # sigue lejos del jefe
+    for _ in range(60):
+        juego.disparar()               # tiempo_juego congelado -> no pasa la cadencia
+    assert len(juego.entity_manager.balas) == n
 
 
 def test_reiniciar_avance_de_nivel(juego, rm):

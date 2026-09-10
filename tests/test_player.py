@@ -90,10 +90,13 @@ def test_numero_de_balas_por_tipo(jugador, imagen_bala, tipo, n):
     assert len(jugador.disparar(0, imagen_bala)) == n
 
 
-def test_actualizar_pausa_desplaza_cadencia(jugador):
-    jugador.ultimo_disparo = 1000
-    jugador.actualizar_pausa(5000)
-    assert jugador.ultimo_disparo == 6000
+def test_invulnerabilidad_expira_con_el_reloj_de_juego(jugador):
+    jugador.invulnerable = True
+    jugador.tiempo_invulnerable = 3000
+    jugador.update(dt=1 / 60, tiempo_juego=2999)
+    assert jugador.invulnerable is True          # aún no
+    jugador.update(dt=1 / 60, tiempo_juego=3001)
+    assert jugador.invulnerable is False
 
 
 # --- Movimiento ---

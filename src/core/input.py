@@ -58,10 +58,8 @@ class InputHandler:
         return True
 
     def _manejar_teclas_presionadas(self, tecla):
-        # En Game Over el teclado no hace nada: `juego.pausado` se reutiliza como
-        # "congelado" sin fijar `tiempo_pausa`, así que un `reanudar_juego()` aquí
-        # descuadraría todos los temporizadores. La pantalla de Game Over se maneja
-        # solo con el ratón.
+        # En Game Over el teclado no hace nada: la pantalla se maneja solo con el
+        # ratón y `juego.pausado` ya está en True como "congelado".
         if self.juego.estado_game_over:
             return
 

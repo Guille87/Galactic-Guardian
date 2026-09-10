@@ -31,6 +31,8 @@ class UIManager:
             self._dibujar_barra_salud_jefe(pantalla)
 
         self._mostrar_fps(pantalla)
+        if settings.DEBUG:
+            self._mostrar_tiempo_juego(pantalla)
 
     def _dibujar_hud_basico(self, pantalla):
         """Dibuja puntuación y vidas en las esquinas."""
@@ -140,6 +142,12 @@ class UIManager:
         fps = str(int(self.juego.reloj.get_fps()))
         txt = self.fuente_pequena.render(f"FPS: {fps}", True, (100, 100, 100))
         pantalla.blit(txt, (self.juego.pantalla_ancho - txt.get_width() - 10, 5))
+
+    def _mostrar_tiempo_juego(self, pantalla):
+        """Reloj de juego (solo DEBUG): sube jugando, se detiene en pausa."""
+        seg = self.juego.tiempo_juego / 1000
+        txt = self.fuente_pequena.render(f"t: {seg:6.1f} s", True, (100, 100, 100))
+        pantalla.blit(txt, (self.juego.pantalla_ancho - txt.get_width() - 10, 24))
 
     def dibujar_confirmacion_salida(self, pantalla, boton_si, boton_no):
         """Dibuja el cuadro de diálogo de confirmación."""
