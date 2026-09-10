@@ -9,10 +9,15 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 - **Auditoría integral** (Fases 1–4) — estabilidad, rendimiento, arquitectura y
   jugabilidad. Detalle en [`AUDITORIA.md`](AUDITORIA.md).
 - **Repositorio** — licencia MIT, `requirements` saneados, `pyproject.toml`,
-  `.gitattributes`, `.gitignore` acotado.
-- **Tests** — suite `pytest` headless (~77 % de cobertura).
-- **Integración continua** — GitHub Actions (Python 3.11–3.13) + badge de cobertura.
+  `.gitattributes`, `.gitignore` acotado, `CONTRIBUTING.md`.
+- **Tests** — suite `pytest` headless (~83 % de cobertura).
+- **Integración continua** — GitHub Actions (Python 3.11–3.13) + badge de cobertura;
+  `main` protegido.
 - **Documentación** — README, este roadmap, `CHANGELOG.md`.
+- **`v0.1.0`** publicada.
+- **Fase 5 — bugs conocidos** — arreglados todos (menú de opciones, Game Over +
+  teclado, reloj de juego que se pausa de verdad, tirón al cambiar de música,
+  código muerto). Ver `CHANGELOG.md` → `[0.1.1]`.
 
 ## En curso
 
@@ -21,29 +26,9 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Próximo (corto plazo)
 
-- `CONTRIBUTING.md` (guía de contribución + proceso de publicación de versiones).
-- Primer tag **`v0.1.0`** + release en GitHub.
-- **Fase 5 — bugs conocidos** (ver abajo).
+- **`v0.1.1`** + release en GitHub (Fase 5).
 - Adelgazar el "objeto-Dios" `Juego`: que los managers reciban solo lo que usan
   (pendiente de la auditoría, item 14).
-
-## Bugs conocidos (Fase 5)
-
-Todos pre-existentes a la auditoría, no bloqueantes:
-
-- **Opciones — flechas del slider:** las flechas ◄ ► del volumen de música y de
-  efectos saltan al máximo/mínimo de golpe; deberían subir/bajar en pasos (p. ej. 0.10).
-- **Opciones — sin etiquetas:** no hay texto que indique cuál es el slider de música
-  y cuál el de efectos.
-- **Game Over + `Esc`:** pulsar `Esc` en la pantalla de Game Over reanuda la partida
-  con los temporizadores descuadrados (el estado de "congelado" reutiliza la pausa
-  sin fijar su marca de tiempo).
-- **Reloj de juego:** todo el tiempo se mide con `pygame.time.get_ticks()` + ajustes
-  manuales en cada pausa. El arreglo de fondo es un reloj de juego propio que se
-  pausa de verdad y elimina esta clase de bugs (metralleta al pausar, saltos de fase,
-  invulnerabilidad...). Es un refactor transversal.
-- Limpieza de código muerto (`hud._dibujar_atributo`, `hud._dibujar_texto`,
-  `input._manejar_clic_soltado`).
 
 ## Backlog / ideas
 
