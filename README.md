@@ -86,8 +86,8 @@ Más detalle de la arquitectura en [`CLAUDE.md`](CLAUDE.md).
 
 - [`ROADMAP.md`](ROADMAP.md) — qué está hecho y qué viene.
 - [`CHANGELOG.md`](CHANGELOG.md) — historial de versiones.
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — cómo contribuir y publicar versiones.
 - [`AUDITORIA.md`](AUDITORIA.md) — auditoría de estabilidad, rendimiento, arquitectura y jugabilidad.
-- Guía de contribución (`CONTRIBUTING.md`): en preparación.
 
 ## Licencia
 
