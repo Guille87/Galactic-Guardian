@@ -5,8 +5,7 @@ import webbrowser
 import pygame
 import pygame_gui
 
-from src.core import config, settings
-from src.core.updates import ComprobadorActualizaciones
+from src.core import config, settings, updates
 from src.core.version import __version__
 from src.ui.components.button import Boton
 
@@ -81,11 +80,13 @@ class MenuManager:
         self._flecha_pendiente = None
 
         # Aviso de nueva versión (comprobación en segundo plano, best-effort)
-        self.actualizaciones = ComprobadorActualizaciones()
+        self.actualizaciones = updates.ComprobadorActualizaciones()
         self.btn_actualizar = Boton(
-            "Descargar actualización", (255, 170, 0, 160), (0, 0, 0),
+            "Actualizar", (255, 170, 0, 160), (0, 0, 0),
             self.pantalla.get_rect().centerx, 270, 320, 44, 10,
         )
+        self._descarga = None          # updates.DescargaActualizacion en curso
+        self._descarga_fallo = False
 
     def _preparar_musica(self):
         """Usa el AudioManager para gestionar la música del menú."""
@@ -129,8 +130,9 @@ class MenuManager:
                 self.resultado = "SALIR"
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 info = self.actualizaciones.resultado
-                if isinstance(info, dict) and self.btn_actualizar.clic_en_boton(event.pos):
-                    webbrowser.open(info["url"])
+                if isinstance(info, dict) and self._descarga is None \
+                        and self.btn_actualizar.clic_en_boton(event.pos):
+                    self._pulsar_actualizar(info)
                 elif self.btn_jugar.clic_en_boton(event.pos):
                     self.am.detener_musica("skyfire_theme")
                     self.ejecutando = False
@@ -174,16 +176,45 @@ class MenuManager:
         self.slider_musica.set_current_value(self.vol_musica)
         self.slider_efectos.set_current_value(self.vol_efectos)
 
+    def _pulsar_actualizar(self, info):
+        """Botón "Actualizar": descarga+instala si es la versión instalada y hay
+        instalador; si no (o si la descarga ya falló antes) abre la web."""
+        if (updates.puede_autoactualizar() and info.get("instalador_url")
+                and not self._descarga_fallo):
+            self._descarga = updates.DescargaActualizacion(info["instalador_url"])
+            self._descarga.empezar()
+        else:
+            webbrowser.open(info["url"])
+
     def _dibujar_aviso_actualizacion(self):
-        """Banner + botón si la comprobación encontró una versión más nueva."""
+        """Banner de nueva versión: botón, progreso de descarga o error."""
         info = self.actualizaciones.resultado
         if not isinstance(info, dict):
             return
-        texto = self.font_version.render(
-            f"Nueva versión v{info['version']} disponible", True, (255, 220, 120)
-        )
-        self.pantalla.blit(texto, texto.get_rect(center=(300, 235)))
-        self.btn_actualizar.dibujar(self.pantalla, self.font_version)
+
+        d = self._descarga
+        if d is not None and d.terminada:
+            # Descarga lista: lanzar el instalador y salir del juego.
+            updates.lanzar_instalador(d.ruta)
+            self.ejecutando = False
+            self.resultado = "SALIR"
+            return
+        if d is not None and d.error:
+            self._descarga = None
+            self._descarga_fallo = True
+            d = None
+
+        if d is not None:
+            texto = f"Descargando actualización…  {int(d.progreso * 100)}%"
+        elif self._descarga_fallo:
+            texto = "No se pudo descargar — pulsa para abrir la web"
+        else:
+            texto = f"Nueva versión v{info['version']} disponible"
+
+        surf = self.font_version.render(texto, True, (255, 220, 120))
+        self.pantalla.blit(surf, surf.get_rect(center=(300, 235)))
+        if d is None:
+            self.btn_actualizar.dibujar(self.pantalla, self.font_version)
 
     def _inicializar_interfaz_opciones(self):
         """Crea el UIManager y los elementos de la interfaz **una sola vez**.

@@ -29,10 +29,15 @@ para pasar de nivel.
 
 ## Descargar y jugar (Windows)
 
-En la página de [**Releases**](https://github.com/Guille87/Galactic-Guardian/releases)
-descarga el `.zip` `GalacticGuardian-vX.Y.Z-windows.zip`, descomprímelo y ejecuta
-`GalacticGuardian.exe`. No hace falta instalar nada. La configuración y las
-puntuaciones se guardan en `%APPDATA%\GalacticGuardian`.
+En la página de [**Releases**](https://github.com/Guille87/Galactic-Guardian/releases):
+
+- **`GalacticGuardian-vX.Y.Z-setup.exe`** — instalador (sin permisos de administrador).
+  Crea acceso directo y desinstalador, y desde el menú del juego puedes
+  actualizar a nuevas versiones con un clic.
+- **`GalacticGuardian-vX.Y.Z-windows.zip`** — portable: descomprime y ejecuta
+  `GalacticGuardian.exe`.
+
+La configuración y las puntuaciones se guardan en `%APPDATA%\GalacticGuardian`.
 
 ## Ejecutar desde el código
 
