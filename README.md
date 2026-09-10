@@ -28,13 +28,13 @@
 | src/managers/waves.py                 |       60 |        8 |     87% |36, 46-47, 54, 60, 79, 83-84 |
 | src/ui/components/button.py           |       40 |        6 |     85% |     34-39 |
 | src/ui/hud.py                         |      107 |       13 |     88% |85, 158-176 |
-| src/ui/menu.py                        |      235 |       54 |     77% |116-119, 129-130, 137-139, 141, 143, 262, 288, 303-305, 328-332, 361-377, 382-414 |
+| src/ui/menu.py                        |      242 |       54 |     78% |118-121, 131-132, 139-141, 143, 145, 265, 291, 306-308, 327-331, 369-385, 390-422 |
 | src/ui/scoreboard.py                  |       34 |        2 |     94% |     41-42 |
 | src/visual/background.py              |       22 |        2 |     91% |    27, 30 |
 | src/visual/explosions.py              |       20 |        0 |    100% |           |
 | src/visual/flash.py                   |       22 |        0 |    100% |           |
 | src/visual/flash\_constant.py         |       11 |        1 |     91% |        17 |
-| **TOTAL**                             | **1737** |  **269** | **85%** |           |
+| **TOTAL**                             | **1744** |  **269** | **85%** |           |
 
 
 ## Setup coverage badge
