@@ -7,6 +7,11 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-09-10
+
+Refactor interno (cierre del item 14 de la auditoría) y un ajuste de jugabilidad.
+Sin cambios incompatibles.
+
 ### Changed
 
 - Al derrotar al jefe y pasar de nivel ya no desaparece **ninguna** bala en
@@ -116,6 +121,7 @@ puesta a punto del repositorio (licencia, tests, integración continua, document
   los grupos tipados y `groupcollide`).
 - `__init__.py` vacío en la raíz del repositorio.
 
-[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/Guille87/Galactic-Guardian/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/Guille87/Galactic-Guardian/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Guille87/Galactic-Guardian/releases/tag/v0.1.0
