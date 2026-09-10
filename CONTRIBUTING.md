@@ -76,6 +76,14 @@ código 0 si todo va bien. El `.spec` incluye `data/assets/` y los datos de
 `pygame_gui`; si añades otra dependencia que cargue archivos en runtime, hay que
 sumarla ahí (`collect_data_files`).
 
+El instalador (`installer.iss`, Inno Setup 6) se genera a partir de `dist/`:
+
+```bash
+iscc /DVersion=0.1.4 installer.iss   # -> GalacticGuardian-setup.exe
+```
+
+En una Release, `build.yml` compila y sube el `.zip` y el `-setup.exe`.
+
 En la versión compilada, `config.ini` y las puntuaciones se guardan en
 `%APPDATA%\GalacticGuardian` (no junto al `.exe`).
 

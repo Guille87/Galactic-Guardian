@@ -147,16 +147,69 @@ def test_ui_de_opciones_se_reutiliza(menu):
     assert menu.ui_manager is primero
 
 
-def test_aviso_de_actualizacion_abre_el_navegador(menu, monkeypatch):
-    menu.actualizaciones.resultado = {"version": "9.9.9", "url": "http://descarga"}
+def _clic_actualizar(menu):
+    pygame.event.post(pygame.event.Event(
+        pygame.MOUSEBUTTONDOWN, button=1, pos=menu.btn_actualizar.rect.center))
+    menu._menu_principal()
+
+
+def test_actualizar_sin_instalador_abre_el_navegador(menu, monkeypatch):
+    """En desarrollo (no frozen) el botón siempre abre la web."""
+    menu.actualizaciones.resultado = {
+        "version": "9.9.9", "url": "http://descarga", "instalador_url": "http://x/setup.exe",
+    }
+    abierto = []
+    monkeypatch.setattr("src.ui.menu.webbrowser.open", lambda u: abierto.append(u))
+    monkeypatch.setattr("src.core.updates.puede_autoactualizar", lambda: False)
+
+    _clic_actualizar(menu)
+    assert abierto == ["http://descarga"]
+
+
+def test_actualizar_instalado_descarga_y_al_terminar_lanza_y_sale(menu, monkeypatch):
+    menu.actualizaciones.resultado = {
+        "version": "9.9.9", "url": "http://d", "instalador_url": "http://x/setup.exe",
+    }
+    monkeypatch.setattr("src.core.updates.puede_autoactualizar", lambda: True)
+
+    class _DescargaFalsa:
+        def __init__(self, url): self.progreso = 0.5; self.terminada = False; self.error = False; self.ruta = None
+        def empezar(self): pass
+    monkeypatch.setattr("src.core.updates.DescargaActualizacion", _DescargaFalsa)
+
+    lanzado = []
+    monkeypatch.setattr("src.core.updates.lanzar_instalador", lambda r: lanzado.append(r))
+
+    _clic_actualizar(menu)
+    assert isinstance(menu._descarga, _DescargaFalsa)      # descargando
+    menu._menu_principal()                                  # sigue a 50%, no lanza
+    assert not lanzado
+
+    menu._descarga.terminada = True
+    menu._descarga.ruta = "C:/tmp/setup.exe"
+    menu._menu_principal()
+    assert lanzado == ["C:/tmp/setup.exe"]
+    assert menu.ejecutando is False and menu.resultado == "SALIR"
+
+
+def test_actualizar_error_de_descarga_ofrece_la_web(menu, monkeypatch):
+    menu.actualizaciones.resultado = {
+        "version": "9.9.9", "url": "http://d", "instalador_url": "http://x/setup.exe",
+    }
+    monkeypatch.setattr("src.core.updates.puede_autoactualizar", lambda: True)
+
+    class _DescargaFalsa:
+        def __init__(self, url): self.progreso = 0.0; self.terminada = False; self.error = True; self.ruta = None
+        def empezar(self): pass
+    monkeypatch.setattr("src.core.updates.DescargaActualizacion", _DescargaFalsa)
     abierto = []
     monkeypatch.setattr("src.ui.menu.webbrowser.open", lambda u: abierto.append(u))
 
-    pos = menu.btn_actualizar.rect.center
-    pygame.event.post(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=pos))
-    menu._menu_principal()
+    _clic_actualizar(menu)      # arranca -> _dibujar detecta error -> _descarga_fallo
+    assert menu._descarga is None and menu._descarga_fallo is True
 
-    assert abierto == ["http://descarga"]
+    _clic_actualizar(menu)      # ahora el botón abre la web
+    assert abierto == ["http://d"]
 
 
 def test_sin_actualizacion_el_boton_no_hace_nada(menu, monkeypatch):

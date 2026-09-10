@@ -9,11 +9,19 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ### Added
 
-- Aviso de nueva versión: al abrir el menú se comprueba en segundo plano la
-  última Release de GitHub y, si hay una más nueva, el menú muestra un banner con
-  un botón que abre la página de descargas. Best-effort: silencioso sin red, una
-  consulta al día como mucho (cacheada). Se puede desactivar con la variable de
-  entorno `GG_SIN_COMPROBAR_ACTUALIZACIONES`.
+- **Actualización desde el menú.** Al abrir el menú se comprueba en segundo plano
+  la última Release de GitHub. Si hay una más nueva, aparece un banner con el
+  botón **Actualizar**:
+  - En la versión instalada: descarga el instalador y lo ejecuta en silencio; el
+    juego se cierra, se actualiza y se vuelve a abrir solo.
+  - Ejecutando desde el código (o si no hay instalador): abre la página de
+    descargas en el navegador.
+  Best-effort: silencioso sin red, una consulta al día como mucho (cacheada).
+  Se desactiva con la variable de entorno `GG_SIN_COMPROBAR_ACTUALIZACIONES`.
+- **Instalador de Windows.** `build.yml` genera también
+  `GalacticGuardian-vX.Y.Z-setup.exe` (Inno Setup, instalación por usuario sin
+  UAC en `%LOCALAPPDATA%\Programs`, acceso directo y desinstalador) además del
+  `.zip` portable.
 
 ## [0.1.3] - 2026-09-10
 

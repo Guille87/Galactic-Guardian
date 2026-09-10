@@ -15,6 +15,7 @@ __pycache__/
 # Datos generados en tiempo de ejecución (se recrean solos)
 /config.ini
 /data/saves/
+/comprobacion-actualizacion.json
 
 # Tests y cobertura
 .pytest_cache/
@@ -34,6 +35,10 @@ build/
 # ... salvo el del juego, que se versiona (build reproducible)
 *.spec
 !GalacticGuardian.spec
+# Artefactos del build (el .iss sí se versiona)
+GalacticGuardian-setup.exe
+GalacticGuardian-*-windows.zip
+GalacticGuardian-*-setup.exe
 
 # Variables de entorno
 .env
