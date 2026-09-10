@@ -45,21 +45,21 @@ EXPLOSIONES = {f"explosion_{i}": f"imagenes/explosion/Explosion1_{i}.png" for i 
 
 # --- LÓGICA DE PERSISTENCIA (OPCIONES DE USUARIO) ---
 
-def guardar_configuracion(volumen_musica, volumen_efectos):
+def guardar_configuracion(volumen_musica, volumen_efectos, ruta=None):
     config = configparser.ConfigParser()
     config['VOLUMEN'] = {
         'musica': str(volumen_musica),
         'efectos': str(volumen_efectos)
     }
-    with open(CONFIG_FILE, 'w') as configfile:
+    with open(ruta or CONFIG_FILE, 'w') as configfile:
         config.write(configfile)
 
 
-def cargar_configuracion():
+def cargar_configuracion(ruta=None):
     config = configparser.ConfigParser()
 
     try:
-        config.read(CONFIG_FILE)
+        config.read(ruta or CONFIG_FILE)
 
         volumen_musica = float(config.get('VOLUMEN', 'musica', fallback=0.5))
         volumen_efectos = float(config.get('VOLUMEN', 'efectos', fallback=0.5))
