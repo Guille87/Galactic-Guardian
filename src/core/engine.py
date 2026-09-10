@@ -48,17 +48,7 @@ class Juego:
         self.MIN_TIEMPO_GENERACION = settings.GEN_MIN_INICIAL
         self.MAX_TIEMPO_GENERACION = settings.GEN_MAX_INICIAL
 
-        # 3. Managers (El "Cerebro" distribuido)
-        self.audio_manager = audio_manager  # Compartido con el menú (inyectado)
-        self.entity_manager = EntityManager(self)
-        self.effect_manager = EffectManager(self)
-        self.ui_manager = UIManager(self)
-        self.render_manager = RenderManager(self)
-        self.wave_manager = WaveManager(resource_manager, self.audio_manager, self.pantalla_ancho, self.pantalla_alto)
-        self.input_handler = InputHandler(self)
-        self.collision_manager = CollisionManager(self)
-
-        # 4. Entidades Principales
+        # 3. Entidades principales y estado compartido por los managers
         self.background = ScrollingBackground(
             self.rm.get_image("imagen_fondo1"),
             self.rm.get_image("imagen_fondo2"),
@@ -69,6 +59,23 @@ class Juego:
             self.pantalla_ancho,
             self.pantalla_alto,
         )
+        # {enemigo: ts del último contacto}. WeakKeyDictionary: si el enemigo se
+        # destruye, su entrada desaparece sola (además de purgarse al morir/salir).
+        # Se vacía con .clear() al reiniciar, nunca se reasigna: los managers
+        # guardan la referencia.
+        self.enemigos_golpeados = weakref.WeakKeyDictionary()
+
+        # 4. Managers (El "Cerebro" distribuido)
+        self.audio_manager = audio_manager  # Compartido con el menú (inyectado)
+        self.entity_manager = EntityManager(
+            self.rm, self.pantalla_ancho, self.pantalla_alto, self.enemigos_golpeados
+        )
+        self.effect_manager = EffectManager(self.rm, self.entity_manager, self.jugador)
+        self.ui_manager = UIManager(self)
+        self.render_manager = RenderManager(self)
+        self.wave_manager = WaveManager(resource_manager, self.audio_manager, self.pantalla_ancho, self.pantalla_alto)
+        self.input_handler = InputHandler(self)
+        self.collision_manager = CollisionManager(self)
 
         # 5. Control de Tiempos y Flujo
         # Reloj de juego en ms. Solo avanza dentro de actualizar(dt), así que en
@@ -77,9 +84,6 @@ class Juego:
         self.tiempo_juego = 0.0
         self.inicio_juego = 0.0            # "tiempo 0" del nivel actual
         self.tiempo_proximo_enemigo = 0
-        # {enemigo: ts del último contacto}. WeakKeyDictionary: si el enemigo se
-        # destruye, su entrada desaparece sola (además de purgarse al morir/salir).
-        self.enemigos_golpeados = weakref.WeakKeyDictionary()
 
         # 6. Inicialización de Estado de Juego
         self.audio_manager.reproducir_musica("rain_of_lasers")
@@ -196,7 +200,7 @@ class Juego:
         self._gestionar_generacion_enemigos()
 
         # 2. Física y Colisiones
-        self.entity_manager.actualizar(dt)
+        self.entity_manager.actualizar(dt, self.tiempo_juego)
         self.collision_manager.actualizar()
 
         # 2b. Transición diferida: si el jefe murió durante la resolución de

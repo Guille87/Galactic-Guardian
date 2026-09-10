@@ -47,14 +47,17 @@ Exit routing: the window's X button → `"SALIR"` (app quits after `pygame.quit(
 
 ### The `Juego` "god object" + manager pattern
 
-`Juego` holds all match state (score, level, `pausado`, `estado_game_over`, `pidiendo_nombre`, sprite groups, difficulty timers) and delegates behavior to managers, each of which takes `juego` (or the resource/audio managers) in its constructor and reaches back into it for shared state:
+`Juego` holds all match state (score, level, `pausado`, `estado_game_over`, `pidiendo_nombre`, sprite groups, difficulty timers) and delegates behavior to managers. Audit item 14 (shrinking the god object) is in progress: the **mechanical** managers now take explicit collaborators, the **view/controller** ones still take `juego` by design.
+
+- Explicit deps: `WaveManager(rm, am, ancho, alto)`, `EntityManager(rm, ancho, alto, enemigos_golpeados)`, `EffectManager(rm, entity_manager, jugador)`. They hold no `juego` reference. This works because the identities they capture (`jugador`, `enemigos_golpeados`) are stable across `reiniciar_juego` (reset in place / `.clear()`ed, never rebound).
+- Still take `juego`: `InputHandler`, `RenderManager`, `UIManager` (the view + controller layer — they legitimately observe the whole match) and `CollisionManager` (pending 14c: split collision detection from match-rule mutation).
 
 - **`InputHandler`** (`src/core/input.py`) — translates pygame events into `Juego` method calls; owns the pause/game-over/name-entry input modes and the blocking quit-confirmation dialog (which now `tick(30)`s to avoid a CPU-spin). `manejar_eventos()` returns `False` to end the game loop; `QUIT` sets `salir_del_juego()` rather than killing the process. Continuous fire is a flag (`juego.disparando`) polled each frame.
-- **`EntityManager`** (`src/managers/entities.py`) — owns five `pygame.sprite.Group`s: `balas`, `balas_enemigo`, `enemigos`, `items`, `efectos` (explosions + destellos). `actualizar(dt)` updates every group, drives enemy/boss auto-fire, and `kill()`s off-screen entities. There is **no `juego.all_sprites`** anymore; the player is a lone `Sprite` held on `juego.jugador`.
+- **`EntityManager`** (`src/managers/entities.py`) — owns five `pygame.sprite.Group`s: `balas`, `balas_enemigo`, `enemigos`, `items`, `efectos` (explosions + destellos). `actualizar(dt, tiempo_juego)` updates every group, drives enemy/boss auto-fire (needs the clock for their cadences), and `kill()`s off-screen entities. There is **no `juego.all_sprites`** anymore; the player is a lone `Sprite` held on `juego.jugador`.
 - **`CollisionManager`** (`src/managers/collision.py`) — resolution via `pygame.sprite.groupcollide` / `spritecollide`. Bullets↔ships use `collide_circle` (needs `sprite.radius` — the attribute is `radius`, not `radio`); body contact and item pickup use rect collision (`CONTACTO_COOLDOWN_MS` per-enemy cooldown via `juego.enemigos_golpeados`, a `WeakKeyDictionary` also purged explicitly on death/despawn). `_eliminar_enemigo` guards against double-processing when several bullets kill one enemy in a frame. On boss death it sets `juego.pendiente_reinicio = True`; the actual `reiniciar_juego()` runs at the end of `Juego.actualizar()` (never mid-collision).
 - **`WaveManager`** (`src/managers/waves.py`) — time-based spawn director. Phases switch at fixed elapsed-ms thresholds (`TIEMPO_FASE_2/3/JEFE`); at the boss phase it swaps music and waits before spawning `Jefe`. Requests pre-scaled images from `ResourceManager`.
 - **`RenderManager`** (`src/managers/render.py`) — orchestrates all per-frame drawing. Real pause takes a fast path: on the first paused frame it snapshots `pantalla`, multiplies it to grey once (`_frame_pausa`), and just re-blits that + text + buttons until unpaused (any active-game render resets `_frame_pausa`). Game Over / name-entry set `juego.pausado = True` too but are excluded from that path and get their own overlay. Overlay buttons (`boton_reintentar`, `boton_salir_post`, `boton_opciones`, `boton_salir`) are created **once**, lazily, and cached on `juego`; `InputHandler` reads those attributes. Fonts are built in `__init__`. `Boton` caches its own rendered `Surface`.
-- **`EffectManager`** (`src/managers/effects.py`) — explosions and screen flashes (`src/visual/`).
+- **`EffectManager`** (`src/managers/effects.py`) — explosions and screen flashes (`src/visual/`); adds them to `entity_manager.efectos`.
 - **`UIManager`** (`src/ui/hud.py`) — HUD and overlay text/box drawing.
 - **`AudioManager`** (`src/core/audio.py`) — music/effect playback and volume. **One instance**, built in `main.py` and injected into both `MenuManager` and `Juego`. Music: one track at a time via `pygame.mixer.music`, loaded from the in-RAM OGG bytes (`get_music_data` → `BytesIO`) so a track switch never stalls the main loop. `reproducir_musica(nombre)` is idempotent (no-ops if `nombre == pista_actual`) and fades the new track **in**; `detener_musica`/`detener_toda_la_musica` do a hard `music.stop()` — **not `fadeout()`**, because a pending fadeout makes the next `music.load()` block until it finishes (~200-300 ms hitch). Effect names in code (`"disparo"`, `"golpe"`, `"item"`) are aliases over the `SONIDOS` keys (`laser_gun`, `hit`, `item_take`). `main.py` calls `pygame.mixer.pre_init(44100,-16,2,512)` before `pygame.init()` and bumps to 16 channels.
 
@@ -82,7 +85,7 @@ Projectiles: `src/entities/base/projectile_base.py` (`Proyectil`, which mixes in
 
 ### Still open
 
-The "god object": managers still take the whole `juego` (audit item 14). Balance values in `settings.py` are first-pass and want playtesting. See `AUDITORIA.md`.
+The "god object": item 14 in progress — Entity/Effect/Wave managers now take explicit deps; `CollisionManager` still writes `juego` state directly (14c). Balance values in `settings.py` are first-pass and want playtesting. See `AUDITORIA.md`.
 
 ### Directory layout
 

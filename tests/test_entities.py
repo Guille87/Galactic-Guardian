@@ -33,7 +33,7 @@ def test_culling_fuera_de_pantalla(juego, rm):
     e = _enemigo(rm)
     em.agregar_enemigo(e)
     e.rect.y = -500                       # fuera por arriba
-    em.actualizar(DT60)
+    em.actualizar(DT60, juego.tiempo_juego)
     assert e not in em.enemigos
 
 
@@ -43,7 +43,7 @@ def test_culling_purga_enemigos_golpeados(juego, rm):
     em.agregar_enemigo(e)
     juego.enemigos_golpeados[e] = 123
     e.rect.y = -500
-    em.actualizar(DT60)
+    em.actualizar(DT60, juego.tiempo_juego)
     assert e not in juego.enemigos_golpeados
 
 

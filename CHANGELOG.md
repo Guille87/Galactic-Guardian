@@ -11,9 +11,11 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 - Al derrotar al jefe y pasar de nivel ya no desaparece **ninguna** bala en
   vuelo (antes solo se conservaban las del jefe; ahora también las del jugador).
-- Interno: al reiniciar una partida el jugador se restablece "in situ" en vez de
-  recrearse (primer paso para reducir el objeto-Dios `Juego`, item 14 de la
-  auditoría). Sin cambios visibles.
+- Interno (item 14 de la auditoría, reducir el objeto-Dios `Juego`): al reiniciar
+  una partida el jugador se restablece "in situ" en vez de recrearse; los
+  managers `EntityManager` y `EffectManager` reciben sus dependencias explícitas
+  (recursos, dimensiones, jugador) en vez del `Juego` entero. Sin cambios
+  visibles.
 
 ## [0.1.1] - 2026-09-10
 

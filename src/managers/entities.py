@@ -6,8 +6,15 @@ from src.entities.enemies import EnemigoTipo2, EnemigoTipo3, Jefe
 class EntityManager:
     """Dueño de todos los grupos de sprites de la partida."""
 
-    def __init__(self, juego):
-        self.juego = juego
+    def __init__(self, resource_manager, pantalla_ancho, pantalla_alto, enemigos_golpeados):
+        self.rm = resource_manager
+        self.ancho = pantalla_ancho
+        self.alto = pantalla_alto
+        # Referencia (no copia) al registro de cooldown de contacto del Juego. Se
+        # vacía con .clear() al reiniciar, nunca se reasigna, así que la
+        # referencia sigue siendo válida toda la partida.
+        self.enemigos_golpeados = enemigos_golpeados
+
         self.balas = pygame.sprite.Group()          # balas del jugador
         self.balas_enemigo = pygame.sprite.Group()
         self.enemigos = pygame.sprite.Group()
@@ -28,18 +35,20 @@ class EntityManager:
             self.balas_enemigo.add(bala)
 
     # --- Ciclo por frame ---
-    def actualizar(self, dt):
-        """Actualiza el movimiento y la lógica de todas las entidades."""
+    def actualizar(self, dt, tiempo_juego):
+        """Actualiza el movimiento y la lógica de todas las entidades.
+
+        `tiempo_juego` es el reloj de juego en ms (se congela en pausa); lo usan
+        las cadencias de disparo de enemigos y jefe.
+        """
         self.balas.update(dt)
         self.balas_enemigo.update(dt)
-        self._actualizar_enemigos(dt)
+        self._actualizar_enemigos(dt, tiempo_juego)
         self.items.update(dt)
         self.efectos.update(dt)
         self._limpiar_entidades_fuera()
 
-    def _actualizar_enemigos(self, dt):
-        ahora = self.juego.tiempo_juego
-
+    def _actualizar_enemigos(self, dt, ahora):
         for enemigo in self.enemigos:
             enemigo.movimiento_enemigo(dt)
             enemigo.update(dt)
@@ -47,24 +56,24 @@ class EntityManager:
             # Disparo automático de los tipos 2 y 3
             if isinstance(enemigo, (EnemigoTipo2, EnemigoTipo3)):
                 key_bala = "bala_enemigo" if isinstance(enemigo, EnemigoTipo2) else "bala_enemigo2"
-                self.agregar_bala_enemigo(enemigo.disparo_enemigo(ahora, self.juego.rm, key_bala))
+                self.agregar_bala_enemigo(enemigo.disparo_enemigo(ahora, self.rm, key_bala))
 
             # Disparo del jefe (dos cadencias)
             if isinstance(enemigo, Jefe):
-                self.agregar_bala_enemigo(enemigo.disparo_jefe(ahora, self.juego.rm, "bala_enemigo2"))
-                self.agregar_bala_enemigo(enemigo.disparo_rapido(ahora, self.juego.rm, "bala_enemigo"))
+                self.agregar_bala_enemigo(enemigo.disparo_jefe(ahora, self.rm, "bala_enemigo2"))
+                self.agregar_bala_enemigo(enemigo.disparo_rapido(ahora, self.rm, "bala_enemigo"))
 
     def _limpiar_entidades_fuera(self):
         """Descarta enemigos y balas que se han salido de la pantalla."""
-        alto = self.juego.pantalla_alto
-        ancho = self.juego.pantalla_ancho
+        alto = self.alto
+        ancho = self.ancho
 
         def esta_fuera(rect):
             return rect.bottom < 0 or rect.top > alto or rect.right < 0 or rect.left > ancho
 
         for enemigo in list(self.enemigos):
             if esta_fuera(enemigo.rect):
-                self.juego.enemigos_golpeados.pop(enemigo, None)
+                self.enemigos_golpeados.pop(enemigo, None)
                 enemigo.kill()
 
         for bala in list(self.balas):
