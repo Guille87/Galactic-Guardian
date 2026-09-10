@@ -4,7 +4,7 @@
 
 | Name                                  |    Stmts |     Miss |   Cover |   Missing |
 |-------------------------------------- | -------: | -------: | ------: | --------: |
-| main.py                               |       41 |       23 |     44% |     32-75 |
+| main.py                               |       71 |       51 |     28% |38-67, 71-119 |
 | src/core/audio.py                     |       40 |        0 |    100% |           |
 | src/core/config.py                    |       23 |        0 |    100% |           |
 | src/core/engine.py                    |      190 |       30 |     84% |222-223, 259, 265-277, 291-295, 303-328 |
@@ -33,7 +33,7 @@
 | src/visual/explosions.py              |       20 |        0 |    100% |           |
 | src/visual/flash.py                   |       22 |        0 |    100% |           |
 | src/visual/flash\_constant.py         |       11 |        1 |     91% |        17 |
-| **TOTAL**                             | **1546** |  **240** | **84%** |           |
+| **TOTAL**                             | **1576** |  **268** | **83%** |           |
 
 
 ## Setup coverage badge
