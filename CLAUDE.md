@@ -76,6 +76,8 @@ Each frame: `input_handler.manejar_eventos()` → if `pausado`, draw only → el
 
 **Restart (`reiniciar_juego`)**: two paths. Level advance (`jefe_derrotado`) keeps the same `Jugador` and its upgrades, bumps `nivel`, tightens spawn cadence, and `EntityManager.vaciar_todo(avance_nivel=True)` clears only enemies + items — **every projectile (player and enemy bullets) and effect already in flight survives** so nothing pops out on boss death. Full restart resets the `Jugador` **in place** via `Jugador.reiniciar(ancho, alto)` (same instance — managers may hold the reference; audit item 14) and `vaciar_todo()` clears everything. `enemigos_golpeados` is `.clear()`ed, never reassigned, for the same reason.
 
+`MenuManager` runs a background update check on entry: `src/core/updates.py` (`ComprobadorActualizaciones`) hits the GitHub "latest release" API in a daemon thread, compares `tag_name` to `__version__`, caches the answer in `%APPDATA%` for a day, and is fully best-effort (any failure → silent, no banner). If a newer version exists, `_menu_principal` shows a banner + `btn_actualizar` that opens the releases page in a browser (applying the update itself is a later phase). Env var `GG_SIN_COMPROBAR_ACTUALIZACIONES` disables it (set in `tests/conftest.py`).
+
 The `pygame_gui` options screen uses the 0.6+ event API (`event.type == pygame_gui.UI_BUTTON_PRESSED` / `UI_HORIZONTAL_SLIDER_MOVED`), not the old `USEREVENT` + `event.user_type`. `MenuManager` keeps a single `self.clock` (only the outer loop `tick`s) and a single `self.ui_manager`, built lazily once by `_inicializar_interfaz_opciones` and re-synced on each entry by `_abrir_opciones`. Volume handling for **both** sliders: dragging the bar is free (`UI_HORIZONTAL_SLIDER_MOVED` → `_clamp_volumen`, just `[0,1]` + round to 2 dp); an ◄ ► arrow click sets `_flecha_pendiente = (destino, sube)` on `UI_BUTTON_PRESSED`, and the `MOVED` `pygame_gui` fires right after is snapped to the multiple of `VOLUMEN_PASO` just above/below the *previous* value (`_paso_volumen`, so `0.27` → `0.3`/`0.2`). Every applied value is pushed back with `set_current_value` — a value outside `[0,1]`, even by `1e-17`, makes `pygame_gui` silently freeze the slider. After `ui_manager.update`, `button_held_repeat_acc` is zeroed on any held arrow so pygame_gui's hold-to-fast-scroll never kicks in (it made the volume visibly overshoot before settling).
 
 ### Entities
@@ -95,11 +97,11 @@ The "god object": audit item 14 is largely done — every mechanical manager (Wa
 ### Directory layout
 
 ```
-src/core/      engine, config, settings, resources, audio, input
+src/core/      engine, config, settings, resources, audio, input, paths, version, updates
 src/managers/  entities, collision, waves, render, effects
 src/entities/  player, enemies, bullet, bullet_enemy, items, base/ (projectile_base, movimiento)
 src/ui/        menu, hud, scoreboard, components/button.py
 src/visual/    background (parallax scroll), explosions, flash, flash_constant
 tests/         suite pytest headless (conftest.py + test_*.py, uno por módulo)
-.github/       workflows/ci.yml, dependabot.yml
+.github/       workflows/ (ci.yml, build.yml), dependabot.yml
 ```

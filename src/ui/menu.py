@@ -1,10 +1,12 @@
 import math
 import time
+import webbrowser
 
 import pygame
 import pygame_gui
 
 from src.core import config, settings
+from src.core.updates import ComprobadorActualizaciones
 from src.core.version import __version__
 from src.ui.components.button import Boton
 
@@ -78,6 +80,13 @@ class MenuManager:
         # escalón en vez de aplicarse tal cual.
         self._flecha_pendiente = None
 
+        # Aviso de nueva versión (comprobación en segundo plano, best-effort)
+        self.actualizaciones = ComprobadorActualizaciones()
+        self.btn_actualizar = Boton(
+            "Descargar actualización", (255, 170, 0, 160), (0, 0, 0),
+            self.pantalla.get_rect().centerx, 270, 320, 44, 10,
+        )
+
     def _preparar_musica(self):
         """Usa el AudioManager para gestionar la música del menú."""
         self.am.reproducir_musica("skyfire_theme")
@@ -96,6 +105,7 @@ class MenuManager:
         self.resultado = None
 
         self._preparar_musica()  # Solo activamos la música aquí, al lanzar el menú completo
+        self.actualizaciones.comprobar_en_segundo_plano()  # no-op si ya se lanzó
 
         while self.ejecutando:
             time_delta = self.clock.tick(settings.FPS) / 1000.0
@@ -118,7 +128,10 @@ class MenuManager:
                 self.ejecutando = False
                 self.resultado = "SALIR"
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if self.btn_jugar.clic_en_boton(event.pos):
+                info = self.actualizaciones.resultado
+                if isinstance(info, dict) and self.btn_actualizar.clic_en_boton(event.pos):
+                    webbrowser.open(info["url"])
+                elif self.btn_jugar.clic_en_boton(event.pos):
                     self.am.detener_musica("skyfire_theme")
                     self.ejecutando = False
                     self.resultado = "JUGAR"
@@ -131,6 +144,8 @@ class MenuManager:
         self.pantalla.blit(fondo, (0, 0))
         titulo = self.font_titulo.render("Galactic Guardian", True, (255, 255, 255))
         self.pantalla.blit(titulo, titulo.get_rect(center=(300, 150)))
+
+        self._dibujar_aviso_actualizacion()
 
         self.btn_jugar.dibujar(self.pantalla, self.font_estandar)
         self.btn_opciones.dibujar(self.pantalla, self.font_estandar)
@@ -158,6 +173,17 @@ class MenuManager:
             self._inicializar_interfaz_opciones()
         self.slider_musica.set_current_value(self.vol_musica)
         self.slider_efectos.set_current_value(self.vol_efectos)
+
+    def _dibujar_aviso_actualizacion(self):
+        """Banner + botón si la comprobación encontró una versión más nueva."""
+        info = self.actualizaciones.resultado
+        if not isinstance(info, dict):
+            return
+        texto = self.font_version.render(
+            f"Nueva versión v{info['version']} disponible", True, (255, 220, 120)
+        )
+        self.pantalla.blit(texto, texto.get_rect(center=(300, 235)))
+        self.btn_actualizar.dibujar(self.pantalla, self.font_version)
 
     def _inicializar_interfaz_opciones(self):
         """Crea el UIManager y los elementos de la interfaz **una sola vez**.

@@ -147,6 +147,30 @@ def test_ui_de_opciones_se_reutiliza(menu):
     assert menu.ui_manager is primero
 
 
+def test_aviso_de_actualizacion_abre_el_navegador(menu, monkeypatch):
+    menu.actualizaciones.resultado = {"version": "9.9.9", "url": "http://descarga"}
+    abierto = []
+    monkeypatch.setattr("src.ui.menu.webbrowser.open", lambda u: abierto.append(u))
+
+    pos = menu.btn_actualizar.rect.center
+    pygame.event.post(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=pos))
+    menu._menu_principal()
+
+    assert abierto == ["http://descarga"]
+
+
+def test_sin_actualizacion_el_boton_no_hace_nada(menu, monkeypatch):
+    menu.actualizaciones.resultado = False        # al día
+    abierto = []
+    monkeypatch.setattr("src.ui.menu.webbrowser.open", lambda u: abierto.append(u))
+
+    pos = menu.btn_actualizar.rect.center
+    pygame.event.post(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=pos))
+    menu._menu_principal()
+
+    assert abierto == []
+
+
 def test_ejecutar_reinicia_su_estado(menu):
     menu.estado = "OPCIONES"
     menu.ejecutando = False
