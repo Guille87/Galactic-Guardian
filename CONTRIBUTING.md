@@ -55,6 +55,30 @@ El patrón completo está en [CLAUDE.md](CLAUDE.md). En resumen:
 
 Todo cambio de lógica viene con su test.
 
+## Compilar un ejecutable
+
+El juego se empaqueta con **PyInstaller** en modo carpeta (Windows):
+
+```bash
+pip install -r requirements-build.txt
+pyinstaller GalacticGuardian.spec --noconfirm --clean
+```
+
+Genera `dist/GalacticGuardian/` (`GalacticGuardian.exe` + `_internal/`). Para
+verificar el build sin abrir ventana:
+
+```bash
+dist/GalacticGuardian/GalacticGuardian.exe --smoke
+```
+
+Carga todos los recursos, hace unos frames de menú y de partida y sale con
+código 0 si todo va bien. El `.spec` incluye `data/assets/` y los datos de
+`pygame_gui`; si añades otra dependencia que cargue archivos en runtime, hay que
+sumarla ahí (`collect_data_files`).
+
+En la versión compilada, `config.ini` y las puntuaciones se guardan en
+`%APPDATA%\GalacticGuardian` (no junto al `.exe`).
+
 ## Publicar una versión
 
 El proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/): `MAJOR`
@@ -75,5 +99,5 @@ para correcciones.
 
 4. Crea la *Release* en GitHub desde el tag, con las notas del CHANGELOG.
 
-> El empaquetado y la publicación del ejecutable (PyInstaller / itch.io) están en
-> el [ROADMAP](ROADMAP.md); todavía no hay workflow de release que genere binarios.
+> Adjuntar el `.zip` del ejecutable a la Release todavía es manual (compílalo como
+> arriba y súbelo). El workflow que lo hace al etiquetar está en el [ROADMAP](ROADMAP.md).

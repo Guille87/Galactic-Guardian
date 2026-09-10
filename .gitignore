@@ -31,7 +31,9 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+# ... salvo el del juego, que se versiona (build reproducible)
 *.spec
+!GalacticGuardian.spec
 
 # Variables de entorno
 .env
