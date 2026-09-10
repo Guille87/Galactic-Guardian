@@ -34,6 +34,9 @@ TIEMPO_ESPERA_JEFE = 5000    # margen tras cambiar la música antes de que apare
 TIEMPO_ESCALA_NIVEL = 0.12
 TIEMPO_ESCALA_SUELO = 0.6
 
+# --- Menú de opciones ---
+VOLUMEN_PASO = 0.1  # cuánto sube/baja el volumen con las flechas del slider
+
 # --- Jugador ---
 JUGADOR_INVULNERABLE_MS = 3000
 CONTACTO_COOLDOWN_MS = 2000  # daño por contacto cuerpo a cuerpo (por enemigo)

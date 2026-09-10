@@ -136,31 +136,10 @@ class UIManager:
             )
             pantalla.blit(txt_hp, (x, y + 16))
 
-    def _dibujar_atributo(self, pantalla, nombre, valor, maximo, pos, color):
-        texto = self.fuente_pequena.render(f"{nombre}: {valor}", True, (255, 255, 255))
-        pantalla.blit(texto, pos)
-
-        ancho_barra = 100
-        incremento = ancho_barra / float(maximo)
-
-        # Barra de fondo/borde
-        pygame.draw.rect(pantalla, (255, 255, 255), (pos[0], pos[1] + 20, ancho_barra, 10), 1)
-        # Relleno
-        pygame.draw.rect(pantalla, color, (pos[0], pos[1] + 20, valor * incremento, 10))
-
-        # Divisiones visuales
-        for i in range(int(maximo) + 1):
-            x = pos[0] + i * incremento
-            pygame.draw.line(pantalla, (255, 255, 255), (x, pos[1] + 21), (x, pos[1] + 29), 1)
-
     def _mostrar_fps(self, pantalla):
         fps = str(int(self.juego.reloj.get_fps()))
         txt = self.fuente_pequena.render(f"FPS: {fps}", True, (100, 100, 100))
         pantalla.blit(txt, (self.juego.pantalla_ancho - txt.get_width() - 10, 5))
-
-    def _dibujar_texto(self, pantalla, texto, pos, color):
-        surface = self.fuente_pequena.render(texto, True, color)
-        pantalla.blit(surface, pos)
 
     def dibujar_confirmacion_salida(self, pantalla, boton_si, boton_no):
         """Dibuja el cuadro de diálogo de confirmación."""

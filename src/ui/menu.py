@@ -105,14 +105,24 @@ class MenuManager:
         """Crea el UIManager y los elementos de la interfaz solo una vez."""
         self.ui_manager = pygame_gui.UIManager((settings.ANCHO, settings.ALTO))
 
-        # Sliders
+        # Etiquetas
+        pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect((50, 120), (200, 24)), text="Música", manager=self.ui_manager
+        )
+        pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect((50, 220), (200, 24)), text="Efectos", manager=self.ui_manager
+        )
+
+        # Sliders (click_increment: las flechas ◄ ► mueven el volumen de poco en poco)
         self.slider_musica = pygame_gui.elements.UIHorizontalSlider(
             relative_rect=pygame.Rect((50, 150), (500, 50)),
-            start_value=self.vol_musica, value_range=(0, 1), manager=self.ui_manager
+            start_value=self.vol_musica, value_range=(0, 1),
+            click_increment=settings.VOLUMEN_PASO, manager=self.ui_manager
         )
         self.slider_efectos = pygame_gui.elements.UIHorizontalSlider(
             relative_rect=pygame.Rect((50, 250), (500, 50)),
-            start_value=self.vol_efectos, value_range=(0, 1), manager=self.ui_manager
+            start_value=self.vol_efectos, value_range=(0, 1),
+            click_increment=settings.VOLUMEN_PASO, manager=self.ui_manager
         )
 
         # Botones
@@ -124,15 +134,24 @@ class MenuManager:
         )
         self.opciones_cargadas = True
 
-    def _feedback_sonoro_efectos(self):
-        """Reproduce un sonido de prueba al mover el slider de efectos (con anti-spam)."""
+    def _feedback_sonoro_efectos(self, reiniciar=False):
+        """Sonido de prueba al ajustar el volumen de efectos.
+
+        Al arrastrar el slider llegan muchos eventos seguidos, así que se deja
+        terminar el sonido antes de repetirlo. Con las flechas (`reiniciar=True`)
+        cada pulsación corta y relanza el sonido para oír el volumen nuevo.
+        """
+        sonido = self.rm.get_sound("laser_gun")
+        if not sonido:
+            return
         ahora = time.time()
-        if not self.sonido_reproduciendose or ahora >= self.tiempo_final_reproduccion:
-            sonido_test = self.rm.get_sound("laser_gun")
-            if sonido_test:
-                self.sonido_reproduciendose = True
-                sonido_test.play()
-                self.tiempo_final_reproduccion = ahora + sonido_test.get_length()
+        if reiniciar:
+            sonido.stop()
+        elif self.sonido_reproduciendose and ahora < self.tiempo_final_reproduccion:
+            return
+        self.sonido_reproduciendose = True
+        sonido.play()
+        self.tiempo_final_reproduccion = ahora + sonido.get_length()
 
     def _menu_opciones(self, time_delta):
         """Lógica de la pantalla de opciones usando pygame_gui."""
@@ -159,7 +178,13 @@ class MenuManager:
                     self._feedback_sonoro_efectos()
 
             elif event.type == pygame_gui.UI_BUTTON_PRESSED:
-                if event.ui_element == self.btn_guardar:
+                if event.ui_element in (self.slider_efectos.left_button, self.slider_efectos.right_button):
+                    # Flecha del slider de efectos: relanzar el sonido de prueba
+                    # para oír el volumen tras el paso que se acaba de aplicar.
+                    self.vol_efectos = self.slider_efectos.get_current_value()
+                    self.am.actualizar_volumen_efectos(self.vol_efectos)
+                    self._feedback_sonoro_efectos(reiniciar=True)
+                elif event.ui_element == self.btn_guardar:
                     config.guardar_configuracion(self.vol_musica, self.vol_efectos)
                     self.opciones_cargadas = False  # Limpiar para la próxima vez
                     self.estado = "PRINCIPAL"
