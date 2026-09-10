@@ -1,9 +1,11 @@
 import pygame
 
+from src.core import settings
 from .bullet import Bala
+from .base.movimiento import MovimientoSubpixel
 
 
-class Jugador(pygame.sprite.Sprite):
+class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
     # Constantes de clase para configuración (Mantenible)
     CONFIG = {
         "tamano": (50, 50),
@@ -14,11 +16,10 @@ class Jugador(pygame.sprite.Sprite):
         "danio_max": 3
     }
 
-    def __init__(self, ruta_imagen, pantalla_ancho, pantalla_alto, grupo_sprites):
-        super().__init__(grupo_sprites)
-        # 1. Configuración de Imagen (Recibimos la ruta, pero cargamos vía Pygame o pasamos la superficie)
-        # Nota: Idealmente el ResourceManager debería darte el Surface directamente
-        self.image = pygame.transform.scale(pygame.image.load(ruta_imagen), self.CONFIG["tamano"])
+    def __init__(self, imagen, pantalla_ancho, pantalla_alto):
+        super().__init__()
+        # Recibimos la Surface ya escalada y cacheada por el ResourceManager
+        self.image = imagen
         self.rect = self.image.get_rect(centerx=pantalla_ancho // 2, bottom=pantalla_alto - 10)
 
         # 2. Atributos de Estado (Estadísticas)
@@ -37,7 +38,10 @@ class Jugador(pygame.sprite.Sprite):
         self.invulnerable = False
         self.tiempo_invulnerable = 0
         self.destello_constante = None
-        self.radio = 16
+        self.radius = settings.RADIO_JUGADOR
+
+        self._init_subpixel()
+        self._vel_actual = pygame.Vector2()  # para el suavizado opcional
 
     @property
     def danio_maximo(self):
@@ -51,13 +55,25 @@ class Jugador(pygame.sprite.Sprite):
     def cadencia_disparo_maxima(self):
         return self.CONFIG["cadencia_max"]
 
-    def mover(self, teclas, pantalla):
-        """Mueve al jugador según las teclas presionadas."""
+    def mover(self, teclas, pantalla, dt):
+        """Mueve al jugador según las teclas presionadas (independiente de FPS)."""
         dx = (teclas[pygame.K_RIGHT] or teclas[pygame.K_d]) - (teclas[pygame.K_LEFT] or teclas[pygame.K_a])
         dy = (teclas[pygame.K_DOWN] or teclas[pygame.K_s]) - (teclas[pygame.K_UP] or teclas[pygame.K_w])
 
-        self.rect.x += dx * self.velocidad
-        self.rect.y += dy * self.velocidad
+        # Normalizar la diagonal para que no sea 1.41x más rápida
+        direccion = pygame.Vector2(dx, dy)
+        if direccion.length_squared() > 0:
+            direccion.scale_to_length(1.0)
+        objetivo = direccion * self.velocidad
+
+        # Suavizado opcional (settings.JUGADOR_SUAVIZADO; 1.0 = instantáneo)
+        s = settings.JUGADOR_SUAVIZADO
+        if s >= 1.0:
+            self._vel_actual.update(objetivo)
+        else:
+            self._vel_actual = self._vel_actual.lerp(objetivo, min(1.0, s * dt * settings.FPS))
+
+        self._desplazar(self._vel_actual.x, self._vel_actual.y, dt)
 
         # Obtenemos el rect de la superficie si es necesario
         if isinstance(pantalla, pygame.Surface):
@@ -68,18 +84,19 @@ class Jugador(pygame.sprite.Sprite):
         # Limita el movimiento del jugador para que no salga de los bordes de la pantalla
         self.rect.clamp_ip(rect_limite.inflate(-15, -45))
 
-    def disparar(self, tiempo_actual, ruta_bala):
+    def disparar(self, tiempo_actual, imagen_bala):
         """Lógica de control de tiempo para disparar."""
         if tiempo_actual - self.ultimo_disparo > self.cadencia_disparo:
             self.ultimo_disparo = tiempo_actual
-            return self._generar_balas(ruta_bala)
+            return self._generar_balas(imagen_bala)
         return []
 
-    def _generar_balas(self, ruta_bala):
-        """Crea las instancias de balas según el power-up actual."""
+    def _generar_balas(self, imagen_bala):
+        """Crea las instancias de balas según el power-up actual.
+
+        `imagen_bala` es la `Surface` ya escalada y orientada (cacheada por el
+        ResourceManager)."""
         balas = []
-        # Ángulo por defecto (hacia arriba)
-        angulo = 90
 
         pos_x = self.rect.centerx
         pos_y = self.rect.top + 10
@@ -92,9 +109,7 @@ class Jugador(pygame.sprite.Sprite):
             offsets = [0]
 
         for offset in offsets:
-            b = Bala(ruta_bala, pos_x + offset, pos_y, self.danio)
-            b.girar(angulo)
-            balas.append(b)
+            balas.append(Bala(imagen_bala, pos_x + offset, pos_y, self.danio))
 
         return balas
 
@@ -129,7 +144,7 @@ class Jugador(pygame.sprite.Sprite):
     def reducir_vidas(self, cantidad):
         self.vidas = max(0, self.vidas - cantidad)
 
-    def update(self):
+    def update(self, dt=0):
         """Actualiza el estado del jugador en cada fotograma."""
         # Comprobar si la invulnerabilidad ha expirado
         if self.invulnerable and pygame.time.get_ticks() > self.tiempo_invulnerable:

@@ -11,10 +11,11 @@ class InputHandler:
         """Captura eventos de Pygame y los deriva a las funciones correctas."""
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
-                # Si cierra la ventana (X), aquí sí cerramos el programa
-                import sys
-                pygame.quit()
-                sys.exit()
+                # Cerrar la ventana (X) => cerrar la aplicación por completo.
+                # No matamos el proceso aquí: dejamos que el bucle principal
+                # haga su limpieza y propague el estado "SALIR".
+                self.juego.salir_del_juego()
+                return False
 
             # --- ENTRADA DE TEXTO (GAME OVER) ---
             if self.juego.pidiendo_nombre:
@@ -66,6 +67,9 @@ class InputHandler:
         elif tecla == pygame.K_SPACE and not self.juego.pausado:
             self.juego.disparando = True
 
+        elif tecla == pygame.K_F1:
+            self.juego.debug_hitboxes = not self.juego.debug_hitboxes
+
     def _manejar_teclas_soltadas(self, tecla):
         if tecla == pygame.K_SPACE:
             self.juego.disparando = False
@@ -78,7 +82,8 @@ class InputHandler:
                     self.juego.estado_game_over = False
                     self.juego.reiniciar_juego()
                 elif self.juego.boton_salir_post and self.juego.boton_salir_post.clic_en_boton(evento.pos):
-                    self.juego.mostrar_menu_principal()
+                    self.juego.volver_al_menu()
+                    return False
             return True  # Evento consumido
 
         # ¿Estamos en pausa?
@@ -87,9 +92,15 @@ class InputHandler:
             if evento.button == 1:  # Clic izquierdo
                 if self.juego.boton_opciones.clic_en_boton(evento.pos):
                     self.juego.mostrar_opciones_juego()
+                    if not self.juego.ejecutando:
+                        return False
                 elif self.juego.boton_salir.clic_en_boton(evento.pos):
                     decision = self.mostrar_confirmacion_salida()
-                    if decision == "SALIR":
+                    if decision == "MENU":
+                        self.juego.volver_al_menu()
+                        return False
+                    elif decision == "SALIR":
+                        self.juego.salir_del_juego()
                         return False
         # Juego activo
         else:
@@ -113,16 +124,18 @@ class InputHandler:
         # Delegamos el dibujo al UIManager
         self.juego.ui_manager.dibujar_confirmacion_salida(self.juego.pantalla, boton_si, boton_no)
 
-        # Bucle de bloqueo para obtener respuesta
+        # Bucle de bloqueo para obtener respuesta.
+        # "MENU"  -> el jugador confirma volver al menú principal
+        # "SALIR" -> cerró la ventana: propagar cierre de la aplicación
+        # "CONTINUAR" -> cancela y sigue jugando
         while True:
+            self.juego.reloj.tick(30)  # evita el busy-wait al 100 % de CPU
             for evento in pygame.event.get():
                 if evento.type == pygame.QUIT:
-                    pygame.quit()
-                    import sys
-                    sys.exit()
+                    return "SALIR"
 
                 if evento.type == pygame.MOUSEBUTTONDOWN:
                     if boton_si.clic_en_boton(evento.pos):
-                        return "SALIR"
+                        return "MENU"
                     elif boton_no.clic_en_boton(evento.pos):
                         return "CONTINUAR"

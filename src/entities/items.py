@@ -1,5 +1,7 @@
 import pygame
 
+from src.core import settings
+
 
 class Item(pygame.sprite.Sprite):
     TAMANO_ESTANDAR = (48, 48)
@@ -17,11 +19,15 @@ class Item(pygame.sprite.Sprite):
         self.tipo = tipo
         self.image = imagen_surface
         self.rect = self.image.get_rect(center=(x, y))
-        self.speed = 2  # Velocidad de desplazamiento del objeto
+        self.speed = 2  # px/frame-a-60fps
+        self._resto_y = 0.0
 
-    def update(self):
-        # Desplazar hacia abajo
-        self.rect.y += self.speed
+    def update(self, dt=0):
+        # Desplazamiento hacia abajo independiente de FPS
+        dy = self.speed * dt * settings.FPS + self._resto_y
+        iy = int(dy)
+        self.rect.y += iy
+        self._resto_y = dy - iy
 
     def aplicar_efecto(self, jugador):
         if self.tipo in self.EFECTOS:

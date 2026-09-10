@@ -24,12 +24,18 @@ RECURSOS = {
     "potenciador_velocidad": "imagenes/objetos/potenciador_velocidad.png",
 }
 
-SONIDOS = {
+# Música de fondo: se reproduce en streaming vía pygame.mixer.music (una sola
+# pista a la vez), NO se decodifica entera en memoria.
+MUSICA = {
     "skyfire_theme": "musica/SkyFire.ogg",
     "rain_of_lasers": "musica/Rain of Lasers.ogg",
     "deathmatch_theme": "musica/DeathMatch Boss Theme.ogg",
     "defeated_tune": "musica/Defeated (Game Over Tune).ogg",
     "victory_tune": "musica/Victory Tune.ogg",
+}
+
+# Efectos cortos: se cargan en memoria como pygame.mixer.Sound.
+SONIDOS = {
     "laser_gun": "sonidos/laser-gun.wav",
     "hit": "sonidos/hit.wav",
     "item_take": "sonidos/item-take.wav",

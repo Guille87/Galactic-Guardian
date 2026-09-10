@@ -3,13 +3,17 @@ import time
 import pygame
 import pygame_gui
 
-from src.core import config
+from src.core import config, settings
 from src.ui.components.button import Boton
 
 
 class MenuManager:
     """
     Clase principal para gestionar las pantallas del menú (Estado).
+
+    `ejecutar()` corre el bucle del menú y devuelve el siguiente estado de la
+    máquina de alto nivel: "JUGAR" o "SALIR". El objeto es persistente: se
+    reutiliza cada vez que se vuelve al menú desde la partida.
     """
 
     def __init__(self, pantalla, resource_manager, audio_manager, sistema_clasificacion):
@@ -21,9 +25,13 @@ class MenuManager:
         self.font_estandar = pygame.font.Font(None, 36)
         self.opciones_cargadas = False
 
+        # Reloj único de la instancia (no crear uno nuevo por frame)
+        self.clock = pygame.time.Clock()
+
         # Estado inicial
         self.estado = "PRINCIPAL"  # Posibles: PRINCIPAL, OPCIONES, PUNTUACIONES
         self.ejecutando = True
+        self.resultado = None  # "JUGAR" | "SALIR"
 
         # Cargar config inicial
         self.vol_musica, self.vol_efectos = config.cargar_configuracion()
@@ -44,18 +52,26 @@ class MenuManager:
         self.btn_puntos = Boton("Puntuaciones", (255, 255, 0, 128), (255, 255, 255), cx, 490, 200, 50, 10)
 
     def ejecutar(self):
-        """Bucle principal del menú. Controla el flujo entre pantallas."""
+        """Bucle principal del menú. Devuelve el siguiente estado ("JUGAR"/"SALIR")."""
+        # Reinicio de estado por si volvemos desde una partida
+        self.ejecutando = True
+        self.estado = "PRINCIPAL"
+        self.resultado = None
+        self.opciones_cargadas = False
+
         self._preparar_musica()  # Solo activamos la música aquí, al lanzar el menú completo
-        clock = pygame.time.Clock()
+
         while self.ejecutando:
+            time_delta = self.clock.tick(settings.FPS) / 1000.0
+
             if self.estado == "PRINCIPAL":
                 self._menu_principal()
             elif self.estado == "OPCIONES":
-                self._menu_opciones()
+                self._menu_opciones(time_delta)
             elif self.estado == "PUNTUACIONES":
                 self._menu_puntuaciones()
 
-            clock.tick(60)
+        return self.resultado or "SALIR"
 
     def _menu_principal(self):
         pygame.display.set_caption("Galactic Guardian - Menú")
@@ -64,9 +80,12 @@ class MenuManager:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.ejecutando = False
+                self.resultado = "SALIR"
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.btn_jugar.clic_en_boton(event.pos):
-                    self._lanzar_juego()
+                    self.am.detener_musica("skyfire_theme")
+                    self.ejecutando = False
+                    self.resultado = "JUGAR"
                 elif self.btn_opciones.clic_en_boton(event.pos):
                     self.estado = "OPCIONES"
                 elif self.btn_puntos.clic_en_boton(event.pos):
@@ -84,7 +103,7 @@ class MenuManager:
 
     def _inicializar_interfaz_opciones(self):
         """Crea el UIManager y los elementos de la interfaz solo una vez."""
-        self.ui_manager = pygame_gui.UIManager((600, 800))
+        self.ui_manager = pygame_gui.UIManager((settings.ANCHO, settings.ALTO))
 
         # Sliders
         self.slider_musica = pygame_gui.elements.UIHorizontalSlider(
@@ -105,49 +124,48 @@ class MenuManager:
         )
         self.opciones_cargadas = True
 
-    def _menu_opciones(self):
+    def _feedback_sonoro_efectos(self):
+        """Reproduce un sonido de prueba al mover el slider de efectos (con anti-spam)."""
+        ahora = time.time()
+        if not self.sonido_reproduciendose or ahora >= self.tiempo_final_reproduccion:
+            sonido_test = self.rm.get_sound("laser_gun")
+            if sonido_test:
+                self.sonido_reproduciendose = True
+                sonido_test.play()
+                self.tiempo_final_reproduccion = ahora + sonido_test.get_length()
+
+    def _menu_opciones(self, time_delta):
         """Lógica de la pantalla de opciones usando pygame_gui."""
         # Solo inicializamos la UI si acabamos de entrar al estado
-        if not hasattr(self, 'opciones_cargadas') or not self.opciones_cargadas:
+        if not self.opciones_cargadas:
             self._inicializar_interfaz_opciones()
 
-        time_delta = pygame.time.Clock().tick(60) / 1000.0
         fondo = self.rm.get_image("imagen_fondo1")
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.ejecutando = False
+                self.estado = "PRINCIPAL"
+                self.resultado = "SALIR"
 
-            # Gestión de eventos de la UI
-            if event.type == pygame.USEREVENT:
-                if event.user_type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
-                    if event.ui_element == self.slider_musica:
-                        self.vol_musica = event.value
-                        # Actualizamos el volumen de toda la música
-                        self.am.actualizar_volumen_musica(self.vol_musica)
-                    elif event.ui_element == self.slider_efectos:
-                        self.vol_efectos = event.value
-                        # Actualizamos el volumen de TODOS los efectos
-                        self.am.actualizar_volumen_efectos(self.vol_efectos)
-                        # Lógica de feedback continuo
-                        ahora = time.time()
-                        if not self.sonido_reproduciendose or ahora >= self.tiempo_final_reproduccion:
-                            # Reproducimos un sonido de prueba
-                            sonido_test = self.rm.get_sound("laser_gun")
-                            if sonido_test:
-                                self.sonido_reproduciendose = True
-                                sonido_test.play()
-                                # Calculamos cuándo terminará este sonido para permitir el siguiente
-                                self.tiempo_final_reproduccion = ahora + sonido_test.get_length()
+            # --- Eventos de pygame_gui (API 0.6+: cada evento con su propio type) ---
+            elif event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
+                if event.ui_element == self.slider_musica:
+                    self.vol_musica = event.value
+                    self.am.actualizar_volumen_musica(self.vol_musica)
+                elif event.ui_element == self.slider_efectos:
+                    self.vol_efectos = event.value
+                    self.am.actualizar_volumen_efectos(self.vol_efectos)
+                    self._feedback_sonoro_efectos()
 
-                elif event.user_type == pygame_gui.UI_BUTTON_PRESSED:
-                    if event.ui_element == self.btn_guardar:
-                        config.guardar_configuracion(self.vol_musica, self.vol_efectos)
-                        self.opciones_cargadas = False # Limpiar para la próxima vez
-                        self.estado = "PRINCIPAL"
-                    elif event.ui_element == self.btn_volver:
-                        self.opciones_cargadas = False
-                        self.estado = "PRINCIPAL"
+            elif event.type == pygame_gui.UI_BUTTON_PRESSED:
+                if event.ui_element == self.btn_guardar:
+                    config.guardar_configuracion(self.vol_musica, self.vol_efectos)
+                    self.opciones_cargadas = False  # Limpiar para la próxima vez
+                    self.estado = "PRINCIPAL"
+                elif event.ui_element == self.btn_volver:
+                    self.opciones_cargadas = False
+                    self.estado = "PRINCIPAL"
 
             self.ui_manager.process_events(event)
 
@@ -163,26 +181,29 @@ class MenuManager:
         pygame.display.flip()
 
     def mostrar_solo_opciones(self):
-        """Muestra las opciones y retorna el control cuando se pulsa Guardar o Volver."""
+        """Muestra las opciones y retorna el control cuando se pulsa Guardar o Volver.
+
+        Se usa desde la pausa de la partida. Devuelve "SALIR" si el usuario cerró
+        la ventana (para que el motor propague el cierre), o None en caso normal.
+        """
         self.estado = "OPCIONES"
         self.opciones_cargadas = False  # Forzamos la carga de la UI
-        clock = pygame.time.Clock()
 
         bucle_opciones = True
         while bucle_opciones:
-            self._menu_opciones()
+            time_delta = self.clock.tick(settings.FPS) / 1000.0
+            self._menu_opciones(time_delta)
 
-            # Condición de salida: si el estado cambia a PRINCIPAL, significa que el usuario pulsó Guardar o Volver.
+            # Salida normal: Guardar o Volver dejan el estado en PRINCIPAL
             if self.estado == "PRINCIPAL":
                 bucle_opciones = False
 
-            # Si el usuario cierra la ventana (X)
-            for _ in pygame.event.get(pygame.QUIT):
-                pygame.quit()
-                exit()
+            # Cierre de ventana durante la pausa: re-emitimos QUIT y salimos
+            if self.resultado == "SALIR":
+                pygame.event.post(pygame.event.Event(pygame.QUIT))
+                return "SALIR"
 
-            clock.tick(60)
-
+        return None
 
     def _menu_puntuaciones(self):
         """Pantalla de puntuaciones"""
@@ -193,6 +214,7 @@ class MenuManager:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.ejecutando = False
+                self.resultado = "SALIR"
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 self.estado = "PRINCIPAL"
 
@@ -219,16 +241,3 @@ class MenuManager:
         self.pantalla.blit(txt_salir, txt_salir.get_rect(center=(300, 750)))
 
         pygame.display.flip()
-
-    def _lanzar_juego(self):
-        from src.core.engine import Juego
-        self.am.detener_musica("skyfire_theme")
-
-        juego = Juego(self.pantalla, self.vol_musica, self.vol_efectos, self.clasificacion, self.rm)
-        juego.ejecutar()
-
-        # Al volver del juego, restauramos música y estado
-        self.estado = "PRINCIPAL"
-        # Forzamos a que Pygame sepa que el sistema de video sigue activo
-        pygame.display.set_mode((600, 800))
-        self._preparar_musica()

@@ -25,13 +25,13 @@ class EffectManager:
         """Crea una animación de explosión en el centro dado."""
         if self.explosion_frames:
             explosion = Explosion(posicion, self.explosion_frames)
-            self.juego.all_sprites.add(explosion)
+            self.juego.entity_manager.efectos.add(explosion)
 
     def crear_destello_recibir_danio(self):
         """Crea el destello rojo efímero sobre el jugador."""
         if not self.juego.jugador.invulnerable:
             destello = Destello(self.juego.jugador)
-            self.juego.all_sprites.add(destello)
+            self.juego.entity_manager.efectos.add(destello)
 
     def crear_destello_invulnerabilidad(self):
         """Crea el halo blanco constante de invulnerabilidad."""
@@ -39,4 +39,4 @@ class EffectManager:
         if self.juego.jugador.destello_constante is None:
             destello = DestelloConstante(self.juego.jugador)
             self.juego.jugador.destello_constante = destello
-            self.juego.all_sprites.add(destello)
+            self.juego.entity_manager.efectos.add(destello)

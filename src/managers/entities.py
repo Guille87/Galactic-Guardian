@@ -4,86 +4,86 @@ from src.entities.enemies import EnemigoTipo2, EnemigoTipo3, Jefe
 
 
 class EntityManager:
+    """Dueño de todos los grupos de sprites de la partida."""
+
     def __init__(self, juego):
         self.juego = juego
-        self.balas = []
-        self.balas_enemigo = []
-        self.enemigos = []
-        self.items = juego.all_sprites  # Compartimos el grupo de items/explosiones
+        self.balas = pygame.sprite.Group()          # balas del jugador
+        self.balas_enemigo = pygame.sprite.Group()
+        self.enemigos = pygame.sprite.Group()
+        self.items = pygame.sprite.Group()
+        self.efectos = pygame.sprite.Group()        # explosiones y destellos
 
+    # --- Altas ---
     def agregar_enemigo(self, enemigo):
         if enemigo:
-            self.enemigos.append(enemigo)
+            self.enemigos.add(enemigo)
 
     def agregar_bala_jugador(self, bala):
         if bala:
-            self.balas.append(bala)
+            self.balas.add(bala)
 
     def agregar_bala_enemigo(self, bala):
         if bala:
-            self.balas_enemigo.append(bala)
+            self.balas_enemigo.add(bala)
 
-    def actualizar(self):
-        """Actualiza el movimiento y lógica de todas las entidades."""
-        self._actualizar_balas()
-        self._actualizar_enemigos()
+    # --- Ciclo por frame ---
+    def actualizar(self, dt):
+        """Actualiza el movimiento y la lógica de todas las entidades."""
+        self.balas.update(dt)
+        self.balas_enemigo.update(dt)
+        self._actualizar_enemigos(dt)
+        self.items.update(dt)
+        self.efectos.update(dt)
         self._limpiar_entidades_fuera()
 
-    def _actualizar_balas(self):
-        for bala in self.balas[:]:
-            bala.update()
-        for bala_e in self.balas_enemigo[:]:
-            bala_e.update()
-
-    def _actualizar_enemigos(self):
+    def _actualizar_enemigos(self, dt):
         ahora = pygame.time.get_ticks()
 
         for enemigo in self.enemigos:
-            enemigo.movimiento_enemigo()
-            enemigo.update()
+            enemigo.movimiento_enemigo(dt)
+            enemigo.update(dt)
 
-            # 1. Lógica para Enemigos Tipo 2 y 3
-            # Lógica de disparo automática de enemigos
+            # Disparo automático de los tipos 2 y 3
             if isinstance(enemigo, (EnemigoTipo2, EnemigoTipo3)):
-                # Elegimos la imagen según el tipo
                 key_bala = "bala_enemigo" if isinstance(enemigo, EnemigoTipo2) else "bala_enemigo2"
-                ruta_bala = self.juego.rm.get_image_path(key_bala)
+                self.agregar_bala_enemigo(enemigo.disparo_enemigo(ahora, self.juego.rm, key_bala))
 
-                bala = enemigo.disparo_enemigo(ahora, ruta_bala)
-                if bala:
-                    self.agregar_bala_enemigo(bala)
-
-            # 2. Lógica específica del Jefe
+            # Disparo del jefe (dos cadencias)
             if isinstance(enemigo, Jefe):
-                # El jefe suele usar ambos tipos de bala
-                ruta_normal = self.juego.rm.get_image_path("bala_enemigo2")
-                ruta_rapida = self.juego.rm.get_image_path("bala_enemigo")
-
-                b1 = enemigo.disparo_jefe(ahora, ruta_normal)
-                b2 = enemigo.disparo_rapido(ahora, ruta_rapida)
-
-                if b1: self.agregar_bala_enemigo(b1)
-                if b2: self.agregar_bala_enemigo(b2)
+                self.agregar_bala_enemigo(enemigo.disparo_jefe(ahora, self.juego.rm, "bala_enemigo2"))
+                self.agregar_bala_enemigo(enemigo.disparo_rapido(ahora, self.juego.rm, "bala_enemigo"))
 
     def _limpiar_entidades_fuera(self):
-        """Elimina lo que sobra y actualiza contadores del juego."""
+        """Descarta enemigos y balas que se han salido de la pantalla."""
+        alto = self.juego.pantalla_alto
+        ancho = self.juego.pantalla_ancho
 
         def esta_fuera(rect):
-            return (
-                    rect.bottom < 0 or rect.top > self.juego.pantalla_alto or
-                    rect.right < 0 or rect.left > self.juego.pantalla_ancho
-            )
+            return rect.bottom < 0 or rect.top > alto or rect.right < 0 or rect.left > ancho
 
-        # Filtrar enemigos que se salen
-        salidos = [e for e in self.enemigos if esta_fuera(e.rect)]
-        self.juego.enemigos_activos -= len(salidos)
+        for enemigo in list(self.enemigos):
+            if esta_fuera(enemigo.rect):
+                self.juego.enemigos_golpeados.pop(enemigo, None)
+                enemigo.kill()
 
-        # Reasignar listas filtrando las que NO están fuera
-        self.enemigos = [e for e in self.enemigos if not esta_fuera(e.rect)]
-        self.balas = [b for b in self.balas if not esta_fuera(b.rect)]
-        self.balas_enemigo = [b for b in self.balas_enemigo if not esta_fuera(b.rect)]
+        for bala in list(self.balas):
+            if esta_fuera(bala.rect):
+                bala.kill()
 
-    def vaciar_todo(self):
-        self.balas.clear()
-        self.balas_enemigo.clear()
-        self.enemigos.clear()
+        for bala in list(self.balas_enemigo):
+            if esta_fuera(bala.rect):
+                bala.kill()
+
+    def vaciar_todo(self, avance_nivel=False):
+        """Vacía los grupos de sprites.
+
+        Con `avance_nivel=True` (se acaba de derrotar al jefe) se conservan las
+        balas enemigas y los efectos ya en vuelo: así las balas del jefe no
+        desaparecen de golpe al destruirlo y la explosión termina su animación.
+        """
+        grupos = [self.balas, self.enemigos, self.items]
+        if not avance_nivel:
+            grupos += [self.balas_enemigo, self.efectos]
+        for grupo in grupos:
+            grupo.empty()

@@ -1,34 +1,28 @@
-import math
 import pygame
 
+from .movimiento import MovimientoSubpixel
 
-class Proyectil(pygame.sprite.Sprite):
-    def __init__(self, ruta_imagen, x, y, danio, velocidad, tamano=(50, 50)):
+
+class Proyectil(pygame.sprite.Sprite, MovimientoSubpixel):
+    """Base común de balas. Recibe una `Surface` ya escalada y orientada
+    (cacheada por el `ResourceManager`); nunca carga desde disco.
+
+    La colisión la resuelve `CollisionManager` con `pygame.sprite.collide_circle`,
+    que usa el atributo `radius` (lo fija cada subclase con `RADIUS`).
+    """
+
+    RADIUS = 16
+
+    def __init__(self, imagen, x, y, danio, velocidad):
         super().__init__()
-        # Carga inyectada (puedes pasar el Surface directamente si prefieres)
-        img = pygame.image.load(ruta_imagen).convert_alpha()
-        self.image = pygame.transform.scale(img, tamano)
+        self.image = imagen
         self.rect = self.image.get_rect(center=(x, y))
 
         self.danio = danio
         self.velocidad = velocidad
-        self.radio = 16  # Hitbox circular estándar
+        self.radius = self.RADIUS
+        self._init_subpixel()
 
-    def girar(self, angulo):
-        """Gira la imagen manteniendo el centro."""
-        self.image = pygame.transform.rotate(self.image, angulo)
-        self.rect = self.image.get_rect(center=self.rect.center)
-
-    def comprobar_colision(self, objeto):
-        """Lógica de colisión circular genérica."""
-        if objeto:
-            distancia = math.hypot(
-                self.rect.centerx - objeto.rect.centerx,
-                self.rect.centery - objeto.rect.centery
-            )
-            return distancia < self.radio + objeto.radio
-        return False
-
-    def update(self):
+    def update(self, dt=0):
         """Función que sobreescribirán los hijos."""
         pass
