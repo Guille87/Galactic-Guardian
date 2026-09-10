@@ -5,11 +5,11 @@
 | Name                                  |    Stmts |     Miss |   Cover |   Missing |
 |-------------------------------------- | -------: | -------: | ------: | --------: |
 | main.py                               |       41 |       23 |     44% |     32-75 |
-| src/core/audio.py                     |       39 |        2 |     95% |     31-32 |
+| src/core/audio.py                     |       40 |        2 |     95% |     34-35 |
 | src/core/config.py                    |       23 |        0 |    100% |           |
 | src/core/engine.py                    |      174 |       30 |     83% |186-187, 223, 229-241, 255-259, 267-292 |
 | src/core/input.py                     |       92 |       44 |     52% |47-48, 51-52, 84-114, 119-142 |
-| src/core/resources.py                 |       57 |        4 |     93% |71, 77, 87, 90 |
+| src/core/resources.py                 |       58 |        4 |     93% |78, 84, 94, 97 |
 | src/core/settings.py                  |       36 |        0 |    100% |           |
 | src/entities/base/movimiento.py       |       18 |        0 |    100% |           |
 | src/entities/base/projectile\_base.py |       14 |        1 |     93% |        28 |
@@ -31,7 +31,7 @@
 | src/visual/explosions.py              |       20 |        0 |    100% |           |
 | src/visual/flash.py                   |       22 |        0 |    100% |           |
 | src/visual/flash\_constant.py         |       11 |        1 |     91% |        17 |
-| **TOTAL**                             | **1471** |  **247** | **83%** |           |
+| **TOTAL**                             | **1473** |  **247** | **83%** |           |
 
 
 ## Setup coverage badge
