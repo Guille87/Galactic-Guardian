@@ -29,8 +29,8 @@ puesta a punto del repositorio (licencia, tests, integración continua, document
   (`groupcollide` / `collide_circle`).
 - `LICENSE` (MIT), suite de tests con `pytest` (~77 % de cobertura), integración
   continua en GitHub Actions (Python 3.11–3.13) con badge de cobertura,
-  `CHANGELOG.md`, `ROADMAP.md`, `requirements-dev.txt`, `.gitattributes` y
-  `dependabot.yml`.
+  `CHANGELOG.md`, `ROADMAP.md`, `CONTRIBUTING.md`, `requirements-dev.txt`,
+  `.gitattributes` y `dependabot.yml`.
 
 ### Changed
 
