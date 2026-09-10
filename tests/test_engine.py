@@ -45,9 +45,13 @@ def test_reiniciar_avance_de_nivel(juego, rm):
     juego.jefe_derrotado = True
     bala_ficticia = EnemigoTipo1(rm.get_image_scaled("enemigo1", (48, 48)), 0, 0, 600, 1)
     juego.entity_manager.agregar_bala_enemigo(bala_ficticia)
+    juego.entity_manager.agregar_bala_jugador(
+        EnemigoTipo1(rm.get_image_scaled("enemigo1", (48, 48)), 0, 0, 600, 1)
+    )
     juego.reiniciar_juego()
     assert juego.nivel == 2
     assert len(juego.entity_manager.balas_enemigo) == 1   # balas del jefe conservadas
+    assert len(juego.entity_manager.balas) == 1           # balas del jugador conservadas
 
 
 def test_reiniciar_desde_cero(juego):
