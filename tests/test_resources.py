@@ -35,10 +35,11 @@ def test_recurso_desconocido_devuelve_none(rm):
     assert rm.get_image("no_existe") is None
 
 
-def test_get_music_path_registrado(rm):
-    ruta = rm.get_music_path("rain_of_lasers")
-    assert ruta and ruta.endswith(".ogg")
-    # la música NO se carga como Sound
+def test_musica_cargada_como_bytes(rm):
+    datos = rm.get_music_data("rain_of_lasers")
+    assert isinstance(datos, bytes) and len(datos) > 1000
+    assert datos[:4] == b"OggS"                 # cabecera OGG
+    # la música NO se carga como Sound (se decodifica al vuelo)
     assert rm.get_sound("rain_of_lasers") is None
 
 

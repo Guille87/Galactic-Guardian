@@ -9,7 +9,7 @@ class ResourceManager:
             cls._instance = super().__new__(cls)
             cls._instance.resources = {}
             cls._instance.image_paths = {}
-            cls._instance.music_paths = {}
+            cls._instance.music_data = {}
         return cls._instance
 
     def __init__(self):
@@ -34,8 +34,15 @@ class ResourceManager:
         self.resources[name] = pygame.mixer.Sound(path)
 
     def load_music(self, name, path):
-        """Registra la ruta de una pista de música (no se carga en memoria)."""
-        self.music_paths[name] = path
+        """Carga los bytes (OGG comprimido) de una pista de música en memoria.
+
+        Son unos pocos MB en total. `pygame.mixer.music.load()` desde una ruta
+        abre el archivo en el hilo principal y bloquea ~200-400 ms (tirón al
+        cambiar de música); desde un BytesIO en RAM es instantáneo. La música
+        se sigue decodificando al vuelo, no se descomprime entera.
+        """
+        with open(path, "rb") as f:
+            self.music_data[name] = f.read()
 
     def get_image(self, name):
         return self.resources.get(name)
@@ -76,8 +83,8 @@ class ResourceManager:
     def get_image_path(self, name):
         return self.image_paths.get(name)
 
-    def get_music_path(self, name):
-        return self.music_paths.get(name)
+    def get_music_data(self, name):
+        return self.music_data.get(name)
 
     def get_sound(self, name):
         # Devuelve el sonido correspondiente al nombre dado, si existe
