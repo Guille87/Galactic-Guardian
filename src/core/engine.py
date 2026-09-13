@@ -35,11 +35,18 @@ class Juego:
         self.pausado = False
         self.estado_game_over = False
         self.pidiendo_nombre = False
+        self.pidiendo_nombre_para = None   # "game_over" | "victoria": a qué pantalla ir tras registrar el nombre
         self.nombre_entrada = ""
         self.jefe_derrotado = False
         self.disparando = False
         self.pendiente_reinicio = False  # Transición diferida (ver actualizar())
         self.debug_hitboxes = False      # F1: dibuja los círculos de colisión
+
+        # Campaña: pantallas de fin de nivel / victoria final (ver ROADMAP)
+        self.estado_nivel_completado = False
+        self.estado_victoria_final = False
+        self.mostrando_seleccion_nivel = False
+        self.enemigos_eliminados_nivel = 0   # total del nivel (para la pantalla de resumen)
 
         # Control de la máquina de estados de alto nivel
         self.ejecutando = True
@@ -101,6 +108,11 @@ class Juego:
         self.boton_salir = None
         self.boton_reintentar = None
         self.boton_salir_post = None
+        self.boton_continuar = None
+        self.boton_elegir_nivel = None
+        self.botones_seleccion_nivel = None   # lista, se recrea si cambia el nivel máximo
+        self.boton_reintentar_final = None
+        self.boton_menu_final = None
 
     def pausar_juego(self):
         """Pausa el juego. `tiempo_juego` deja de avanzar solo (no se llama a
@@ -110,29 +122,31 @@ class Juego:
     def reanudar_juego(self):
         self.pausado = False
 
-    def reiniciar_juego(self):
-        """Restablece el estado para una nueva partida o nivel."""
-        avance_nivel = self.jefe_derrotado
-        if self.jefe_derrotado:
+    def reiniciar_juego(self, nivel_forzado=None):
+        """Restablece el estado para una nueva partida, el siguiente nivel, o
+        (`nivel_forzado`) un nivel concreto elegido a mano en el selector."""
+        avance_nivel = self.jefe_derrotado and nivel_forzado is None
+        if nivel_forzado is not None:
+            # Selector de nivel: arranca ese nivel como una partida nueva.
+            self.nivel = nivel_forzado
+            self.jefe_derrotado = False
+            self.jugador.reiniciar(self.pantalla_ancho, self.pantalla_alto)
+            self.puntuacion = 0
+        elif self.jefe_derrotado:
             self.nivel += 1
             self.jefe_derrotado = False
-
-            # Aumentar dificultad
-            self.MIN_TIEMPO_GENERACION = max(settings.GEN_MIN_SUELO,
-                                             self.MIN_TIEMPO_GENERACION - settings.GEN_DECREMENTO_NIVEL)
-            self.MAX_TIEMPO_GENERACION = max(settings.GEN_MIN_SUELO,
-                                             self.MAX_TIEMPO_GENERACION - settings.GEN_DECREMENTO_NIVEL)
         else:
             # Partida desde cero: se restablece al jugador in situ (sin recrearlo)
             # para que los managers puedan conservar su referencia.
             self.jugador.reiniciar(self.pantalla_ancho, self.pantalla_alto)
-            self.MIN_TIEMPO_GENERACION = settings.GEN_MIN_INICIAL
-            self.MAX_TIEMPO_GENERACION = settings.GEN_MAX_INICIAL
             self.puntuacion = 0
+
+        self.MIN_TIEMPO_GENERACION, self.MAX_TIEMPO_GENERACION = settings.gen_intervalo_para_nivel(self.nivel)
 
         # Reiniciar todos los valores del juego a sus estados iniciales
         self.entity_manager.vaciar_todo(avance_nivel=avance_nivel)
         self.enemigos_golpeados.clear()
+        self.enemigos_eliminados_nivel = 0
         self.tiempo_proximo_enemigo = 0
         self.tiempo_juego = 0.0
         self.inicio_juego = 0.0
@@ -143,6 +157,9 @@ class Juego:
         self.jugador.invulnerable = False
         self.pausado = False
         self.estado_game_over = False
+        self.estado_nivel_completado = False
+        self.mostrando_seleccion_nivel = False
+        self.estado_victoria_final = False
 
         # Resetear el WaveManager para que el jefe pueda volver a salir en el siguiente nivel
         self.wave_manager.jefe_generado = False
@@ -163,6 +180,7 @@ class Juego:
         y la transición diferida cuando cae el jefe.
         """
         self.enemigos_eliminados += 1
+        self.enemigos_eliminados_nivel += 1
         tipo_item = enemigo.die(self.jugador, self.enemigos_eliminados)
         if tipo_item:
             self._spawnear_item(tipo_item, enemigo.rect.center)
@@ -235,10 +253,10 @@ class Juego:
         self.collision_manager.actualizar(self.tiempo_juego)
 
         # 2b. Transición diferida: si el jefe murió durante la resolución de
-        # colisiones, reiniciamos aquí (nunca desde dentro de un manager).
+        # colisiones, la procesamos aquí (nunca desde dentro de un manager).
         if self.pendiente_reinicio:
             self.pendiente_reinicio = False
-            self.reiniciar_juego()
+            self._procesar_fin_de_nivel()
             return
 
         # 3. Cosmética
@@ -267,14 +285,36 @@ class Juego:
         self.audio_manager.detener_toda_la_musica()
         # Iniciar música Game Over de fondo
         self.audio_manager.reproducir_musica("defeated_tune")
+        self._pedir_nombre_o_mostrar("game_over")
 
-        puntuaciones_top = self.clasificacion.obtener_puntuaciones_top()
-        if len(puntuaciones_top) < 10 or self.puntuacion > puntuaciones_top[-1][1]:
-            # La puntuación del jugador está entre las 10 mejores o es superior a la última de las 10 mejores
-            self.pidiendo_nombre = True
-            self.nombre_entrada = ""
+    def _procesar_fin_de_nivel(self):
+        """Al derrotar al jefe: pantalla de "nivel completado" o, en el último
+        nivel de la campaña, la de victoria final."""
+        self.audio_manager.detener_toda_la_musica()
+        self.audio_manager.reproducir_musica("victory_tune")
+        self.pausado = True
+
+        if self.nivel >= settings.NIVEL_MAX:
+            self._pedir_nombre_o_mostrar("victoria")
         else:
+            self.estado_nivel_completado = True
+
+    def _cualifica_para_el_top10(self):
+        top = self.clasificacion.obtener_puntuaciones_top()
+        return len(top) < 10 or self.puntuacion > top[-1][1]
+
+    def _pedir_nombre_o_mostrar(self, destino):
+        """`destino`: "game_over" o "victoria". Si la puntuación entra en el
+        top 10 se pide el nombre primero (`pidiendo_nombre_para` recuerda a qué
+        pantalla ir después); si no, se muestra esa pantalla directamente."""
+        if self._cualifica_para_el_top10():
+            self.pidiendo_nombre = True
+            self.pidiendo_nombre_para = destino
+            self.nombre_entrada = ""
+        elif destino == "game_over":
             self.estado_game_over = True
+        else:
+            self.estado_victoria_final = True
 
     def volver_al_menu(self):
         """Solicita terminar la partida y devolver el control al menú principal."""

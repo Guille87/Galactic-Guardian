@@ -17,11 +17,29 @@ ANCHO = 600
 ALTO = 800
 FPS = 60
 
+# --- Campaña ---
+NIVEL_MAX = 5   # nº fijo de niveles; el jefe del último da la pantalla de victoria
+
 # --- Generación de enemigos (ms entre spawns) ---
 GEN_MIN_INICIAL = 800
 GEN_MAX_INICIAL = 1000
 GEN_MIN_SUELO = 200          # límite inferior al subir de nivel
 GEN_DECREMENTO_NIVEL = 200   # cuánto baja el intervalo por nivel
+
+
+def gen_intervalo_para_nivel(nivel):
+    """Intervalo (min, max) en ms entre spawns para un nivel dado.
+
+    Función pura de `nivel` (antes era estado mutable que se decrementaba paso a
+    paso en cada `reiniciar_juego`): permite saltar directamente a un nivel
+    concreto -p. ej. desde el selector de nivel- sin repetir el decremento N
+    veces.
+    """
+    bajada = GEN_DECREMENTO_NIVEL * (nivel - 1)
+    return (
+        max(GEN_MIN_SUELO, GEN_MIN_INICIAL - bajada),
+        max(GEN_MIN_SUELO, GEN_MAX_INICIAL - bajada),
+    )
 
 # --- Fases de la oleada (ms desde el inicio del nivel) ---
 TIEMPO_FASE_2 = 20000

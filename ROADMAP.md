@@ -22,30 +22,25 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 - **Actualización desde el juego** — aviso de nueva versión en el menú y botón
   *Actualizar* que descarga el instalador y se aplica solo en la versión
   instalada. Ver `[0.1.4]`.
+- **Campaña con final** — `settings.NIVEL_MAX` niveles fijos; música de victoria,
+  pantalla de "nivel completado" con selector de nivel (rejugar los ya
+  superados en la partida actual), y pantalla de victoria final tras el último
+  jefe. Ver `[Unreleased]` → próxima versión. El modo sin fin queda pendiente
+  como **modo aparte** (ver backlog).
 
 ## En curso / próximo (por orden)
 
-### 1 · Campaña con final (sustituye al bucle infinito)
-- Número **fijo de niveles**, cada uno con su jefe final.
-- Al derrotarlo: música de victoria (`Victory Tune.ogg`, hoy sin usar), pantalla
-  de **"Nivel completado"** (puntuación, enemigos destruidos, tiempo) y opción de
-  **avanzar al siguiente nivel o volver a elegir nivel** (selector de niveles ya
-  superados).
-- Tras el último nivel: pantalla de **victoria** de verdad.
-- El modo sin fin actual queda documentado como **modo aparte** más adelante
-  (ver "Modo sin fin (arcade)" en backlog) — no se pierde, se separa.
-
-### 2 · Menú de opciones — vídeo
+### 1 · Menú de opciones — vídeo
 - Ventana **1×** / **2×** y **pantalla completa** (`pygame.SCALED`, resolución
   lógica 600×800 fija). Se persiste en `config.ini`.
 
-### 3 · Menú de opciones — reasignar teclas
+### 2 · Menú de opciones — reasignar teclas
 - Mapa de controles configurable (mover, disparar, pausa) persistido en
   `config.ini`. UI de "pulsa una tecla" con aviso si choca con otra acción y
   botón de restaurar por defecto.
 - El menú de opciones pasa a tener secciones (Sonido / Vídeo / Controles).
 
-### 4 · Oleadas y niveles como datos (antes de meter contenido nuevo)
+### 3 · Oleadas y niveles como datos (antes de meter contenido nuevo)
 - Sacar la definición de fases/enemigos/jefe/música de cada nivel de
   `WaveManager` a una tabla de datos. Añadir contenido pasa a ser "editar una
   tabla", no tocar lógica — y es el paso natural antes de sumar enemigos.
@@ -53,7 +48,7 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
   crear/destruir constantemente) — mejora de rendimiento, se hace en el mismo
   frente porque toca el mismo código de gestión de entidades.
 
-### 5 · Contenido nuevo (según lleguen los assets)
+### 4 · Contenido nuevo (según lleguen los assets)
 - **Enemigos nuevos** — asset a la espera de que consigas un set de un mismo
   autor (arte consistente).
 - **Patrones de disparo reutilizables** (abanico, dirigido, ráfaga…) para
@@ -96,8 +91,8 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 - **Localización (i18n)**: preparar el código para inglés/español desde ya (que
   el texto nuevo no quede cableado a pelo) aunque la traducción al inglés se
   haga más adelante.
-- **`Modo sin fin (arcade)`**: una vez exista la campaña (#1), recuperar el
-  bucle infinito actual como modo aparte, con su propio ranking.
+- **`Modo sin fin (arcade)`**: ahora que hay campaña con final, recuperar el
+  bucle infinito de antes como modo aparte, con su propio ranking.
 - **Mini-jefes / Boss Rush**: encadenar solo jefes. No prioritario; depende de
   cuántos jefes acabe teniendo la campaña.
 - **Logros** — no ahora, posible más adelante.

@@ -43,7 +43,11 @@ def test_derrota_del_jefe_sube_de_nivel(juego, rm):
 
     juego.collision_manager.actualizar(juego.tiempo_juego)
     nivel0 = juego.nivel
-    juego.actualizar(DT60)                       # procesa pendiente_reinicio
+    juego.actualizar(DT60)                       # procesa la transición diferida
+    assert juego.nivel == nivel0                 # el nivel no sube solo...
+    assert juego.estado_nivel_completado is True  # ...se muestra la pantalla de nivel completado
+
+    juego.reiniciar_juego()                      # "Continuar" en esa pantalla
     assert juego.nivel == nivel0 + 1
 
 

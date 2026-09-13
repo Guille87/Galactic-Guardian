@@ -29,7 +29,10 @@ class InputHandler:
                                 self.juego.nombre_entrada, self.juego.puntuacion
                             )
                             self.juego.pidiendo_nombre = False
-                            self.juego.estado_game_over = True
+                            if self.juego.pidiendo_nombre_para == "victoria":
+                                self.juego.estado_victoria_final = True
+                            else:
+                                self.juego.estado_game_over = True
                     elif evento.key == pygame.K_BACKSPACE:
                         self.juego.nombre_entrada = self.juego.nombre_entrada[:-1]
                     elif len(self.juego.nombre_entrada) < 15:
@@ -61,9 +64,10 @@ class InputHandler:
         return True
 
     def _manejar_teclas_presionadas(self, tecla):
-        # En Game Over el teclado no hace nada: la pantalla se maneja solo con el
-        # ratón y `juego.pausado` ya está en True como "congelado".
-        if self.juego.estado_game_over:
+        # En las pantallas de fin de partida/nivel el teclado no hace nada: se
+        # manejan solo con el ratón y `juego.pausado` ya está "congelado".
+        if (self.juego.estado_game_over or self.juego.estado_nivel_completado
+                or self.juego.mostrando_seleccion_nivel or self.juego.estado_victoria_final):
             return
 
         if tecla == pygame.K_ESCAPE or tecla == pygame.K_p:
@@ -83,7 +87,9 @@ class InputHandler:
             self.juego.disparando = False
 
     def _manejar_clic_presionado(self, evento):
-        # Prioridad: ¿Estamos en Game Over?
+        # Prioridad: las pantallas de fin de partida/nivel, cada una con sus
+        # propios botones (nunca se solapan: como en Game Over, el resto de la
+        # lógica de pausa no debe procesar este clic).
         if self.juego.estado_game_over:
             if evento.button == 1:
                 if self.juego.boton_reintentar and self.juego.boton_reintentar.clic_en_boton(evento.pos):
@@ -93,6 +99,15 @@ class InputHandler:
                     self.juego.volver_al_menu()
                     return False
             return True  # Evento consumido
+
+        if self.juego.estado_nivel_completado:
+            return self._clic_nivel_completado(evento)
+
+        if self.juego.mostrando_seleccion_nivel:
+            return self._clic_seleccion_nivel(evento)
+
+        if self.juego.estado_victoria_final:
+            return self._clic_victoria_final(evento)
 
         # ¿Estamos en pausa?
         if self.juego.pausado:
@@ -114,6 +129,35 @@ class InputHandler:
         else:
             if evento.button == 1:
                 self.juego.disparando = True
+        return True
+
+    def _clic_nivel_completado(self, evento):
+        if evento.button == 1:
+            if self.juego.boton_continuar and self.juego.boton_continuar.clic_en_boton(evento.pos):
+                self.juego.estado_nivel_completado = False
+                self.juego.reiniciar_juego()
+            elif self.juego.boton_elegir_nivel and self.juego.boton_elegir_nivel.clic_en_boton(evento.pos):
+                self.juego.estado_nivel_completado = False
+                self.juego.mostrando_seleccion_nivel = True
+        return True
+
+    def _clic_seleccion_nivel(self, evento):
+        if evento.button == 1 and self.juego.botones_seleccion_nivel:
+            for nivel, boton in self.juego.botones_seleccion_nivel:
+                if boton.clic_en_boton(evento.pos):
+                    self.juego.mostrando_seleccion_nivel = False
+                    self.juego.reiniciar_juego(nivel_forzado=nivel)
+                    break
+        return True
+
+    def _clic_victoria_final(self, evento):
+        if evento.button == 1:
+            if self.juego.boton_reintentar_final and self.juego.boton_reintentar_final.clic_en_boton(evento.pos):
+                self.juego.estado_victoria_final = False
+                self.juego.reiniciar_juego(nivel_forzado=1)
+            elif self.juego.boton_menu_final and self.juego.boton_menu_final.clic_en_boton(evento.pos):
+                self.juego.volver_al_menu()
+                return False
         return True
 
     def mostrar_confirmacion_salida(self):
