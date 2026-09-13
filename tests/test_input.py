@@ -63,6 +63,85 @@ def test_teclas_ignoradas_en_game_over(juego):
     assert juego.pausado is True
 
 
+def test_entrada_de_nombre_tras_victoria_final(juego):
+    juego.pidiendo_nombre = True
+    juego.pidiendo_nombre_para = "victoria"
+    juego.nombre_entrada = "AN"
+    juego.puntuacion = 999
+    _evento(pygame.KEYDOWN, key=pygame.K_RETURN, unicode="\r")
+    _procesar(juego)
+    assert juego.pidiendo_nombre is False
+    assert juego.estado_victoria_final is True
+    assert juego.estado_game_over is False
+
+
+def test_teclas_ignoradas_en_pantallas_de_campana(juego):
+    for atributo in ("estado_nivel_completado", "mostrando_seleccion_nivel", "estado_victoria_final"):
+        setattr(juego, atributo, True)
+        juego.pausado = True
+        _evento(pygame.KEYDOWN, key=pygame.K_ESCAPE)
+        _procesar(juego)
+        assert juego.pausado is True   # Esc no reanuda ni descuadra nada
+        setattr(juego, atributo, False)
+
+
+def test_clic_continuar_en_nivel_completado_avanza_de_nivel(juego):
+    juego.nivel = 1
+    juego.jefe_derrotado = True
+    juego.estado_nivel_completado = True
+    juego.pausado = True
+    juego.dibujar()   # crea boton_continuar / boton_elegir_nivel
+    _evento(pygame.MOUSEBUTTONDOWN, button=1, pos=juego.boton_continuar.rect.center)
+    _procesar(juego)
+    assert juego.nivel == 2
+    assert juego.estado_nivel_completado is False
+
+
+def test_clic_elegir_nivel_abre_el_selector(juego):
+    juego.nivel = 2
+    juego.estado_nivel_completado = True
+    juego.pausado = True
+    juego.dibujar()
+    _evento(pygame.MOUSEBUTTONDOWN, button=1, pos=juego.boton_elegir_nivel.rect.center)
+    _procesar(juego)
+    assert juego.mostrando_seleccion_nivel is True
+    assert juego.estado_nivel_completado is False
+
+
+def test_clic_en_selector_de_nivel_salta_a_ese_nivel(juego):
+    juego.nivel = 3
+    juego.mostrando_seleccion_nivel = True
+    juego.pausado = True
+    juego.dibujar()   # crea los botones de los niveles 1..3
+    _, boton_nivel_2 = juego.botones_seleccion_nivel[1]
+    _evento(pygame.MOUSEBUTTONDOWN, button=1, pos=boton_nivel_2.rect.center)
+    _procesar(juego)
+    assert juego.nivel == 2
+    assert juego.mostrando_seleccion_nivel is False
+
+
+def test_clic_jugar_de_nuevo_en_victoria_final_reinicia_desde_nivel_1(juego):
+    juego.nivel = 5
+    juego.estado_victoria_final = True
+    juego.pausado = True
+    juego.dibujar()
+    _evento(pygame.MOUSEBUTTONDOWN, button=1, pos=juego.boton_reintentar_final.rect.center)
+    _procesar(juego)
+    assert juego.nivel == 1
+    assert juego.estado_victoria_final is False
+
+
+def test_clic_menu_en_victoria_final_vuelve_al_menu(juego):
+    juego.nivel = 5
+    juego.estado_victoria_final = True
+    juego.pausado = True
+    juego.dibujar()
+    _evento(pygame.MOUSEBUTTONDOWN, button=1, pos=juego.boton_menu_final.rect.center)
+    resultado = _procesar(juego)
+    assert resultado is False
+    assert juego.resultado == "MENU"
+
+
 def test_entrada_de_nombre_en_game_over(juego):
     juego.pidiendo_nombre = True
     juego.nombre_entrada = ""
