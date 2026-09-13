@@ -7,6 +7,17 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+
+- **El juego ahora tiene un final.** Campaña de `settings.NIVEL_MAX` niveles fijos
+  (5 de partida). Al derrotar al jefe de un nivel que no es el último suena
+  `Victory Tune.ogg` (hasta ahora sin usar) y aparece una pantalla de **"Nivel
+  completado"** con la puntuación, los enemigos destruidos y el tiempo del
+  nivel, y dos opciones: continuar al siguiente o **elegir nivel** (rejugar
+  cualquiera de los ya superados en la partida actual). Al derrotar al jefe del
+  último nivel hay una pantalla de **victoria final**, con entrada en la tabla
+  de puntuaciones si corresponde.
+
 ## [0.1.4] - 2026-09-11
 
 Actualización desde el propio juego e instalador de Windows. Sin cambios
