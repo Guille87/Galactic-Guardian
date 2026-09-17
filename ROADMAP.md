@@ -30,17 +30,13 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 
 ## En curso / próximo (por orden)
 
-### 1 · Menú de opciones — vídeo
-- Ventana **1×** / **2×** y **pantalla completa** (`pygame.SCALED`, resolución
-  lógica 600×800 fija). Se persiste en `config.ini`.
-
-### 2 · Menú de opciones — reasignar teclas
+### 1 · Menú de opciones — reasignar teclas
 - Mapa de controles configurable (mover, disparar, pausa) persistido en
   `config.ini`. UI de "pulsa una tecla" con aviso si choca con otra acción y
   botón de restaurar por defecto.
-- El menú de opciones pasa a tener secciones (Sonido / Vídeo / Controles).
+- El menú de opciones pasa a tener secciones (Sonido / Controles).
 
-### 3 · Oleadas y niveles como datos (antes de meter contenido nuevo)
+### 2 · Oleadas y niveles como datos (antes de meter contenido nuevo)
 - Sacar la definición de fases/enemigos/jefe/música de cada nivel de
   `WaveManager` a una tabla de datos. Añadir contenido pasa a ser "editar una
   tabla", no tocar lógica — y es el paso natural antes de sumar enemigos.
@@ -48,7 +44,7 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
   crear/destruir constantemente) — mejora de rendimiento, se hace en el mismo
   frente porque toca el mismo código de gestión de entidades.
 
-### 4 · Contenido nuevo (según lleguen los assets)
+### 3 · Contenido nuevo (según lleguen los assets)
 - **Enemigos nuevos** — asset a la espera de que consigas un set de un mismo
   autor (arte consistente).
 - **Patrones de disparo reutilizables** (abanico, dirigido, ráfaga…) para
@@ -115,3 +111,7 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
   compensa para lo que se busca con este juego.
 - **Accesibilidad dedicada** (reducir destellos, modo daltónico) — no se
   considera necesaria para el alcance actual del juego.
+- **Menú de opciones — vídeo** (ventana 1×/2×/pantalla completa/automático,
+  `pygame.SCALED`) — implementado y descartado tras probarlo: la experiencia
+  con varios tamaños de ventana no convenció al autor. El juego se queda fijo
+  a 600×800.
