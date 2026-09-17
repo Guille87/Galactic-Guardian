@@ -364,6 +364,17 @@ class MenuManager:
         self.controles[accion] = tecla
         self._actualizar_texto_control(accion)
 
+    def _overlay_opciones(self):
+        """Capa negra semitransparente entre el fondo estrellado y el texto de
+        Opciones: sin ella el cielo (blanco sobre negro) le comía el contraste
+        a las etiquetas y a los botones. Se crea una sola vez y se reutiliza."""
+        if not hasattr(self, "_overlay_opciones_surf"):
+            overlay = pygame.Surface((settings.ANCHO, settings.ALTO))
+            overlay.set_alpha(150)
+            overlay.fill((0, 0, 0))
+            self._overlay_opciones_surf = overlay
+        return self._overlay_opciones_surf
+
     def _feedback_sonoro_efectos(self, reiniciar=False):
         """Sonido de prueba al ajustar el volumen de efectos.
 
@@ -475,6 +486,7 @@ class MenuManager:
             if sl.left_button.held or sl.right_button.held:
                 sl.button_held_repeat_acc = 0.0
         self.pantalla.blit(fondo, (0, 0))
+        self.pantalla.blit(self._overlay_opciones(), (0, 0))
 
         # Renderizar textos (Título, etiquetas de sliders)
         txt_opciones = self.font_titulo.render("Opciones", True, (255, 255, 255))
