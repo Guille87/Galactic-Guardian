@@ -35,11 +35,26 @@ class Juego:
         self.pausado = False
         self.estado_game_over = False
         self.pidiendo_nombre = False
+        self.pidiendo_nombre_para = None   # "game_over" | "victoria": a qué pantalla ir tras registrar el nombre
         self.nombre_entrada = ""
         self.jefe_derrotado = False
         self.disparando = False
         self.pendiente_reinicio = False  # Transición diferida (ver actualizar())
         self.debug_hitboxes = False      # F1: dibuja los círculos de colisión
+
+        # Campaña: pantallas de fin de nivel / victoria final (ver ROADMAP)
+        self.estado_nivel_completado = False
+        self.estado_victoria_final = False
+        self.mostrando_seleccion_nivel = False
+        self.enemigos_eliminados_nivel = 0   # total del nivel (para la pantalla de resumen)
+
+        # Transición de cierre de nivel al derrotar al jefe: la nave se centra,
+        # sube y desaparece con el fondo acelerando, antes de mostrar la
+        # pantalla de nivel completado / victoria. Mientras dura, el jugador no
+        # se controla (ver InputHandler) y actualizar() la mueve por su cuenta.
+        self.transicion_activa = False
+        self.transicion_fase = None          # "centrar" | "subir" | "espera"
+        self.transicion_tiempo_fase = 0.0    # ms transcurridos en la fase actual
 
         # Control de la máquina de estados de alto nivel
         self.ejecutando = True
@@ -54,7 +69,8 @@ class Juego:
         self.background = ScrollingBackground(
             self.rm.get_image("imagen_fondo1"),
             self.rm.get_image("imagen_fondo2"),
-            self.pantalla_alto
+            self.pantalla_alto,
+            velocidad=settings.FONDO_VELOCIDAD_NORMAL,
         )
         self.jugador = Jugador(
             self.rm.get_image_scaled("jugador", Jugador.CONFIG["tamano"]),
@@ -101,6 +117,11 @@ class Juego:
         self.boton_salir = None
         self.boton_reintentar = None
         self.boton_salir_post = None
+        self.boton_continuar = None
+        self.boton_elegir_nivel = None
+        self.botones_seleccion_nivel = None   # lista, se recrea si cambia el nivel máximo
+        self.boton_reintentar_final = None
+        self.boton_menu_final = None
 
     def pausar_juego(self):
         """Pausa el juego. `tiempo_juego` deja de avanzar solo (no se llama a
@@ -110,29 +131,34 @@ class Juego:
     def reanudar_juego(self):
         self.pausado = False
 
-    def reiniciar_juego(self):
-        """Restablece el estado para una nueva partida o nivel."""
-        avance_nivel = self.jefe_derrotado
-        if self.jefe_derrotado:
+    def reiniciar_juego(self, nivel_forzado=None):
+        """Restablece el estado para una nueva partida, el siguiente nivel, o
+        (`nivel_forzado`) un nivel concreto elegido a mano en el selector."""
+        avance_nivel = self.jefe_derrotado and nivel_forzado is None
+        if nivel_forzado is not None:
+            # Selector de nivel: arranca ese nivel como una partida nueva.
+            self.nivel = nivel_forzado
+            self.jefe_derrotado = False
+            self.jugador.reiniciar(self.pantalla_ancho, self.pantalla_alto)
+            self.puntuacion = 0
+        elif self.jefe_derrotado:
             self.nivel += 1
             self.jefe_derrotado = False
-
-            # Aumentar dificultad
-            self.MIN_TIEMPO_GENERACION = max(settings.GEN_MIN_SUELO,
-                                             self.MIN_TIEMPO_GENERACION - settings.GEN_DECREMENTO_NIVEL)
-            self.MAX_TIEMPO_GENERACION = max(settings.GEN_MIN_SUELO,
-                                             self.MAX_TIEMPO_GENERACION - settings.GEN_DECREMENTO_NIVEL)
+            # La transición ya movió a la nave fuera de la pantalla: el nivel
+            # nuevo empieza con ella en su sitio de siempre (mejoras intactas).
+            self.jugador.recentrar(self.pantalla_ancho, self.pantalla_alto)
         else:
             # Partida desde cero: se restablece al jugador in situ (sin recrearlo)
             # para que los managers puedan conservar su referencia.
             self.jugador.reiniciar(self.pantalla_ancho, self.pantalla_alto)
-            self.MIN_TIEMPO_GENERACION = settings.GEN_MIN_INICIAL
-            self.MAX_TIEMPO_GENERACION = settings.GEN_MAX_INICIAL
             self.puntuacion = 0
+
+        self.MIN_TIEMPO_GENERACION, self.MAX_TIEMPO_GENERACION = settings.gen_intervalo_para_nivel(self.nivel)
 
         # Reiniciar todos los valores del juego a sus estados iniciales
         self.entity_manager.vaciar_todo(avance_nivel=avance_nivel)
         self.enemigos_golpeados.clear()
+        self.enemigos_eliminados_nivel = 0
         self.tiempo_proximo_enemigo = 0
         self.tiempo_juego = 0.0
         self.inicio_juego = 0.0
@@ -143,6 +169,13 @@ class Juego:
         self.jugador.invulnerable = False
         self.pausado = False
         self.estado_game_over = False
+        self.estado_nivel_completado = False
+        self.mostrando_seleccion_nivel = False
+        self.estado_victoria_final = False
+        self.transicion_activa = False
+        self.transicion_fase = None
+        self.transicion_tiempo_fase = 0.0
+        self.background.velocidad = settings.FONDO_VELOCIDAD_NORMAL
 
         # Resetear el WaveManager para que el jefe pueda volver a salir en el siguiente nivel
         self.wave_manager.jefe_generado = False
@@ -163,6 +196,7 @@ class Juego:
         y la transición diferida cuando cae el jefe.
         """
         self.enemigos_eliminados += 1
+        self.enemigos_eliminados_nivel += 1
         tipo_item = enemigo.die(self.jugador, self.enemigos_eliminados)
         if tipo_item:
             self._spawnear_item(tipo_item, enemigo.rect.center)
@@ -225,6 +259,15 @@ class Juego:
         # El reloj de juego solo corre aquí: en pausa / Game Over se congela.
         self.tiempo_juego += dt * 1000
 
+        if self.transicion_activa:
+            # Cierre de nivel en curso: la nave no se controla (ver
+            # InputHandler), no se generan enemigos y no hay nada con lo que
+            # colisionar (el jefe ya ha muerto). Solo movemos la nave "sola",
+            # el fondo, y dejamos que efectos/ítems terminen su animación.
+            self._actualizar_transicion_nivel(dt)
+            self.entity_manager.actualizar(dt, self.tiempo_juego)
+            return
+
         # 1. Entradas y Generación
         teclas = pygame.key.get_pressed()
         self.jugador.mover(teclas, self.pantalla, dt)
@@ -235,10 +278,11 @@ class Juego:
         self.collision_manager.actualizar(self.tiempo_juego)
 
         # 2b. Transición diferida: si el jefe murió durante la resolución de
-        # colisiones, reiniciamos aquí (nunca desde dentro de un manager).
+        # colisiones, arrancamos aquí la secuencia de cierre de nivel (nunca
+        # desde dentro de un manager).
         if self.pendiente_reinicio:
             self.pendiente_reinicio = False
-            self.reiniciar_juego()
+            self._iniciar_transicion_fin_de_nivel()
             return
 
         # 3. Cosmética
@@ -267,14 +311,99 @@ class Juego:
         self.audio_manager.detener_toda_la_musica()
         # Iniciar música Game Over de fondo
         self.audio_manager.reproducir_musica("defeated_tune")
+        self._pedir_nombre_o_mostrar("game_over")
 
-        puntuaciones_top = self.clasificacion.obtener_puntuaciones_top()
-        if len(puntuaciones_top) < 10 or self.puntuacion > puntuaciones_top[-1][1]:
-            # La puntuación del jugador está entre las 10 mejores o es superior a la última de las 10 mejores
-            self.pidiendo_nombre = True
-            self.nombre_entrada = ""
+    def _iniciar_transicion_fin_de_nivel(self):
+        """Arranca la secuencia de cierre de nivel justo al derrotar al jefe.
+
+        Quita las balas en vuelo (del jefe y del jugador) y silencia el
+        disparo; `_actualizar_transicion_nivel` se encarga del resto fotograma
+        a fotograma hasta que `_finalizar_transicion_fin_de_nivel` muestre la
+        pantalla correspondiente.
+        """
+        self.audio_manager.detener_toda_la_musica()
+        self.audio_manager.reproducir_musica("victory_tune")
+        self.entity_manager.balas.empty()
+        self.entity_manager.balas_enemigo.empty()
+        self.disparando = False
+
+        self.transicion_activa = True
+        self.transicion_fase = "centrar"
+        self.transicion_tiempo_fase = 0.0
+
+    def _actualizar_transicion_nivel(self, dt):
+        """Fotograma a fotograma de la secuencia: centrar -> subir -> esperar.
+
+        Valores ajustables en `settings.py`: `TRANSICION_VEL_LATERAL` (rapidez
+        al centrarse), `TRANSICION_VEL_SUBIDA` (rapidez al subir),
+        `TRANSICION_FONDO_ACELERACION` / `TRANSICION_FONDO_RAMPA_MS` (cuánto y
+        en cuánto tiempo se acelera el fondo) y `TRANSICION_ESPERA_MS` (pausa
+        tras desaparecer la nave, antes de la pantalla).
+        """
+        factor = dt * settings.FPS
+        jugador = self.jugador
+        centro_x = self.pantalla_ancho // 2
+
+        if self.transicion_fase == "centrar":
+            paso = settings.TRANSICION_VEL_LATERAL * factor
+            diferencia = centro_x - jugador.rect.centerx
+            if abs(diferencia) <= paso:
+                jugador.rect.centerx = centro_x
+                self.transicion_fase = "subir"
+            else:
+                jugador.rect.centerx += paso if diferencia > 0 else -paso
+
+        elif self.transicion_fase == "subir":
+            jugador.rect.y -= settings.TRANSICION_VEL_SUBIDA * factor
+
+            # El fondo acelera de forma gradual mientras la nave sube.
+            rampa = min(1.0, self.transicion_tiempo_fase / settings.TRANSICION_FONDO_RAMPA_MS)
+            self.background.velocidad = settings.FONDO_VELOCIDAD_NORMAL * (
+                1 + rampa * (settings.TRANSICION_FONDO_ACELERACION - 1)
+            )
+            self.transicion_tiempo_fase += dt * 1000
+
+            if jugador.rect.bottom < -settings.TRANSICION_MARGEN_SALIDA:   # ha desaparecido por arriba
+                self.transicion_fase = "espera"
+                self.transicion_tiempo_fase = 0.0
+
+        elif self.transicion_fase == "espera":
+            self.transicion_tiempo_fase += dt * 1000
+            if self.transicion_tiempo_fase >= settings.TRANSICION_ESPERA_MS:
+                self._finalizar_transicion_fin_de_nivel()
+                return
+
+        self.background.update(dt)
+
+    def _finalizar_transicion_fin_de_nivel(self):
+        """Termina la transición y muestra "nivel completado" o la victoria
+        final si era el último nivel de la campaña."""
+        self.transicion_activa = False
+        self.transicion_fase = None
+        self.background.velocidad = settings.FONDO_VELOCIDAD_NORMAL
+        self.pausado = True
+
+        if self.nivel >= settings.NIVEL_MAX:
+            self._pedir_nombre_o_mostrar("victoria")
         else:
+            self.estado_nivel_completado = True
+
+    def _cualifica_para_el_top10(self):
+        top = self.clasificacion.obtener_puntuaciones_top()
+        return len(top) < 10 or self.puntuacion > top[-1][1]
+
+    def _pedir_nombre_o_mostrar(self, destino):
+        """`destino`: "game_over" o "victoria". Si la puntuación entra en el
+        top 10 se pide el nombre primero (`pidiendo_nombre_para` recuerda a qué
+        pantalla ir después); si no, se muestra esa pantalla directamente."""
+        if self._cualifica_para_el_top10():
+            self.pidiendo_nombre = True
+            self.pidiendo_nombre_para = destino
+            self.nombre_entrada = ""
+        elif destino == "game_over":
             self.estado_game_over = True
+        else:
+            self.estado_victoria_final = True
 
     def volver_al_menu(self):
         """Solicita terminar la partida y devolver el control al menú principal."""

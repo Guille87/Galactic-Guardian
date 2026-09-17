@@ -17,11 +17,45 @@ ANCHO = 600
 ALTO = 800
 FPS = 60
 
+# --- Campaña ---
+NIVEL_MAX = 5   # nº fijo de niveles; el jefe del último da la pantalla de victoria
+
+# --- Fondo ---
+FONDO_VELOCIDAD_NORMAL = 0.5   # px/frame-a-60fps del scroll normal
+
+# --- Transición de fin de nivel (al derrotar al jefe) ---
+# La nave se centra en horizontal, sube recta y desaparece por arriba; el fondo
+# acelera mientras tanto; unos segundos después se muestra "nivel completado".
+TRANSICION_VEL_LATERAL = 6          # px/frame-a-60fps al centrarse en horizontal
+TRANSICION_VEL_SUBIDA = 10          # px/frame-a-60fps al subir y desaparecer
+TRANSICION_FONDO_ACELERACION = 3.0  # multiplicador máx. de velocidad del fondo al subir la nave
+TRANSICION_FONDO_RAMPA_MS = 1500    # ms hasta que el fondo llega a esa velocidad máxima
+TRANSICION_ESPERA_MS = 2000         # ms de espera tras desaparecer la nave, antes de la pantalla
+# Margen extra (px) por encima de "desaparecida" (rect.bottom < 0): la barra de
+# vida se dibuja bajo la nave, así que sin este margen se la ve un instante
+# asomando por arriba de la pantalla.
+TRANSICION_MARGEN_SALIDA = 40
+
 # --- Generación de enemigos (ms entre spawns) ---
 GEN_MIN_INICIAL = 800
 GEN_MAX_INICIAL = 1000
 GEN_MIN_SUELO = 200          # límite inferior al subir de nivel
 GEN_DECREMENTO_NIVEL = 200   # cuánto baja el intervalo por nivel
+
+
+def gen_intervalo_para_nivel(nivel):
+    """Intervalo (min, max) en ms entre spawns para un nivel dado.
+
+    Función pura de `nivel` (antes era estado mutable que se decrementaba paso a
+    paso en cada `reiniciar_juego`): permite saltar directamente a un nivel
+    concreto -p. ej. desde el selector de nivel- sin repetir el decremento N
+    veces.
+    """
+    bajada = GEN_DECREMENTO_NIVEL * (nivel - 1)
+    return (
+        max(GEN_MIN_SUELO, GEN_MIN_INICIAL - bajada),
+        max(GEN_MIN_SUELO, GEN_MAX_INICIAL - bajada),
+    )
 
 # --- Fases de la oleada (ms desde el inicio del nivel) ---
 TIEMPO_FASE_2 = 20000

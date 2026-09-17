@@ -242,6 +242,19 @@ def test_sin_actualizacion_el_boton_no_hace_nada(menu, monkeypatch):
     assert abierto == []
 
 
+def test_pantalla_de_puntuaciones_con_y_sin_nivel(menu):
+    """Formato nuevo (con nivel) y antiguo (sin nivel) mezclados, sin crash."""
+    menu.clasificacion.agregar_puntuacion("Ana", 300, nivel=3)
+    menu.clasificacion.puntuaciones["Viejo"] = 150   # formato antiguo (int suelto)
+    menu.estado = "PUNTUACIONES"
+    menu._menu_puntuaciones()   # no debe lanzar excepción
+
+
+def test_pantalla_de_puntuaciones_vacia(menu):
+    menu.estado = "PUNTUACIONES"
+    menu._menu_puntuaciones()
+
+
 def test_ejecutar_reinicia_su_estado(menu):
     menu.estado = "OPCIONES"
     menu.ejecutando = False
