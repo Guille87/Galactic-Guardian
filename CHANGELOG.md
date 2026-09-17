@@ -7,6 +7,11 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+
+- Botón **Salir** en el menú principal, con confirmación (antes solo se podía
+  cerrar el juego con la X de la ventana).
+
 ### Fixed
 
 - El aviso de nueva versión se cacheaba 24 h: recién publicada una Release, el
