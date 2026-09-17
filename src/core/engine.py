@@ -363,7 +363,7 @@ class Juego:
             )
             self.transicion_tiempo_fase += dt * 1000
 
-            if jugador.rect.bottom < 0:   # ha desaparecido por arriba
+            if jugador.rect.bottom < -settings.TRANSICION_MARGEN_SALIDA:   # ha desaparecido por arriba
                 self.transicion_fase = "espera"
                 self.transicion_tiempo_fase = 0.0
 

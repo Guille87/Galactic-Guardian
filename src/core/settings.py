@@ -31,6 +31,10 @@ TRANSICION_VEL_SUBIDA = 10          # px/frame-a-60fps al subir y desaparecer
 TRANSICION_FONDO_ACELERACION = 3.0  # multiplicador máx. de velocidad del fondo al subir la nave
 TRANSICION_FONDO_RAMPA_MS = 1500    # ms hasta que el fondo llega a esa velocidad máxima
 TRANSICION_ESPERA_MS = 2000         # ms de espera tras desaparecer la nave, antes de la pantalla
+# Margen extra (px) por encima de "desaparecida" (rect.bottom < 0): la barra de
+# vida se dibuja bajo la nave, así que sin este margen se la ve un instante
+# asomando por arriba de la pantalla.
+TRANSICION_MARGEN_SALIDA = 40
 
 # --- Generación de enemigos (ms entre spawns) ---
 GEN_MIN_INICIAL = 800

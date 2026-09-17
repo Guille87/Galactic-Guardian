@@ -157,7 +157,8 @@ def test_transicion_centra_sube_y_acelera_el_fondo_hasta_completarse(juego):
     else:
         pytest.fail("la fase 'subir' no terminó")
     assert aceleracion_vista
-    assert juego.jugador.rect.bottom < 0
+    # con margen de sobra: la barra de vida (bajo la nave) no debe asomar arriba
+    assert juego.jugador.rect.bottom < -settings.TRANSICION_MARGEN_SALIDA
 
     # Fase "espera": tras el tiempo configurado, se muestra la pantalla.
     for _ in range(300):
