@@ -113,6 +113,7 @@ class Juego:
         self.jefe = None
 
         # Botones de overlays (los crea RenderManager una sola vez y los cachea)
+        self.boton_reanudar = None
         self.boton_opciones = None
         self.boton_salir = None
         self.boton_reintentar = None

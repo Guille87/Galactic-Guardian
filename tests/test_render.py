@@ -28,6 +28,12 @@ def test_render_en_pausa(juego, rm):
     juego.dibujar()                     # segundo frame: reutiliza el snapshot
 
 
+def test_render_en_pausa_reanudar_va_encima_de_opciones(juego):
+    juego.pausar_juego()
+    juego.dibujar()
+    assert juego.boton_reanudar.rect.centery < juego.boton_opciones.rect.centery < juego.boton_salir.rect.centery
+
+
 def test_render_game_over(juego):
     juego.estado_game_over = True
     juego.dibujar()

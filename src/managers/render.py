@@ -76,15 +76,19 @@ class RenderManager:
 
     def _dibujar_botones_pausa(self):
         # Se crean una única vez y se cachean en el juego
-        if self.juego.boton_opciones is None:
+        if self.juego.boton_reanudar is None:
             centro_x = self.juego.pantalla_ancho // 2
-            y_opciones = self.juego.pantalla_alto // 2 + 50
-            y_salir = self.juego.pantalla_alto // 2 + 120
+            y_reanudar = self.juego.pantalla_alto // 2 + 50
+            y_opciones = self.juego.pantalla_alto // 2 + 120
+            y_salir = self.juego.pantalla_alto // 2 + 190
+            self.juego.boton_reanudar = Boton("Reanudar", (0, 255, 0, 150), (255, 255, 255),
+                                              centro_x, y_reanudar, 150, 50, radio_borde=10)
             self.juego.boton_opciones = Boton("Opciones", (0, 255, 255, 150), (255, 255, 255),
                                               centro_x, y_opciones, 150, 50, radio_borde=10)
             self.juego.boton_salir = Boton("Salir", (255, 0, 0, 150), (255, 255, 255),
                                            centro_x, y_salir, 150, 50, radio_borde=10)
 
+        self.juego.boton_reanudar.dibujar(self.pantalla, self.font_botones)
         self.juego.boton_opciones.dibujar(self.pantalla, self.font_botones)
         self.juego.boton_salir.dibujar(self.pantalla, self.font_botones)
 
