@@ -1,4 +1,5 @@
 import pygame
+from src.core import settings
 from src.ui.components.button import Boton
 
 
@@ -142,7 +143,9 @@ class RenderManager:
         j.boton_elegir_nivel.dibujar(self.pantalla, self.font_botones)
 
     def _dibujar_pantalla_seleccion_nivel(self):
-        """Elegir, entre los niveles ya superados en esta partida, cuál rejugar."""
+        """Elegir nivel: los ya superados en esta partida, más el siguiente
+        (el mismo al que llevaría "Continuar", por si el jugador prefiere
+        seguir avanzando en vez de rejugar uno anterior)."""
         j = self.juego
         self.pantalla.blit(j.background.img1, (0, 0))
         cx = j.pantalla_ancho // 2
@@ -150,13 +153,14 @@ class RenderManager:
         titulo = self.font_game_over.render("ELEGIR NIVEL", True, (255, 255, 255))
         self.pantalla.blit(titulo, titulo.get_rect(center=(cx, 150)))
 
-        # Se recrean si cambia cuántos niveles hay ya superados.
-        if j.botones_seleccion_nivel is None or len(j.botones_seleccion_nivel) != j.nivel:
+        nivel_maximo_listado = min(j.nivel + 1, settings.NIVEL_MAX)
+        if j.botones_seleccion_nivel is None or len(j.botones_seleccion_nivel) != nivel_maximo_listado:
             j.botones_seleccion_nivel = []
             y = 250
-            for n in range(1, j.nivel + 1):
-                boton = Boton(f"Nivel {n}", (0, 150, 255, 150), (255, 255, 255),
-                             cx, y, 200, 50, radio_borde=10)
+            for n in range(1, nivel_maximo_listado + 1):
+                etiqueta = f"Nivel {n}" + (" (siguiente)" if n == j.nivel + 1 else "")
+                boton = Boton(etiqueta, (0, 150, 255, 150), (255, 255, 255),
+                             cx, y, 260, 50, radio_borde=10)
                 j.botones_seleccion_nivel.append((n, boton))
                 y += 70
 

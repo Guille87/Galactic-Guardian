@@ -184,6 +184,28 @@ def test_actualizar_sin_instalador_abre_el_navegador(menu, monkeypatch):
     assert abierto == ["http://descarga"]
 
 
+def test_botones_bloqueados_mientras_se_descarga_la_actualizacion(menu, monkeypatch):
+    """No se puede interrumpir la descarga jugando, abriendo opciones, etc."""
+    menu.actualizaciones.resultado = {
+        "version": "9.9.9", "url": "http://d", "instalador_url": "http://x/setup.exe",
+    }
+
+    class _DescargaFalsa:
+        def __init__(self): self.progreso = 0.5; self.terminada = False; self.error = False
+    menu._descarga = _DescargaFalsa()
+    assert menu._descargando_actualizacion() is True
+
+    pygame.event.post(pygame.event.Event(
+        pygame.MOUSEBUTTONDOWN, button=1, pos=menu.btn_jugar.rect.center))
+    menu._menu_principal()
+    assert menu.ejecutando is True and menu.resultado is None   # "Jugar" no hizo nada
+
+    pygame.event.post(pygame.event.Event(
+        pygame.MOUSEBUTTONDOWN, button=1, pos=menu.btn_puntos.rect.center))
+    menu._menu_principal()
+    assert menu.estado == "PRINCIPAL"   # "Puntuaciones" tampoco
+
+
 def test_actualizar_instalado_descarga_y_al_terminar_lanza_y_sale(menu, monkeypatch):
     menu.actualizaciones.resultado = {
         "version": "9.9.9", "url": "http://d", "instalador_url": "http://x/setup.exe",
@@ -240,6 +262,56 @@ def test_sin_actualizacion_el_boton_no_hace_nada(menu, monkeypatch):
     menu._menu_principal()
 
     assert abierto == []
+
+
+def test_confirmar_salida_si_devuelve_true(menu):
+    cx = menu.pantalla.get_rect().centerx
+    pygame.event.post(pygame.event.Event(
+        pygame.MOUSEBUTTONDOWN, button=1, pos=(cx - 100, 345)))   # botón "Sí"
+    assert menu._confirmar_salida() is True
+
+
+def test_confirmar_salida_no_devuelve_false(menu):
+    cx = menu.pantalla.get_rect().centerx
+    pygame.event.post(pygame.event.Event(
+        pygame.MOUSEBUTTONDOWN, button=1, pos=(cx + 110, 345)))   # botón "No"
+    assert menu._confirmar_salida() is False
+
+
+def test_confirmar_salida_quit_tambien_confirma(menu):
+    pygame.event.post(pygame.event.Event(pygame.QUIT))
+    assert menu._confirmar_salida() is True
+
+
+def test_boton_salir_confirmado_termina_el_menu(menu, monkeypatch):
+    monkeypatch.setattr(menu, "_confirmar_salida", lambda: True)
+    pygame.event.post(pygame.event.Event(
+        pygame.MOUSEBUTTONDOWN, button=1, pos=menu.btn_salir.rect.center))
+    menu._menu_principal()
+    assert menu.ejecutando is False
+    assert menu.resultado == "SALIR"
+
+
+def test_boton_salir_cancelado_sigue_en_el_menu(menu, monkeypatch):
+    monkeypatch.setattr(menu, "_confirmar_salida", lambda: False)
+    pygame.event.post(pygame.event.Event(
+        pygame.MOUSEBUTTONDOWN, button=1, pos=menu.btn_salir.rect.center))
+    menu._menu_principal()
+    assert menu.ejecutando is True
+    assert menu.resultado is None
+
+
+def test_boton_salir_bloqueado_durante_la_descarga(menu, monkeypatch):
+    class _DescargaFalsa:
+        def __init__(self): self.progreso = 0.1; self.terminada = False; self.error = False
+    menu._descarga = _DescargaFalsa()
+    llamado = []
+    monkeypatch.setattr(menu, "_confirmar_salida", lambda: llamado.append(1) or True)
+    pygame.event.post(pygame.event.Event(
+        pygame.MOUSEBUTTONDOWN, button=1, pos=menu.btn_salir.rect.center))
+    menu._menu_principal()
+    assert llamado == []
+    assert menu.ejecutando is True
 
 
 def test_pantalla_de_puntuaciones_con_y_sin_nivel(menu):

@@ -153,7 +153,13 @@ class InputHandler:
             for nivel, boton in self.juego.botones_seleccion_nivel:
                 if boton.clic_en_boton(evento.pos):
                     self.juego.mostrando_seleccion_nivel = False
-                    self.juego.reiniciar_juego(nivel_forzado=nivel)
+                    if nivel == self.juego.nivel + 1:
+                        # El "siguiente" nivel de la lista es justo el de
+                        # Continuar: mismo camino, para no perder las mejoras
+                        # de la nave (el resto son niveles a rejugar desde cero).
+                        self.juego.reiniciar_juego()
+                    else:
+                        self.juego.reiniciar_juego(nivel_forzado=nivel)
                     break
         return True
 

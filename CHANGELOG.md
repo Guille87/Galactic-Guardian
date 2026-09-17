@@ -7,6 +7,25 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+
+- Botón **Salir** en el menú principal, con confirmación (antes solo se podía
+  cerrar el juego con la X de la ventana).
+- El selector de nivel ("Elegir nivel" tras completar uno) ahora incluye
+  también el **siguiente** nivel, no solo los ya superados — para poder seguir
+  avanzando sin salir de esa pantalla. Elegirlo conserva las mejoras y la
+  puntuación (como Continuar); rejugar un nivel anterior sigue empezando la
+  nave desde cero.
+
+### Fixed
+
+- El aviso de nueva versión se cacheaba 24 h: recién publicada una Release, el
+  juego podía tardar hasta un día en avisar aunque se abriera antes. Ahora la
+  caché dura 6 h.
+- Mientras se descarga la actualización, el resto del menú (Jugar, Opciones,
+  Puntuaciones) ya no responde a los clics: antes se podía interrumpir la
+  descarga a medias saliendo a jugar.
+
 ## [0.2.0] - 2026-09-17
 
 El juego deja de ser infinito: primera versión con una campaña que se puede
