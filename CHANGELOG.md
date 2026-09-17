@@ -12,6 +12,9 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 - El aviso de nueva versión se cacheaba 24 h: recién publicada una Release, el
   juego podía tardar hasta un día en avisar aunque se abriera antes. Ahora la
   caché dura 6 h.
+- Mientras se descarga la actualización, el resto del menú (Jugar, Opciones,
+  Puntuaciones) ya no responde a los clics: antes se podía interrumpir la
+  descarga a medias saliendo a jugar.
 
 ## [0.2.0] - 2026-09-17
 
