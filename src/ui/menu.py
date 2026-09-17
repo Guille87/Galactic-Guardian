@@ -296,17 +296,23 @@ class MenuManager:
             click_increment=settings.VOLUMEN_PASO, manager=self.ui_manager
         )
 
-        # Controles: un botón por acción reasignable (flechas y Esc son fijas,
-        # no aparecen aquí). Clic -> queda "escuchando" la próxima tecla (ver
-        # `_procesar_tecla_reasignada`); Esc cancela sin cambiar nada.
+        # Controles: un botón por acción reasignable. Las flechas y Esc son
+        # fijas (siempre funcionan, no aparecen como botón) — el aviso de abajo
+        # es justo para que el jugador sepa que no hace falta tocar nada si le
+        # vale con ellas. Clic en un botón -> queda "escuchando" la próxima
+        # tecla (ver `_procesar_tecla_reasignada`); Esc cancela sin cambiar nada.
         pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect((50, 320), (200, 24)), text="Controles", manager=self.ui_manager
+        )
+        pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect((50, 344), (500, 22)),
+            text="Las flechas y Esc funcionan siempre, sin reasignar", manager=self.ui_manager,
         )
         self._botones_controles = {}   # acción -> UIButton
         self._acciones_por_boton = {}  # UIButton -> acción (inverso, para los eventos de clic)
         filas = (("arriba", "abajo"), ("izquierda", "derecha"), ("disparar", "pausa"))
         for fila, (accion_izq, accion_der) in enumerate(filas):
-            y = 350 + fila * 54
+            y = 372 + fila * 54
             for accion, x in ((accion_izq, 50), (accion_der, 330)):
                 boton = pygame_gui.elements.UIButton(
                     relative_rect=pygame.Rect((x, y), (220, 44)),
@@ -315,16 +321,16 @@ class MenuManager:
                 self._botones_controles[accion] = boton
                 self._acciones_por_boton[boton] = accion
         self.btn_restaurar_controles = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((50, 512), (300, 40)),
+            relative_rect=pygame.Rect((50, 534), (300, 40)),
             text='Restaurar valores por defecto', manager=self.ui_manager,
         )
 
         # Botones
         self.btn_guardar = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((50, 610), (200, 50)), text='Guardar', manager=self.ui_manager
+            relative_rect=pygame.Rect((50, 632), (200, 50)), text='Guardar', manager=self.ui_manager
         )
         self.btn_volver = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((350, 610), (200, 50)), text='Volver', manager=self.ui_manager
+            relative_rect=pygame.Rect((350, 632), (200, 50)), text='Volver', manager=self.ui_manager
         )
 
     def _texto_boton_control(self, accion):
@@ -472,7 +478,7 @@ class MenuManager:
 
         if self._aviso_conflicto and time.time() < self._aviso_conflicto_hasta:
             aviso = self.font_version.render(self._aviso_conflicto, True, (255, 120, 120))
-            self.pantalla.blit(aviso, (50, 560))
+            self.pantalla.blit(aviso, (50, 582))
 
         self.ui_manager.draw_ui(self.pantalla)
         pygame.display.flip()

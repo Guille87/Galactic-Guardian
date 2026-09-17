@@ -47,6 +47,16 @@ def test_etiquetas_de_los_sliders(menu):
     assert {"Música", "Efectos"} <= textos
 
 
+def test_aviso_de_que_las_flechas_y_esc_son_fijas(menu):
+    """El jugador no debe tener que reasignar las flechas para poder usarlas."""
+    menu._inicializar_interfaz_opciones()
+    textos = " ".join(
+        e.text for e in menu.ui_manager.get_root_container().elements
+        if isinstance(e, pygame_gui.elements.UILabel)
+    )
+    assert "flechas" in textos.lower() and "esc" in textos.lower()
+
+
 def test_feedback_efectos_arrastre_respeta_anti_spam(menu):
     menu._inicializar_interfaz_opciones()
     menu._feedback_sonoro_efectos()
