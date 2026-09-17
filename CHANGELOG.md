@@ -7,6 +7,12 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Fixed
+
+- El aviso de nueva versión se cacheaba 24 h: recién publicada una Release, el
+  juego podía tardar hasta un día en avisar aunque se abriera antes. Ahora la
+  caché dura 6 h.
+
 ## [0.2.0] - 2026-09-17
 
 El juego deja de ser infinito: primera versión con una campaña que se puede
