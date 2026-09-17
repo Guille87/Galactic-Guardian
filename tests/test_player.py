@@ -118,6 +118,36 @@ def test_no_se_sale_de_la_pantalla(jugador):
     assert jugador.rect.bottom <= 800
 
 
+def test_mover_usa_las_flechas_aunque_se_reasigne_otra_tecla(jugador):
+    """Las flechas son fijas: siguen funcionando pase lo que pase con el mapa."""
+    mapa = {"arriba": pygame.K_i, "abajo": pygame.K_k,
+            "izquierda": pygame.K_j, "derecha": pygame.K_l,
+            "disparar": pygame.K_SPACE, "pausa": pygame.K_p}
+    x0 = jugador.rect.centerx
+    jugador.mover(_teclas(pygame.K_RIGHT), pygame.display.get_surface(), DT60, mapa)
+    assert jugador.rect.centerx > x0
+
+
+def test_mover_respeta_la_tecla_reasignada(jugador):
+    """Si "derecha" se reasigna a L, pulsar L también mueve (no solo D)."""
+    mapa = {"arriba": pygame.K_i, "abajo": pygame.K_k,
+            "izquierda": pygame.K_j, "derecha": pygame.K_l,
+            "disparar": pygame.K_SPACE, "pausa": pygame.K_p}
+    x0 = jugador.rect.centerx
+    jugador.mover(_teclas(pygame.K_l), pygame.display.get_surface(), DT60, mapa)
+    assert jugador.rect.centerx > x0
+
+
+def test_mover_ya_no_responde_a_la_tecla_por_defecto_si_se_reasigno(jugador):
+    """Tras reasignar "derecha" a L, D deja de mover (solo la flecha sigue fija)."""
+    mapa = {"arriba": pygame.K_i, "abajo": pygame.K_k,
+            "izquierda": pygame.K_j, "derecha": pygame.K_l,
+            "disparar": pygame.K_SPACE, "pausa": pygame.K_p}
+    x0 = jugador.rect.centerx
+    jugador.mover(_teclas(pygame.K_d), pygame.display.get_surface(), DT60, mapa)
+    assert jugador.rect.centerx == x0
+
+
 # --- Reinicio in situ ---
 
 def test_reiniciar_restaura_estado(jugador):
