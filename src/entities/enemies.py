@@ -79,10 +79,10 @@ class EnemigoBase(pygame.sprite.Sprite, MovimientoSubpixel):
 
         if not pool: return None
 
+        # El jefe no pasa por aquí: sobrescribe die() y nunca suelta ítems.
         prob = 0.05
         if isinstance(self, EnemigoTipo2): prob = 0.1
         if isinstance(self, EnemigoTipo3): prob = 0.2
-        if isinstance(self, Jefe): prob = 1.0
 
         if random.random() < prob or enemigos_eliminados >= 10:
             return random.choice(pool)
@@ -176,6 +176,10 @@ class Jefe(EnemigoBase):
         El jefe maneja su propia posición en update.
         """
         pass
+
+    def die(self, jugador, enemigos_eliminados):
+        """El jefe no suelta ítems: pasar de nivel ya es su recompensa."""
+        return None
 
     def update(self, dt=0):
         """Lógica de patrulla del Jefe (independiente de FPS)."""

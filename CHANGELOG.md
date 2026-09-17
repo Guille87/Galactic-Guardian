@@ -23,7 +23,12 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
   tabla de puntuaciones si corresponde.
 - Las puntuaciones ahora guardan también el **nivel alcanzado**, visible en una
   tabla con cabecera en el menú de Puntuaciones (antes solo se veían nombre y
-  puntos, sin cabecera).
+  puntos, sin cabecera; la columna de puntos queda alineada a la derecha).
+
+### Changed
+
+- El jefe ya no suelta ningún ítem al morir (antes lo hacía siempre); derrotarlo
+  es su propia recompensa.
 
 ## [0.1.4] - 2026-09-11
 
