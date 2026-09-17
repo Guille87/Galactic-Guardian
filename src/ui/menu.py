@@ -99,6 +99,7 @@ class MenuManager:
         self.btn_jugar = Boton("Jugar", (0, 255, 0, 100), (255, 255, 255), cx, 350, 200, 50, 10)
         self.btn_opciones = Boton("Opciones", (0, 0, 255, 128), (255, 255, 255), cx, 420, 200, 50, 10)
         self.btn_puntos = Boton("Puntuaciones", (255, 255, 0, 128), (255, 255, 255), cx, 490, 200, 50, 10)
+        self.btn_salir = Boton("Salir", (255, 0, 0, 150), (255, 255, 255), cx, 560, 200, 50, 10)
 
     def ejecutar(self):
         """Bucle principal del menú. Devuelve el siguiente estado ("JUGAR"/"SALIR")."""
@@ -130,7 +131,8 @@ class MenuManager:
             if event.type == pygame.QUIT:
                 self.ejecutando = False
                 self.resultado = "SALIR"
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 \
+                    and not self._descargando_actualizacion():
                 info = self.actualizaciones.resultado
                 if isinstance(info, dict) and self._descarga is None \
                         and self.btn_actualizar.clic_en_boton(event.pos):
@@ -143,6 +145,10 @@ class MenuManager:
                     self._abrir_opciones()
                 elif self.btn_puntos.clic_en_boton(event.pos):
                     self.estado = "PUNTUACIONES"
+                elif self.btn_salir.clic_en_boton(event.pos):
+                    if self._confirmar_salida():
+                        self.ejecutando = False
+                        self.resultado = "SALIR"
 
         # Dibujado
         self.pantalla.blit(fondo, (0, 0))
@@ -154,6 +160,7 @@ class MenuManager:
         self.btn_jugar.dibujar(self.pantalla, self.font_estandar)
         self.btn_opciones.dibujar(self.pantalla, self.font_estandar)
         self.btn_puntos.dibujar(self.pantalla, self.font_estandar)
+        self.btn_salir.dibujar(self.pantalla, self.font_estandar)
 
         # Versión, esquina inferior derecha
         txt_version = self.font_version.render(f"v{__version__}", True, (150, 150, 150))
@@ -162,6 +169,37 @@ class MenuManager:
             txt_version.get_rect(bottomright=(settings.ANCHO - 8, settings.ALTO - 6)),
         )
         pygame.display.flip()
+
+    def _confirmar_salida(self):
+        """Diálogo bloqueante "¿Seguro que quieres salir?". Devuelve True si
+        se confirma (también al cerrar la ventana con la X)."""
+        cx = self.pantalla.get_rect().centerx
+        boton_si = Boton("Sí", (50, 50, 50), (255, 255, 255), cx - 100, 320, 100, 50)
+        boton_no = Boton("No", (50, 50, 50), (255, 255, 255), cx + 110, 320, 100, 50)
+
+        fondo_oscuro = pygame.Surface((settings.ANCHO, settings.ALTO))
+        fondo_oscuro.set_alpha(200)
+        fondo_oscuro.fill((0, 0, 0))
+        self.pantalla.blit(fondo_oscuro, (0, 0))
+
+        rect_dialogo = pygame.Rect(50, 200, 500, 200)
+        pygame.draw.rect(self.pantalla, (255, 255, 255), rect_dialogo)
+        texto = self.font_estandar.render("¿Seguro que quieres salir?", True, (0, 0, 0))
+        self.pantalla.blit(texto, texto.get_rect(center=(rect_dialogo.centerx, rect_dialogo.centery - 50)))
+        boton_si.dibujar(self.pantalla, self.font_estandar)
+        boton_no.dibujar(self.pantalla, self.font_estandar)
+        pygame.display.flip()
+
+        while True:
+            self.clock.tick(settings.FPS)   # evita el busy-wait al 100 % de CPU
+            for evento in pygame.event.get():
+                if evento.type == pygame.QUIT:
+                    return True
+                if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
+                    if boton_si.clic_en_boton(evento.pos):
+                        return True
+                    if boton_no.clic_en_boton(evento.pos):
+                        return False
 
     def _abrir_opciones(self):
         """Entra en la pantalla de opciones: crea la UI (una vez) y sincroniza
@@ -178,6 +216,11 @@ class MenuManager:
             self._inicializar_interfaz_opciones()
         self.slider_musica.set_current_value(self.vol_musica)
         self.slider_efectos.set_current_value(self.vol_efectos)
+
+    def _descargando_actualizacion(self):
+        """True mientras la descarga está en curso (ni terminada ni fallida):
+        se bloquea el resto del menú para no interrumpirla a medio camino."""
+        return self._descarga is not None and not self._descarga.terminada and not self._descarga.error
 
     def _pulsar_actualizar(self, info):
         """Botón "Actualizar": descarga+instala si es la versión instalada y hay
