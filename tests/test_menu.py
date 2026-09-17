@@ -184,6 +184,28 @@ def test_actualizar_sin_instalador_abre_el_navegador(menu, monkeypatch):
     assert abierto == ["http://descarga"]
 
 
+def test_botones_bloqueados_mientras_se_descarga_la_actualizacion(menu, monkeypatch):
+    """No se puede interrumpir la descarga jugando, abriendo opciones, etc."""
+    menu.actualizaciones.resultado = {
+        "version": "9.9.9", "url": "http://d", "instalador_url": "http://x/setup.exe",
+    }
+
+    class _DescargaFalsa:
+        def __init__(self): self.progreso = 0.5; self.terminada = False; self.error = False
+    menu._descarga = _DescargaFalsa()
+    assert menu._descargando_actualizacion() is True
+
+    pygame.event.post(pygame.event.Event(
+        pygame.MOUSEBUTTONDOWN, button=1, pos=menu.btn_jugar.rect.center))
+    menu._menu_principal()
+    assert menu.ejecutando is True and menu.resultado is None   # "Jugar" no hizo nada
+
+    pygame.event.post(pygame.event.Event(
+        pygame.MOUSEBUTTONDOWN, button=1, pos=menu.btn_puntos.rect.center))
+    menu._menu_principal()
+    assert menu.estado == "PRINCIPAL"   # "Puntuaciones" tampoco
+
+
 def test_actualizar_instalado_descarga_y_al_terminar_lanza_y_sale(menu, monkeypatch):
     menu.actualizaciones.resultado = {
         "version": "9.9.9", "url": "http://d", "instalador_url": "http://x/setup.exe",

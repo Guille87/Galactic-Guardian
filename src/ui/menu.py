@@ -130,7 +130,8 @@ class MenuManager:
             if event.type == pygame.QUIT:
                 self.ejecutando = False
                 self.resultado = "SALIR"
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 \
+                    and not self._descargando_actualizacion():
                 info = self.actualizaciones.resultado
                 if isinstance(info, dict) and self._descarga is None \
                         and self.btn_actualizar.clic_en_boton(event.pos):
@@ -178,6 +179,11 @@ class MenuManager:
             self._inicializar_interfaz_opciones()
         self.slider_musica.set_current_value(self.vol_musica)
         self.slider_efectos.set_current_value(self.vol_efectos)
+
+    def _descargando_actualizacion(self):
+        """True mientras la descarga está en curso (ni terminada ni fallida):
+        se bloquea el resto del menú para no interrumpirla a medio camino."""
+        return self._descarga is not None and not self._descarga.terminada and not self._descarga.error
 
     def _pulsar_actualizar(self, info):
         """Botón "Actualizar": descarga+instala si es la versión instalada y hay
