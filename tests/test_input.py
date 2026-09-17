@@ -51,6 +51,14 @@ def test_no_dispara_mientras_esta_pausado(juego):
     assert len(juego.entity_manager.balas) == 0
 
 
+def test_clic_reanudar_en_pausa_continua_la_partida(juego):
+    juego.pausar_juego()
+    juego.dibujar()   # crea boton_reanudar/boton_opciones/boton_salir
+    _evento(pygame.MOUSEBUTTONDOWN, button=1, pos=juego.boton_reanudar.rect.center)
+    _procesar(juego)
+    assert juego.pausado is False
+
+
 def test_teclas_y_disparo_ignorados_durante_la_transicion_de_nivel(juego):
     """Durante la transición `pausado` sigue en False (el fondo y la nave se
     siguen actualizando solos), pero el jugador no debe poder hacer nada."""

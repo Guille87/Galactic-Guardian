@@ -122,7 +122,9 @@ class InputHandler:
         if self.juego.pausado:
             # Lógica de botones en pausa
             if evento.button == 1:  # Clic izquierdo
-                if self.juego.boton_opciones.clic_en_boton(evento.pos):
+                if self.juego.boton_reanudar.clic_en_boton(evento.pos):
+                    self.juego.reanudar_juego()
+                elif self.juego.boton_opciones.clic_en_boton(evento.pos):
                     self.juego.mostrar_opciones_juego()
                     if not self.juego.ejecutando:
                         return False
