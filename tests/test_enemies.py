@@ -30,6 +30,11 @@ def test_salud_enemigo_lineal(img_enemigo, nivel):
     assert e.salud_maxima < 16
 
 
+def test_jefe_no_suelta_loot_ni_siquiera_por_la_racha_de_piedad(img_jefe, jugador):
+    jefe = Jefe(img_jefe, 0, 0, 600, 800, 1, jugador)
+    assert jefe.die(jugador, enemigos_eliminados=999) is None
+
+
 def test_salud_jefe_crece_pero_no_se_dispara(img_jefe, jugador):
     saludes = [Jefe(img_jefe, 0, 0, 600, 800, n, jugador).salud_maxima for n in (1, 2, 3, 4)]
     assert saludes[0] == 100

@@ -384,6 +384,17 @@ class MenuManager:
 
         return None
 
+    def _dibujar_fila_puntuaciones(self, textos, columnas, y, color):
+        """Dibuja una fila de la tabla de puntuaciones (o su cabecera).
+
+        `columnas`: `(etiqueta, x, alineacion)` por columna — `alineacion` es
+        "izq" (x = borde izquierdo del texto) o "der" (x = borde derecho).
+        """
+        for texto, (_, x, alineacion) in zip(textos, columnas):
+            surf = self.font_version.render(texto, True, color)
+            px = x - surf.get_width() if alineacion == "der" else x
+            self.pantalla.blit(surf, (px, y))
+
     def _menu_puntuaciones(self):
         """Pantalla de puntuaciones"""
         # Espera un clic para volver
@@ -404,13 +415,20 @@ class MenuManager:
         txt_titulo = self.font_titulo.render("Puntuaciones", True, (255, 255, 255))
         self.pantalla.blit(txt_titulo, txt_titulo.get_rect(center=(300, 100)))
 
-        # Listado de puntos
-        y_offset = 180
+        # Listado de puntos: cabecera + filas en columnas (nº, nombre, puntos, nivel).
+        # `x` en "Puntos" es el borde derecho de la columna (texto alineado a la derecha).
         if puntuaciones_top:
-            for i, (nombre, puntuacion) in enumerate(puntuaciones_top, start=1):
-                texto = f"{i}. {nombre}: {puntuacion}"
-                surf = self.font_estandar.render(texto, True, (255, 255, 255))
-                self.pantalla.blit(surf, (130, y_offset + i * 45))
+            columnas = (("#", 60, "izq"), ("Nombre", 110, "izq"),
+                       ("Puntos", 420, "der"), ("Nivel", 480, "izq"))
+            y = 170
+            self._dibujar_fila_puntuaciones(
+                [c[0] for c in columnas], columnas, y, (200, 200, 200))
+            y += 36
+
+            for i, (nombre, puntos, nivel) in enumerate(puntuaciones_top, start=1):
+                textos = (str(i), nombre, str(puntos), str(nivel) if nivel else "—")
+                self._dibujar_fila_puntuaciones(textos, columnas, y, (255, 255, 255))
+                y += 36
         else:
             aviso = self.font_estandar.render("No hay puntuaciones aún", True, (200, 200, 200))
             self.pantalla.blit(aviso, aviso.get_rect(center=(300, 400)))

@@ -20,12 +20,15 @@ class RenderManager:
 
     def renderizar_todo(self):
         """Función principal que orquesta el dibujo de cada frame."""
+        # Pantallas propias que, como Game Over, congelan la partida
+        # (`pausado = True`) pero no usan el camino rápido de pausa ni dibujan
+        # las entidades del mundo.
+        j = self.juego
+        overlay_propio = (j.estado_game_over or j.pidiendo_nombre or j.estado_nivel_completado
+                          or j.mostrando_seleccion_nivel or j.estado_victoria_final)
+
         # --- Camino rápido: PAUSA real (escena estática) ---
-        # Game Over / entrada de nombre también ponen juego.pausado = True para
-        # congelar la lógica, pero tienen su propio overlay más abajo.
-        pausa_real = (self.juego.pausado
-                      and not self.juego.estado_game_over
-                      and not self.juego.pidiendo_nombre)
+        pausa_real = j.pausado and not overlay_propio
         if pausa_real:
             self._renderizar_pausa()
             pygame.display.flip()
@@ -37,8 +40,8 @@ class RenderManager:
         # 1. Fondo
         self.juego.background.draw(self.pantalla)
 
-        # 2. Entidades del mundo (solo si no es Game Over / entrada de nombre)
-        if not self.juego.estado_game_over and not self.juego.pidiendo_nombre:
+        # 2. Entidades del mundo (solo si no hay una pantalla propia encima)
+        if not overlay_propio:
             self._dibujar_entidades()
             self.pantalla.blit(self.juego.jugador.image, self.juego.jugador.rect)
             if self.juego.debug_hitboxes:
@@ -46,10 +49,16 @@ class RenderManager:
             self.juego.ui_manager.dibujar_interfaz(self.pantalla)
 
         # 3. Overlays superiores
-        if self.juego.pidiendo_nombre:
+        if j.pidiendo_nombre:
             self.juego.ui_manager.dibujar_entrada_nombre(self.pantalla, self.juego.nombre_entrada)
-        elif self.juego.estado_game_over:
+        elif j.estado_game_over:
             self._dibujar_pantalla_game_over()
+        elif j.estado_nivel_completado:
+            self._dibujar_pantalla_nivel_completado()
+        elif j.mostrando_seleccion_nivel:
+            self._dibujar_pantalla_seleccion_nivel()
+        elif j.estado_victoria_final:
+            self._dibujar_pantalla_victoria_final()
 
         pygame.display.flip()
 
@@ -98,6 +107,85 @@ class RenderManager:
 
         self.juego.boton_reintentar.dibujar(self.pantalla, self.font_botones)
         self.juego.boton_salir_post.dibujar(self.pantalla, self.font_botones)
+
+    # ------------------------------------------------------------ CAMPAÑA
+    def _dibujar_estadisticas(self, lineas, y_inicial, color=(255, 255, 255)):
+        cx = self.juego.pantalla_ancho // 2
+        y = y_inicial
+        for linea in lineas:
+            surf = self.font_botones.render(linea, True, color)
+            self.pantalla.blit(surf, surf.get_rect(center=(cx, y)))
+            y += 40
+        return y
+
+    def _dibujar_pantalla_nivel_completado(self):
+        """Tras derrotar al jefe de un nivel que no es el último."""
+        j = self.juego
+        self.pantalla.blit(j.background.img1, (0, 0))
+        cx = j.pantalla_ancho // 2
+
+        titulo = self.font_game_over.render(f"NIVEL {j.nivel} COMPLETADO", True, (255, 215, 0))
+        self.pantalla.blit(titulo, titulo.get_rect(center=(cx, 180)))
+
+        self._dibujar_estadisticas([
+            f"Puntuación: {j.puntuacion}",
+            f"Enemigos destruidos: {j.enemigos_eliminados_nivel}",
+            f"Tiempo: {j.tiempo_juego / 1000:.1f} s",
+        ], 280)
+
+        if j.boton_continuar is None:
+            j.boton_continuar = Boton("Continuar", (0, 255, 0, 150), (255, 255, 255),
+                                      cx, 480, 220, 50, radio_borde=10)
+            j.boton_elegir_nivel = Boton("Elegir nivel", (0, 150, 255, 150), (255, 255, 255),
+                                         cx, 550, 220, 50, radio_borde=10)
+        j.boton_continuar.dibujar(self.pantalla, self.font_botones)
+        j.boton_elegir_nivel.dibujar(self.pantalla, self.font_botones)
+
+    def _dibujar_pantalla_seleccion_nivel(self):
+        """Elegir, entre los niveles ya superados en esta partida, cuál rejugar."""
+        j = self.juego
+        self.pantalla.blit(j.background.img1, (0, 0))
+        cx = j.pantalla_ancho // 2
+
+        titulo = self.font_game_over.render("ELEGIR NIVEL", True, (255, 255, 255))
+        self.pantalla.blit(titulo, titulo.get_rect(center=(cx, 150)))
+
+        # Se recrean si cambia cuántos niveles hay ya superados.
+        if j.botones_seleccion_nivel is None or len(j.botones_seleccion_nivel) != j.nivel:
+            j.botones_seleccion_nivel = []
+            y = 250
+            for n in range(1, j.nivel + 1):
+                boton = Boton(f"Nivel {n}", (0, 150, 255, 150), (255, 255, 255),
+                             cx, y, 200, 50, radio_borde=10)
+                j.botones_seleccion_nivel.append((n, boton))
+                y += 70
+
+        for _, boton in j.botones_seleccion_nivel:
+            boton.dibujar(self.pantalla, self.font_botones)
+
+    def _dibujar_pantalla_victoria_final(self):
+        """Tras derrotar al jefe del último nivel de la campaña."""
+        j = self.juego
+        self.pantalla.blit(j.background.img1, (0, 0))
+        cx = j.pantalla_ancho // 2
+
+        titulo = self.font_game_over.render("¡VICTORIA!", True, (255, 215, 0))
+        self.pantalla.blit(titulo, titulo.get_rect(center=(cx, 150)))
+        subtitulo = self.font_botones.render("Has completado Galactic Guardian", True, (255, 255, 255))
+        self.pantalla.blit(subtitulo, subtitulo.get_rect(center=(cx, 210)))
+
+        self._dibujar_estadisticas([
+            f"Puntuación final: {j.puntuacion}",
+            f"Nivel: {j.nivel}",
+        ], 280)
+
+        if j.boton_reintentar_final is None:
+            j.boton_reintentar_final = Boton("Jugar de nuevo", (255, 0, 0, 128), (255, 255, 255),
+                                             cx, 450, 220, 50, radio_borde=10)
+            j.boton_menu_final = Boton("Menú", (255, 0, 255, 128), (255, 255, 255),
+                                       cx, 520, 220, 50, radio_borde=10)
+        j.boton_reintentar_final.dibujar(self.pantalla, self.font_botones)
+        j.boton_menu_final.dibujar(self.pantalla, self.font_botones)
 
     # ------------------------------------------------------------- ENTIDADES
     def _dibujar_entidades(self):
