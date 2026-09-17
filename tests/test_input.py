@@ -201,3 +201,32 @@ def test_entrada_de_nombre_en_game_over(juego):
     assert juego.pidiendo_nombre is False
     assert juego.estado_game_over is True
     assert ("AN", 500, juego.nivel) in juego.clasificacion.obtener_puntuaciones_top()
+
+
+def test_disparo_y_pausa_usan_la_tecla_reasignada(juego):
+    """Tras reasignar "disparar" a J y "pausa" a O, esas teclas hacen lo suyo."""
+    juego.input_handler.mapa_teclas["disparar"] = pygame.K_j
+    juego.input_handler.mapa_teclas["pausa"] = pygame.K_o
+
+    _evento(pygame.KEYDOWN, key=pygame.K_j)
+    _procesar(juego)
+    assert juego.disparando is True
+
+    _evento(pygame.KEYDOWN, key=pygame.K_o)
+    _procesar(juego)
+    assert juego.pausado is True
+
+
+def test_espacio_ya_no_dispara_si_se_reasigno_disparar(juego):
+    juego.input_handler.mapa_teclas["disparar"] = pygame.K_j
+    _evento(pygame.KEYDOWN, key=pygame.K_SPACE)
+    _procesar(juego)
+    assert juego.disparando is False
+
+
+def test_escape_pausa_siempre_aunque_se_reasigne_pausa(juego):
+    """Esc es fija: sigue pausando aunque "pausa" apunte a otra tecla."""
+    juego.input_handler.mapa_teclas["pausa"] = pygame.K_o
+    _evento(pygame.KEYDOWN, key=pygame.K_ESCAPE)
+    _procesar(juego)
+    assert juego.pausado is True
