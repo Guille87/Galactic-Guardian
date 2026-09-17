@@ -71,20 +71,25 @@ class RenderManager:
             self._frame_pausa.fill((90, 90, 90), special_flags=pygame.BLEND_RGB_MULT)
 
         self.pantalla.blit(self._frame_pausa, (0, 0))
-        self._mostrar_texto_centralizado("Juego Pausado", (255, 255, 255))
+        # Título + 3 botones como un bloque centrado en la pantalla (antes el
+        # título estaba en el centro exacto y los botones colgaban por debajo,
+        # descuadrando el conjunto hacia abajo cada vez que se añadía uno).
+        self._mostrar_texto_centralizado("Juego Pausado", (255, 255, 255), desplazamiento_y=-99)
         self._dibujar_botones_pausa()
 
     def _dibujar_botones_pausa(self):
         # Se crean una única vez y se cachean en el juego
-        if self.juego.boton_opciones is None:
+        if self.juego.boton_reanudar is None:
             centro_x = self.juego.pantalla_ancho // 2
-            y_opciones = self.juego.pantalla_alto // 2 + 50
-            y_salir = self.juego.pantalla_alto // 2 + 120
+            centro_y = self.juego.pantalla_alto // 2
+            self.juego.boton_reanudar = Boton("Reanudar", (0, 255, 0, 150), (255, 255, 255),
+                                              centro_x, centro_y - 33, 150, 50, radio_borde=10)
             self.juego.boton_opciones = Boton("Opciones", (0, 255, 255, 150), (255, 255, 255),
-                                              centro_x, y_opciones, 150, 50, radio_borde=10)
+                                              centro_x, centro_y + 33, 150, 50, radio_borde=10)
             self.juego.boton_salir = Boton("Salir", (255, 0, 0, 150), (255, 255, 255),
-                                           centro_x, y_salir, 150, 50, radio_borde=10)
+                                           centro_x, centro_y + 99, 150, 50, radio_borde=10)
 
+        self.juego.boton_reanudar.dibujar(self.pantalla, self.font_botones)
         self.juego.boton_opciones.dibujar(self.pantalla, self.font_botones)
         self.juego.boton_salir.dibujar(self.pantalla, self.font_botones)
 
@@ -220,7 +225,8 @@ class RenderManager:
         self.pantalla.blit(aviso, (10, self.juego.pantalla_alto - aviso.get_height() - 8))
 
     # ---------------------------------------------------------------- HELPERS
-    def _mostrar_texto_centralizado(self, texto, color):
+    def _mostrar_texto_centralizado(self, texto, color, desplazamiento_y=0):
         texto_surface = self.font_pausa.render(texto, True, color)
-        texto_rect = texto_surface.get_rect(center=(self.juego.pantalla_ancho // 2, self.juego.pantalla_alto // 2))
+        texto_rect = texto_surface.get_rect(
+            center=(self.juego.pantalla_ancho // 2, self.juego.pantalla_alto // 2 + desplazamiento_y))
         self.pantalla.blit(texto_surface, texto_rect)

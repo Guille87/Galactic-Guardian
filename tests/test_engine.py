@@ -232,3 +232,20 @@ def test_actualizar_muchos_frames_sin_crash(juego):
     for _ in range(400):
         juego.disparar()
         juego.actualizar(DT60)
+
+
+def test_opciones_desde_pausa_aplica_los_controles_reasignados(juego, monkeypatch):
+    """Al volver de Opciones (abierta desde la pausa), el InputHandler de la
+    partida en curso debe usar el mapa de teclas tal cual queda en el menú,
+    se haya pulsado Guardar o no (aplicación inmediata, como el volumen)."""
+    import pygame
+    from src.ui.menu import MenuManager
+
+    def _opciones_falsas(self):
+        self.controles["disparar"] = pygame.K_j
+        return None
+
+    monkeypatch.setattr(MenuManager, "mostrar_solo_opciones", _opciones_falsas)
+
+    juego.mostrar_opciones_juego()
+    assert juego.input_handler.mapa_teclas["disparar"] == pygame.K_j

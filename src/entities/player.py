@@ -1,6 +1,6 @@
 import pygame
 
-from src.core import settings
+from src.core import controles, settings
 from .bullet import Bala
 from .base.movimiento import MovimientoSubpixel
 
@@ -86,10 +86,16 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
     def cadencia_disparo_maxima(self):
         return self.CONFIG["cadencia_max"]
 
-    def mover(self, teclas, pantalla, dt):
-        """Mueve al jugador según las teclas presionadas (independiente de FPS)."""
-        dx = (teclas[pygame.K_RIGHT] or teclas[pygame.K_d]) - (teclas[pygame.K_LEFT] or teclas[pygame.K_a])
-        dy = (teclas[pygame.K_DOWN] or teclas[pygame.K_s]) - (teclas[pygame.K_UP] or teclas[pygame.K_w])
+    def mover(self, teclas, pantalla, dt, mapa_teclas=None):
+        """Mueve al jugador según las teclas presionadas (independiente de FPS).
+
+        Las flechas son fijas; `mapa_teclas` (acción -> tecla) añade la
+        reasignable, WASD por defecto (`controles.POR_DEFECTO`)."""
+        mapa_teclas = mapa_teclas or controles.POR_DEFECTO
+        dx = (teclas[pygame.K_RIGHT] or teclas[mapa_teclas["derecha"]]) \
+            - (teclas[pygame.K_LEFT] or teclas[mapa_teclas["izquierda"]])
+        dy = (teclas[pygame.K_DOWN] or teclas[mapa_teclas["abajo"]]) \
+            - (teclas[pygame.K_UP] or teclas[mapa_teclas["arriba"]])
 
         # Normalizar la diagonal para que no sea 1.41x más rápida
         direccion = pygame.Vector2(dx, dy)

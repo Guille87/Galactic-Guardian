@@ -1,7 +1,9 @@
 import configparser
 import os
 
-from src.core import paths
+import pygame
+
+from src.core import controles, paths
 
 # --- RUTAS Y RECURSOS (CONSTANTES) ---
 DIR_ASSETS = paths.recurso('data', 'assets')          # solo lectura (empaquetado)
@@ -46,12 +48,16 @@ EXPLOSIONES = {f"explosion_{i}": f"imagenes/explosion/Explosion1_{i}.png" for i 
 
 # --- LÓGICA DE PERSISTENCIA (OPCIONES DE USUARIO) ---
 
-def guardar_configuracion(volumen_musica, volumen_efectos, ruta=None):
+def guardar_configuracion(volumen_musica, volumen_efectos, mapa_controles=None, ruta=None):
     config = configparser.ConfigParser()
     config['VOLUMEN'] = {
         'musica': str(volumen_musica),
         'efectos': str(volumen_efectos)
     }
+    if mapa_controles is not None:
+        config['CONTROLES'] = {
+            accion: pygame.key.name(codigo) for accion, codigo in mapa_controles.items()
+        }
     with open(ruta or CONFIG_FILE, 'w') as configfile:
         config.write(configfile)
 
@@ -68,3 +74,23 @@ def cargar_configuracion(ruta=None):
         volumen_musica, volumen_efectos = 0.5, 0.5
 
     return volumen_musica, volumen_efectos
+
+
+def cargar_controles(ruta=None):
+    """Mapa de teclas reasignable (una por acción). Cada acción cae a su
+    valor por defecto por separado si falta o el nombre guardado no es
+    válido, para que un campo corrupto no tire el resto del mapa."""
+    config = configparser.ConfigParser()
+    config.read(ruta or CONFIG_FILE)
+
+    mapa = {}
+    for accion in controles.ACCIONES:
+        nombre = config.get('CONTROLES', accion, fallback=None)
+        codigo = None
+        if nombre:
+            try:
+                codigo = pygame.key.key_code(nombre)
+            except ValueError:
+                codigo = None
+        mapa[accion] = codigo if codigo is not None else controles.POR_DEFECTO[accion]
+    return mapa

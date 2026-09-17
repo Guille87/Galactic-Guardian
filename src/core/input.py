@@ -1,5 +1,6 @@
 import pygame
 
+from src.core import config
 from src.ui.components.button import Boton
 
 
@@ -9,6 +10,7 @@ class InputHandler:
 
     def __init__(self, juego):
         self.juego = juego
+        self.mapa_teclas = config.cargar_controles()   # disparar/pausa/mover (flechas y Esc son fijas)
 
     def manejar_eventos(self):
         """Captura eventos de Pygame y los deriva a las funciones correctas."""
@@ -74,20 +76,20 @@ class InputHandler:
                 or self.juego.transicion_activa):
             return
 
-        if tecla == pygame.K_ESCAPE or tecla == pygame.K_p:
+        if tecla == pygame.K_ESCAPE or tecla == self.mapa_teclas["pausa"]:
             if not self.juego.pausado:
                 self.juego.pausar_juego()
             else:
                 self.juego.reanudar_juego()
 
-        elif tecla == pygame.K_SPACE and not self.juego.pausado:
+        elif tecla == self.mapa_teclas["disparar"] and not self.juego.pausado:
             self.juego.disparando = True
 
         elif tecla == pygame.K_F1:
             self.juego.debug_hitboxes = not self.juego.debug_hitboxes
 
     def _manejar_teclas_soltadas(self, tecla):
-        if tecla == pygame.K_SPACE:
+        if tecla == self.mapa_teclas["disparar"]:
             self.juego.disparando = False
 
     def _manejar_clic_presionado(self, evento):
@@ -120,7 +122,9 @@ class InputHandler:
         if self.juego.pausado:
             # Lógica de botones en pausa
             if evento.button == 1:  # Clic izquierdo
-                if self.juego.boton_opciones.clic_en_boton(evento.pos):
+                if self.juego.boton_reanudar.clic_en_boton(evento.pos):
+                    self.juego.reanudar_juego()
+                elif self.juego.boton_opciones.clic_en_boton(evento.pos):
                     self.juego.mostrar_opciones_juego()
                     if not self.juego.ejecutando:
                         return False

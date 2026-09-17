@@ -47,6 +47,16 @@ def test_etiquetas_de_los_sliders(menu):
     assert {"Música", "Efectos"} <= textos
 
 
+def test_aviso_de_que_las_flechas_y_esc_son_fijas(menu):
+    """El jugador no debe tener que reasignar las flechas para poder usarlas."""
+    menu._inicializar_interfaz_opciones()
+    textos = " ".join(
+        e.text for e in menu.ui_manager.get_root_container().elements
+        if isinstance(e, pygame_gui.elements.UILabel)
+    )
+    assert "flechas" in textos.lower() and "esc" in textos.lower()
+
+
 def test_feedback_efectos_arrastre_respeta_anti_spam(menu):
     menu._inicializar_interfaz_opciones()
     menu._feedback_sonoro_efectos()
@@ -155,6 +165,69 @@ def test_volumen_fuera_de_rango_no_bloquea_los_sliders(menu):
         _click(menu, menu.slider_efectos.right_button)
     assert menu.vol_musica == pytest.approx(0.3)
     assert menu.vol_efectos == pytest.approx(0.3)
+
+
+def _pulsar_tecla_en_opciones(menu, tecla):
+    pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=tecla))
+    menu._menu_opciones(0.016)
+
+
+def test_clic_en_boton_de_control_empieza_a_escuchar(menu):
+    menu._abrir_opciones()
+    _click(menu, menu._botones_controles["disparar"])
+    assert menu._reasignando_accion == "disparar"
+
+
+def test_reasignar_disparar_actualiza_el_mapa_y_el_texto(menu):
+    from src.core import controles
+    menu._abrir_opciones()
+    _click(menu, menu._botones_controles["disparar"])
+    _pulsar_tecla_en_opciones(menu, pygame.K_j)
+    assert menu.controles["disparar"] == pygame.K_j
+    assert controles.nombre_tecla(pygame.K_j) in menu._botones_controles["disparar"].text
+    assert menu._reasignando_accion is None
+
+
+def test_escape_cancela_la_reasignacion_sin_cambiar_nada(menu):
+    menu._abrir_opciones()
+    valor_previo = menu.controles["disparar"]
+    _click(menu, menu._botones_controles["disparar"])
+    _pulsar_tecla_en_opciones(menu, pygame.K_ESCAPE)
+    assert menu.controles["disparar"] == valor_previo
+    assert menu._reasignando_accion is None
+
+
+def test_conflicto_entre_acciones_no_reasigna_y_avisa(menu):
+    menu._abrir_opciones()
+    valor_previo = menu.controles["disparar"]
+    tecla_de_pausa = menu.controles["pausa"]
+    _click(menu, menu._botones_controles["disparar"])
+    _pulsar_tecla_en_opciones(menu, tecla_de_pausa)   # ya la usa "pausa"
+    assert menu.controles["disparar"] == valor_previo   # no cambia
+    assert menu._aviso_conflicto is not None
+
+
+def test_restaurar_valores_por_defecto(menu):
+    from src.core import controles
+    menu._abrir_opciones()
+    _click(menu, menu._botones_controles["disparar"])
+    _pulsar_tecla_en_opciones(menu, pygame.K_j)
+    assert menu.controles["disparar"] == pygame.K_j
+
+    _click(menu, menu.btn_restaurar_controles)
+    assert menu.controles == controles.POR_DEFECTO
+
+
+def test_guardar_persiste_el_mapa_de_controles(menu, monkeypatch, tmp_path):
+    ruta = str(tmp_path / "cfg.ini")
+    monkeypatch.setattr("src.core.config.CONFIG_FILE", ruta)
+    menu._abrir_opciones()
+    _click(menu, menu._botones_controles["disparar"])
+    _pulsar_tecla_en_opciones(menu, pygame.K_j)
+    _click(menu, menu.btn_guardar)
+
+    from src.core import config
+    assert config.cargar_controles(ruta=ruta)["disparar"] == pygame.K_j
 
 
 def test_ui_de_opciones_se_reutiliza(menu):

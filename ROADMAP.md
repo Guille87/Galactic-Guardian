@@ -27,16 +27,14 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
   superados en la partida actual), y pantalla de victoria final tras el último
   jefe. Ver `[Unreleased]` → próxima versión. El modo sin fin queda pendiente
   como **modo aparte** (ver backlog).
+- **Menú de opciones — reasignar teclas** — tecla principal de mover/disparar/
+  pausa reasignable (WASD + Espacio + P por defecto); flechas y Esc fijas,
+  aviso si dos acciones chocan, botón de restaurar por defecto. Persistido en
+  `config.ini`. Ver `[Unreleased]` → próxima versión.
 
 ## En curso / próximo (por orden)
 
-### 1 · Menú de opciones — reasignar teclas
-- Mapa de controles configurable (mover, disparar, pausa) persistido en
-  `config.ini`. UI de "pulsa una tecla" con aviso si choca con otra acción y
-  botón de restaurar por defecto.
-- El menú de opciones pasa a tener secciones (Sonido / Controles).
-
-### 2 · Oleadas y niveles como datos (antes de meter contenido nuevo)
+### 1 · Oleadas y niveles como datos (antes de meter contenido nuevo)
 - Sacar la definición de fases/enemigos/jefe/música de cada nivel de
   `WaveManager` a una tabla de datos. Añadir contenido pasa a ser "editar una
   tabla", no tocar lógica — y es el paso natural antes de sumar enemigos.
@@ -44,7 +42,7 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
   crear/destruir constantemente) — mejora de rendimiento, se hace en el mismo
   frente porque toca el mismo código de gestión de entidades.
 
-### 3 · Contenido nuevo (según lleguen los assets)
+### 2 · Contenido nuevo (según lleguen los assets)
 - **Enemigos nuevos** — asset a la espera de que consigas un set de un mismo
   autor (arte consistente).
 - **Patrones de disparo reutilizables** (abanico, dirigido, ráfaga…) para

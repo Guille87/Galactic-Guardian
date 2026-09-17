@@ -113,6 +113,7 @@ class Juego:
         self.jefe = None
 
         # Botones de overlays (los crea RenderManager una sola vez y los cachea)
+        self.boton_reanudar = None
         self.boton_opciones = None
         self.boton_salir = None
         self.boton_reintentar = None
@@ -270,7 +271,7 @@ class Juego:
 
         # 1. Entradas y Generación
         teclas = pygame.key.get_pressed()
-        self.jugador.mover(teclas, self.pantalla, dt)
+        self.jugador.mover(teclas, self.pantalla, dt, self.input_handler.mapa_teclas)
         self._gestionar_generacion_enemigos()
 
         # 2. Física y Colisiones
@@ -420,7 +421,11 @@ class Juego:
         from src.ui.menu import MenuManager
         menu = MenuManager(self.pantalla, self.rm, self.audio_manager, self.clasificacion)
 
-        if menu.mostrar_solo_opciones() == "SALIR":
+        resultado = menu.mostrar_solo_opciones()
+        # Aplicación inmediata (como el volumen), sin esperar a "Guardar":
+        # el objeto en memoria del menú, no una relectura de config.ini.
+        self.input_handler.mapa_teclas = menu.controles
+        if resultado == "SALIR":
             self.salir_del_juego()
 
     def dibujar(self):
