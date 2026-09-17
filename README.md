@@ -7,34 +7,34 @@
 | main.py                               |       71 |       51 |     28% |38-67, 71-119 |
 | src/core/audio.py                     |       40 |        0 |    100% |           |
 | src/core/config.py                    |       23 |        0 |    100% |           |
-| src/core/engine.py                    |      190 |       30 |     84% |222-223, 259, 265-277, 291-295, 303-328 |
-| src/core/input.py                     |       92 |       44 |     52% |50-51, 54-55, 87-117, 122-145 |
+| src/core/engine.py                    |      268 |       29 |     89% |256-257, 303, 309-314, 403-406, 420-424, 432-457 |
+| src/core/input.py                     |      128 |       41 |     68% |58-59, 98-105, 120-139, 173-196 |
 | src/core/paths.py                     |       23 |        3 |     87% |32, 44, 46 |
 | src/core/resources.py                 |       58 |        4 |     93% |78, 84, 94, 97 |
-| src/core/settings.py                  |       36 |        0 |    100% |           |
+| src/core/settings.py                  |       47 |        0 |    100% |           |
 | src/core/updates.py                   |      123 |       19 |     85% |73-78, 91-104, 123-124, 132, 158-161 |
 | src/core/version.py                   |        1 |        0 |    100% |           |
 | src/entities/base/movimiento.py       |       18 |        0 |    100% |           |
 | src/entities/base/projectile\_base.py |       14 |        1 |     93% |        28 |
 | src/entities/bullet.py                |       10 |        0 |    100% |           |
 | src/entities/bullet\_enemy.py         |       11 |        0 |    100% |           |
-| src/entities/enemies.py               |      129 |       20 |     84% |74, 140-146, 149-153, 178, 191-196, 199-204 |
+| src/entities/enemies.py               |      130 |       20 |     85% |74, 140-146, 149-153, 178, 195-200, 203-208 |
 | src/entities/items.py                 |       20 |        0 |    100% |           |
-| src/entities/player.py                |      103 |        4 |     96% |93, 101, 174-175 |
+| src/entities/player.py                |      109 |        4 |     96% |105, 113, 186-187 |
 | src/managers/collision.py             |       53 |        0 |    100% |           |
 | src/managers/effects.py               |       31 |        0 |    100% |           |
 | src/managers/entities.py              |       60 |        6 |     90% |58-59, 63-64, 84-85 |
-| src/managers/render.py                |       80 |        1 |     99% |       124 |
+| src/managers/render.py                |      137 |        1 |     99% |       212 |
 | src/managers/waves.py                 |       60 |        8 |     87% |36, 46-47, 54, 60, 79, 83-84 |
 | src/ui/components/button.py           |       40 |        6 |     85% |     34-39 |
 | src/ui/hud.py                         |      107 |       13 |     88% |85, 158-176 |
-| src/ui/menu.py                        |      242 |       54 |     78% |118-121, 131-132, 139-141, 143, 145, 265, 291, 306-308, 327-331, 369-385, 390-422 |
-| src/ui/scoreboard.py                  |       34 |        2 |     94% |     41-42 |
+| src/ui/menu.py                        |      250 |       37 |     85% |118-121, 131-132, 139-141, 143, 145, 265, 291, 306-308, 327-331, 369-385, 405-409 |
+| src/ui/scoreboard.py                  |       45 |        2 |     96% |     56-57 |
 | src/visual/background.py              |       22 |        2 |     91% |    27, 30 |
 | src/visual/explosions.py              |       20 |        0 |    100% |           |
 | src/visual/flash.py                   |       22 |        0 |    100% |           |
 | src/visual/flash\_constant.py         |       11 |        1 |     91% |        17 |
-| **TOTAL**                             | **1744** |  **269** | **85%** |           |
+| **TOTAL**                             | **1952** |  **248** | **87%** |           |
 
 
 ## Setup coverage badge
