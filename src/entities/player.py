@@ -62,6 +62,18 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
         self._ultimo_desplazamiento.update(0, 0)
         self._vel_actual.update(0, 0)
 
+    def recentrar(self, pantalla_ancho, pantalla_alto):
+        """Vuelve a la posición de salida sin tocar estadísticas ni mejoras.
+
+        Se usa en la transición entre niveles de la campaña: el nivel
+        siguiente empieza con la nave en su sitio de siempre, no donde haya
+        quedado tras salir volando por arriba de la pantalla."""
+        self.rect.centerx = pantalla_ancho // 2
+        self.rect.bottom = pantalla_alto - 10
+        self._resto.update(0, 0)
+        self._ultimo_desplazamiento.update(0, 0)
+        self._vel_actual.update(0, 0)
+
     @property
     def danio_maximo(self):
         return self.CONFIG["danio_max"]

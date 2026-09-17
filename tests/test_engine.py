@@ -80,7 +80,9 @@ def test_reiniciar_desde_cero_limpia_enemigos_golpeados(juego, rm):
 
 def test_fin_de_nivel_intermedio_muestra_pantalla_de_nivel_completado(juego):
     juego.nivel = settings.NIVEL_MAX - 1
-    juego._procesar_fin_de_nivel()
+    juego._iniciar_transicion_fin_de_nivel()
+    assert juego.transicion_activa is True
+    juego._finalizar_transicion_fin_de_nivel()   # nos saltamos la animación
     assert juego.pausado is True
     assert juego.estado_nivel_completado is True
     assert juego.estado_victoria_final is False
@@ -89,7 +91,8 @@ def test_fin_de_nivel_intermedio_muestra_pantalla_de_nivel_completado(juego):
 
 def test_fin_del_ultimo_nivel_pide_nombre_para_la_victoria(juego):
     juego.nivel = settings.NIVEL_MAX
-    juego._procesar_fin_de_nivel()
+    juego._iniciar_transicion_fin_de_nivel()
+    juego._finalizar_transicion_fin_de_nivel()
     assert juego.pausado is True
     assert juego.estado_nivel_completado is False
     # con la tabla de puntuaciones vacía, cualquier puntuación entra en el top 10
@@ -100,12 +103,71 @@ def test_fin_del_ultimo_nivel_pide_nombre_para_la_victoria(juego):
 def test_continuar_tras_nivel_completado_avanza_de_nivel(juego):
     juego.nivel = 1
     juego.jefe_derrotado = True   # lo deja así al_eliminar_enemigo
-    juego._procesar_fin_de_nivel()
+    juego._iniciar_transicion_fin_de_nivel()
+    juego._finalizar_transicion_fin_de_nivel()
     assert juego.estado_nivel_completado is True
 
     juego.reiniciar_juego()       # "Continuar" en esa pantalla
     assert juego.nivel == 2
     assert juego.estado_nivel_completado is False
+    # la transición ya había movido la nave: el nivel nuevo la recentra
+    assert juego.jugador.rect.centerx == juego.pantalla_ancho // 2
+    assert juego.jugador.rect.bottom == juego.pantalla_alto - 10
+
+
+def test_iniciar_transicion_limpia_las_balas_en_vuelo_y_el_disparo(juego, rm):
+    juego.jugador.ultimo_disparo = -99999
+    juego.disparar()
+    assert len(juego.entity_manager.balas) > 0
+    juego.entity_manager.agregar_bala_enemigo(
+        EnemigoTipo1(rm.get_image_scaled("enemigo1", (48, 48)), 0, 0, 600, 1)
+    )
+    juego.disparando = True
+
+    juego._iniciar_transicion_fin_de_nivel()
+
+    assert len(juego.entity_manager.balas) == 0
+    assert len(juego.entity_manager.balas_enemigo) == 0
+    assert juego.disparando is False
+
+
+def test_transicion_centra_sube_y_acelera_el_fondo_hasta_completarse(juego):
+    juego.nivel = 1
+    juego.jugador.rect.centerx = 50                       # lejos del centro
+    y_inicial = juego.jugador.rect.bottom
+    juego._iniciar_transicion_fin_de_nivel()
+
+    # Fase "centrar": solo se mueve en horizontal.
+    for _ in range(200):
+        if juego.transicion_fase != "centrar":
+            break
+        juego.actualizar(DT60)
+    else:
+        pytest.fail("la fase 'centrar' no terminó")
+    assert juego.jugador.rect.centerx == juego.pantalla_ancho // 2
+    assert juego.jugador.rect.bottom == y_inicial
+
+    # Fase "subir": sube y desaparece; el fondo acelera mientras tanto.
+    aceleracion_vista = False
+    for _ in range(300):
+        if juego.transicion_fase != "subir":
+            break
+        juego.actualizar(DT60)
+        aceleracion_vista |= juego.background.velocidad > settings.FONDO_VELOCIDAD_NORMAL
+    else:
+        pytest.fail("la fase 'subir' no terminó")
+    assert aceleracion_vista
+    assert juego.jugador.rect.bottom < 0
+
+    # Fase "espera": tras el tiempo configurado, se muestra la pantalla.
+    for _ in range(300):
+        if not juego.transicion_activa:
+            break
+        juego.actualizar(DT60)
+    else:
+        pytest.fail("la transición no terminó")
+    assert juego.estado_nivel_completado is True
+    assert juego.background.velocidad == settings.FONDO_VELOCIDAD_NORMAL
 
 
 def test_seleccionar_nivel_arranca_ese_nivel_desde_cero(juego):

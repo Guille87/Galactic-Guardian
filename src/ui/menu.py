@@ -404,13 +404,24 @@ class MenuManager:
         txt_titulo = self.font_titulo.render("Puntuaciones", True, (255, 255, 255))
         self.pantalla.blit(txt_titulo, txt_titulo.get_rect(center=(300, 100)))
 
-        # Listado de puntos
-        y_offset = 180
+        # Listado de puntos: cabecera + filas en columnas (nº, nombre, puntos, nivel)
         if puntuaciones_top:
-            for i, (nombre, puntuacion) in enumerate(puntuaciones_top, start=1):
-                texto = f"{i}. {nombre}: {puntuacion}"
-                surf = self.font_estandar.render(texto, True, (255, 255, 255))
-                self.pantalla.blit(surf, (130, y_offset + i * 45))
+            columnas = (("#", 60), ("Nombre", 110), ("Puntos", 340), ("Nivel", 480))
+            y = 170
+            for texto, x in columnas:
+                surf = self.font_version.render(texto, True, (200, 200, 200))
+                self.pantalla.blit(surf, (x, y))
+            y += 36
+
+            for i, (nombre, puntos, nivel) in enumerate(puntuaciones_top, start=1):
+                fila = (
+                    (str(i), 60), (nombre, 110),
+                    (str(puntos), 340), (str(nivel) if nivel else "—", 480),
+                )
+                for texto, x in fila:
+                    surf = self.font_version.render(texto, True, (255, 255, 255))
+                    self.pantalla.blit(surf, (x, y))
+                y += 36
         else:
             aviso = self.font_estandar.render("No hay puntuaciones aún", True, (200, 200, 200))
             self.pantalla.blit(aviso, aviso.get_rect(center=(300, 400)))

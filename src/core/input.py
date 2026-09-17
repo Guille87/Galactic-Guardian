@@ -26,7 +26,8 @@ class InputHandler:
                     if evento.key == pygame.K_RETURN:
                         if self.juego.nombre_entrada.strip():
                             self.juego.clasificacion.agregar_puntuacion(
-                                self.juego.nombre_entrada, self.juego.puntuacion
+                                self.juego.nombre_entrada, self.juego.puntuacion,
+                                nivel=self.juego.nivel,
                             )
                             self.juego.pidiendo_nombre = False
                             if self.juego.pidiendo_nombre_para == "victoria":
@@ -57,17 +58,20 @@ class InputHandler:
                 if evento.button == 1:
                     self.juego.disparando = False
 
-        # Si no está pausado y la bandera está activa, dispara
-        if not self.juego.pausado and self.juego.disparando:
+        # Si no está pausado ni en la transición de fin de nivel y la bandera
+        # está activa, dispara.
+        if not self.juego.pausado and not self.juego.transicion_activa and self.juego.disparando:
             self.juego.disparar()
 
         return True
 
     def _manejar_teclas_presionadas(self, tecla):
         # En las pantallas de fin de partida/nivel el teclado no hace nada: se
-        # manejan solo con el ratón y `juego.pausado` ya está "congelado".
+        # manejan solo con el ratón y `juego.pausado` ya está "congelado". La
+        # transición de cierre de nivel tampoco admite teclado: la nave va sola.
         if (self.juego.estado_game_over or self.juego.estado_nivel_completado
-                or self.juego.mostrando_seleccion_nivel or self.juego.estado_victoria_final):
+                or self.juego.mostrando_seleccion_nivel or self.juego.estado_victoria_final
+                or self.juego.transicion_activa):
             return
 
         if tecla == pygame.K_ESCAPE or tecla == pygame.K_p:
@@ -108,6 +112,9 @@ class InputHandler:
 
         if self.juego.estado_victoria_final:
             return self._clic_victoria_final(evento)
+
+        if self.juego.transicion_activa:
+            return True   # cierre de nivel en curso: el ratón no hace nada
 
         # ¿Estamos en pausa?
         if self.juego.pausado:

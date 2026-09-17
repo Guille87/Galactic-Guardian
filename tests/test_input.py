@@ -51,6 +51,24 @@ def test_no_dispara_mientras_esta_pausado(juego):
     assert len(juego.entity_manager.balas) == 0
 
 
+def test_teclas_y_disparo_ignorados_durante_la_transicion_de_nivel(juego):
+    """Durante la transición `pausado` sigue en False (el fondo y la nave se
+    siguen actualizando solos), pero el jugador no debe poder hacer nada."""
+    juego.transicion_activa = True
+
+    _evento(pygame.KEYDOWN, key=pygame.K_ESCAPE)
+    _procesar(juego)
+    assert juego.pausado is False   # Esc no pausa durante la transición
+
+    _evento(pygame.KEYDOWN, key=pygame.K_SPACE)
+    _procesar(juego)
+    assert juego.disparando is False
+
+    _evento(pygame.MOUSEBUTTONDOWN, button=1, pos=(300, 400))
+    _procesar(juego)
+    assert juego.disparando is False
+
+
 def test_teclas_ignoradas_en_game_over(juego):
     """Esc/P en Game Over no deben reanudar el juego (descuadraría los timers)."""
     juego.estado_game_over = True
@@ -159,4 +177,4 @@ def test_entrada_de_nombre_en_game_over(juego):
     _procesar(juego)
     assert juego.pidiendo_nombre is False
     assert juego.estado_game_over is True
-    assert ("AN", 500) in juego.clasificacion.obtener_puntuaciones_top()
+    assert ("AN", 500, juego.nivel) in juego.clasificacion.obtener_puntuaciones_top()
