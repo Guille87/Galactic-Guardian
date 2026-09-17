@@ -9,6 +9,13 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ### Added
 
+- **Menú de opciones — Controles**: la tecla "principal" de mover
+  (arriba/abajo/izquierda/derecha), disparar y pausa ahora se puede reasignar
+  (por defecto WASD + Espacio + P, como hasta ahora). Las flechas y Esc siguen
+  funcionando siempre, sin poder tocarse — red de seguridad para no quedarse
+  sin poder moverse o pausar. Aviso si dos acciones chocan en la misma tecla
+  (no se aplica el cambio); botón para restaurar los valores por defecto.
+  Persistido en `config.ini`.
 - Botón **Salir** en el menú principal, con confirmación (antes solo se podía
   cerrar el juego con la X de la ventana).
 - El selector de nivel ("Elegir nivel" tras completar uno) ahora incluye
