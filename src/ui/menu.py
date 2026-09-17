@@ -274,7 +274,11 @@ class MenuManager:
         """Crea el UIManager y los elementos de la interfaz **una sola vez**.
 
         Antes se recreaba en cada entrada, dejando varios UIManager vivos."""
-        self.ui_manager = pygame_gui.UIManager((settings.ANCHO, settings.ALTO))
+        # Las etiquetas (Música/Efectos/Controles y el aviso de las flechas)
+        # se centran por defecto en pygame_gui; con este tema quedan alineadas
+        # a la izquierda, al ras de los sliders y los botones.
+        tema = {"label": {"misc": {"text_horiz_alignment": "left"}}}
+        self.ui_manager = pygame_gui.UIManager((settings.ANCHO, settings.ALTO), tema)
 
         # Etiquetas
         pygame_gui.elements.UILabel(
