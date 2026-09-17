@@ -128,14 +128,37 @@ def test_clic_elegir_nivel_abre_el_selector(juego):
 
 def test_clic_en_selector_de_nivel_salta_a_ese_nivel(juego):
     juego.nivel = 3
+    juego.jugador.mejorar_danio()      # mejora que un nivel "a rejugar" debe perder
     juego.mostrando_seleccion_nivel = True
     juego.pausado = True
-    juego.dibujar()   # crea los botones de los niveles 1..3
+    juego.dibujar()   # crea los botones de los niveles 1..4 (superados + el siguiente)
     _, boton_nivel_2 = juego.botones_seleccion_nivel[1]
     _evento(pygame.MOUSEBUTTONDOWN, button=1, pos=boton_nivel_2.rect.center)
     _procesar(juego)
     assert juego.nivel == 2
     assert juego.mostrando_seleccion_nivel is False
+    assert juego.jugador.danio == 1    # nivel a rejugar: nave desde cero
+
+
+def test_clic_en_el_siguiente_nivel_del_selector_conserva_las_mejoras(juego):
+    """El botón "(siguiente)" es el mismo camino que Continuar: no resetea la
+    nave ni la puntuación, a diferencia de rejugar un nivel ya superado."""
+    juego.nivel = 3
+    juego.jefe_derrotado = True        # lo deja así al_eliminar_enemigo
+    juego.jugador.mejorar_danio()
+    juego.puntuacion = 500
+    juego.mostrando_seleccion_nivel = True
+    juego.pausado = True
+    juego.dibujar()
+    nivel_siguiente, boton_siguiente = juego.botones_seleccion_nivel[-1]
+    assert nivel_siguiente == 4
+
+    _evento(pygame.MOUSEBUTTONDOWN, button=1, pos=boton_siguiente.rect.center)
+    _procesar(juego)
+
+    assert juego.nivel == 4
+    assert juego.jugador.danio == 2    # se conserva, como con "Continuar"
+    assert juego.puntuacion == 500
 
 
 def test_clic_jugar_de_nuevo_en_victoria_final_reinicia_desde_nivel_1(juego):
