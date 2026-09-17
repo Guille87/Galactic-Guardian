@@ -1,5 +1,7 @@
-"""src/core/config.py — persistencia de volúmenes."""
-from src.core import config
+"""src/core/config.py — persistencia de volúmenes y controles."""
+import pygame
+
+from src.core import config, controles
 
 
 def test_roundtrip(tmp_path):
@@ -30,3 +32,33 @@ def test_diccionarios_de_recursos_coherentes():
     assert all(v.endswith(".ogg") for v in config.MUSICA.values())
     assert all(v.endswith((".wav", ".ogg")) for v in config.SONIDOS.values())
     assert len(config.EXPLOSIONES) == 11
+
+
+def test_controles_sin_config_devuelve_los_valores_por_defecto(tmp_path):
+    ruta = str(tmp_path / "no_existe.ini")
+    assert config.cargar_controles(ruta=ruta) == controles.POR_DEFECTO
+
+
+def test_controles_roundtrip(tmp_path):
+    ruta = str(tmp_path / "cfg.ini")
+    mapa = dict(controles.POR_DEFECTO, disparar=pygame.K_j, pausa=pygame.K_ESCAPE)
+    config.guardar_configuracion(0.3, 0.7, mapa_controles=mapa, ruta=ruta)
+    assert config.cargar_controles(ruta=ruta) == mapa
+
+
+def test_guardar_sin_mapa_de_controles_no_escribe_esa_seccion(tmp_path):
+    """Guardar solo volumen (p.ej. desde la pausa antes de tocar Controles) no
+    debe crear una sección [CONTROLES] vacía ni tocar los valores por defecto."""
+    ruta = str(tmp_path / "cfg.ini")
+    config.guardar_configuracion(0.3, 0.7, ruta=ruta)
+    assert config.cargar_controles(ruta=ruta) == controles.POR_DEFECTO
+
+
+def test_controles_tecla_guardada_invalida_cae_a_esa_accion_por_defecto(tmp_path):
+    """Un nombre de tecla corrupto en una acción no debe tirar las demás."""
+    ruta = tmp_path / "raro.ini"
+    ruta.write_text("[CONTROLES]\ndisparar = esto-no-es-una-tecla\npausa = escape\n")
+    mapa = config.cargar_controles(ruta=str(ruta))
+    assert mapa["disparar"] == controles.POR_DEFECTO["disparar"]   # cae a la de defecto
+    assert mapa["pausa"] == pygame.K_ESCAPE                         # esta sí es válida
+    assert mapa["arriba"] == controles.POR_DEFECTO["arriba"]        # no estaba en el ini
