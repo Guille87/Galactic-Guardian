@@ -8,7 +8,7 @@
 | src/core/audio.py                     |       40 |        0 |    100% |           |
 | src/core/config.py                    |       23 |        0 |    100% |           |
 | src/core/engine.py                    |      268 |       29 |     89% |256-257, 303, 309-314, 403-406, 420-424, 432-457 |
-| src/core/input.py                     |      128 |       41 |     68% |58-59, 98-105, 120-139, 173-196 |
+| src/core/input.py                     |      130 |       41 |     68% |58-59, 98-105, 120-139, 179-202 |
 | src/core/paths.py                     |       23 |        3 |     87% |32, 44, 46 |
 | src/core/resources.py                 |       58 |        4 |     93% |78, 84, 94, 97 |
 | src/core/settings.py                  |       47 |        0 |    100% |           |
@@ -24,17 +24,17 @@
 | src/managers/collision.py             |       53 |        0 |    100% |           |
 | src/managers/effects.py               |       31 |        0 |    100% |           |
 | src/managers/entities.py              |       60 |        6 |     90% |58-59, 63-64, 84-85 |
-| src/managers/render.py                |      137 |        1 |     99% |       212 |
+| src/managers/render.py                |      140 |        1 |     99% |       216 |
 | src/managers/waves.py                 |       60 |        8 |     87% |36, 46-47, 54, 60, 79, 83-84 |
 | src/ui/components/button.py           |       40 |        6 |     85% |     34-39 |
 | src/ui/hud.py                         |      107 |       13 |     88% |85, 158-176 |
-| src/ui/menu.py                        |      250 |       37 |     85% |118-121, 131-132, 139-141, 143, 145, 265, 291, 306-308, 327-331, 369-385, 405-409 |
+| src/ui/menu.py                        |      283 |       37 |     87% |119-122, 132-133, 141-143, 145, 147, 308, 334, 349-351, 370-374, 412-428, 448-452 |
 | src/ui/scoreboard.py                  |       45 |        2 |     96% |     56-57 |
 | src/visual/background.py              |       22 |        2 |     91% |    27, 30 |
 | src/visual/explosions.py              |       20 |        0 |    100% |           |
 | src/visual/flash.py                   |       22 |        0 |    100% |           |
 | src/visual/flash\_constant.py         |       11 |        1 |     91% |        17 |
-| **TOTAL**                             | **1952** |  **248** | **87%** |           |
+| **TOTAL**                             | **1990** |  **248** | **88%** |           |
 
 
 ## Setup coverage badge

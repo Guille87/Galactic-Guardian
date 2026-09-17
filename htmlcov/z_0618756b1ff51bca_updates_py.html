@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_0618756b1ff51bca_version_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-17 00:49 +0000
+            created at 2026-09-17 11:09 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -107,7 +107,7 @@
     <p class="run"><span class="n"><a id="t25" href="#t25">25</a></span><span class="t"><span class="nam">_API_LATEST</span> <span class="op">=</span> <span class="fst">f&quot;</span><span class="fst">https://api.github.com/repos/</span><span class="op">{</span><span class="nam">_REPO</span><span class="op">}</span><span class="fst">/releases/latest</span><span class="fst">&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t26" href="#t26">26</a></span><span class="t"><span class="nam">_RELEASES_WEB</span> <span class="op">=</span> <span class="fst">f&quot;</span><span class="fst">https://github.com/</span><span class="op">{</span><span class="nam">_REPO</span><span class="op">}</span><span class="fst">/releases/latest</span><span class="fst">&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t27" href="#t27">27</a></span><span class="t"><span class="nam">_CACHE</span> <span class="op">=</span> <span class="nam">os</span><span class="op">.</span><span class="nam">path</span><span class="op">.</span><span class="nam">join</span><span class="op">(</span><span class="nam">paths</span><span class="op">.</span><span class="nam">dir_datos_usuario</span><span class="op">(</span><span class="op">)</span><span class="op">,</span> <span class="str">&quot;comprobacion-actualizacion.json&quot;</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t"><span class="nam">_CACHE_TTL</span> <span class="op">=</span> <span class="num">24</span> <span class="op">*</span> <span class="num">3600</span>      <span class="com"># segundos: como mucho una consulta al d&#237;a</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t"><span class="nam">_CACHE_TTL</span> <span class="op">=</span> <span class="num">6</span> <span class="op">*</span> <span class="num">3600</span>       <span class="com"># segundos: como mucho una consulta cada 6 horas</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t"><span class="nam">_TIMEOUT</span> <span class="op">=</span> <span class="num">5</span>               <span class="com"># segundos (conexi&#243;n / lecturas cortas)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t"><span class="nam">_TIMEOUT_DESCARGA</span> <span class="op">=</span> <span class="num">30</span>     <span class="com"># segundos (lecturas durante la descarga del instalador)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t"><span class="nam">_DESACTIVADO</span> <span class="op">=</span> <span class="nam">bool</span><span class="op">(</span><span class="nam">os</span><span class="op">.</span><span class="nam">environ</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">&quot;GG_SIN_COMPROBAR_ACTUALIZACIONES&quot;</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -293,7 +293,7 @@
             <a class="nav" href="z_0618756b1ff51bca_version_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-17 00:49 +0000
+            created at 2026-09-17 11:09 +0000
         </p>
     </div>
 </footer>
