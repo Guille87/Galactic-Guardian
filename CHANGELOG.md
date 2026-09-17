@@ -10,13 +10,20 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 ### Added
 
 - **El juego ahora tiene un final.** Campaña de `settings.NIVEL_MAX` niveles fijos
-  (5 de partida). Al derrotar al jefe de un nivel que no es el último suena
-  `Victory Tune.ogg` (hasta ahora sin usar) y aparece una pantalla de **"Nivel
-  completado"** con la puntuación, los enemigos destruidos y el tiempo del
-  nivel, y dos opciones: continuar al siguiente o **elegir nivel** (rejugar
-  cualquiera de los ya superados en la partida actual). Al derrotar al jefe del
-  último nivel hay una pantalla de **victoria final**, con entrada en la tabla
-  de puntuaciones si corresponde.
+  (5 de partida). Al derrotar a un jefe que no es el último: las balas propias y
+  las suyas desaparecen, suena `Victory Tune.ogg` (hasta ahora sin usar) y una
+  breve transición cinemática mueve la nave sola —se centra, sube y desaparece
+  por arriba mientras el fondo acelera— antes de mostrar la pantalla de **"Nivel
+  completado"** (puntuación, enemigos destruidos, tiempo del nivel) con dos
+  opciones: continuar al siguiente nivel o **elegir nivel** (rejugar cualquiera
+  de los ya superados en la partida actual). Durante la transición el jugador no
+  puede moverse, disparar ni pausar. Al continuar, la nave del nivel nuevo
+  aparece en su sitio de siempre (las mejoras se conservan). Al derrotar al jefe
+  del último nivel hay una pantalla de **victoria final**, con entrada en la
+  tabla de puntuaciones si corresponde.
+- Las puntuaciones ahora guardan también el **nivel alcanzado**, visible en una
+  tabla con cabecera en el menú de Puntuaciones (antes solo se veían nombre y
+  puntos, sin cabecera).
 
 ## [0.1.4] - 2026-09-11
 

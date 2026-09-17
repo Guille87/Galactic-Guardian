@@ -20,6 +20,18 @@ FPS = 60
 # --- Campaña ---
 NIVEL_MAX = 5   # nº fijo de niveles; el jefe del último da la pantalla de victoria
 
+# --- Fondo ---
+FONDO_VELOCIDAD_NORMAL = 0.5   # px/frame-a-60fps del scroll normal
+
+# --- Transición de fin de nivel (al derrotar al jefe) ---
+# La nave se centra en horizontal, sube recta y desaparece por arriba; el fondo
+# acelera mientras tanto; unos segundos después se muestra "nivel completado".
+TRANSICION_VEL_LATERAL = 6          # px/frame-a-60fps al centrarse en horizontal
+TRANSICION_VEL_SUBIDA = 10          # px/frame-a-60fps al subir y desaparecer
+TRANSICION_FONDO_ACELERACION = 3.0  # multiplicador máx. de velocidad del fondo al subir la nave
+TRANSICION_FONDO_RAMPA_MS = 1500    # ms hasta que el fondo llega a esa velocidad máxima
+TRANSICION_ESPERA_MS = 2000         # ms de espera tras desaparecer la nave, antes de la pantalla
+
 # --- Generación de enemigos (ms entre spawns) ---
 GEN_MIN_INICIAL = 800
 GEN_MAX_INICIAL = 1000
