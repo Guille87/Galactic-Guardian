@@ -5,7 +5,7 @@ import webbrowser
 import pygame
 import pygame_gui
 
-from src.core import config, settings, updates
+from src.core import config, controles, settings, updates
 from src.core.version import __version__
 from src.ui.components.button import Boton
 
@@ -69,6 +69,10 @@ class MenuManager:
         vol_musica, vol_efectos = config.cargar_configuracion()
         self.vol_musica = _clamp_volumen(vol_musica)
         self.vol_efectos = _clamp_volumen(vol_efectos)
+        self.controles = config.cargar_controles()
+        self._reasignando_accion = None      # acción esperando una pulsación, o None
+        self._aviso_conflicto = None
+        self._aviso_conflicto_hasta = 0
         self._crear_botones()
 
         # Control de feedback sonoro
@@ -207,6 +211,8 @@ class MenuManager:
         self.estado = "OPCIONES"
         self._flecha_pendiente = None
         self._ignorar_moved = None
+        self._reasignando_accion = None
+        self._aviso_conflicto = None
         # Recortar antes de crear/tocar el slider: un valor fuera de [0, 1]
         # (aunque sea por 1e-17) hace que pygame_gui lo ignore y el slider quede
         # descuadrado y sin responder.
@@ -216,6 +222,8 @@ class MenuManager:
             self._inicializar_interfaz_opciones()
         self.slider_musica.set_current_value(self.vol_musica)
         self.slider_efectos.set_current_value(self.vol_efectos)
+        for accion in controles.ACCIONES:      # por si quedó "Pulsa una tecla…" a medias
+            self._actualizar_texto_control(accion)
 
     def _descargando_actualizacion(self):
         """True mientras la descarga está en curso (ni terminada ni fallida):
@@ -288,13 +296,63 @@ class MenuManager:
             click_increment=settings.VOLUMEN_PASO, manager=self.ui_manager
         )
 
+        # Controles: un botón por acción reasignable (flechas y Esc son fijas,
+        # no aparecen aquí). Clic -> queda "escuchando" la próxima tecla (ver
+        # `_procesar_tecla_reasignada`); Esc cancela sin cambiar nada.
+        pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect((50, 320), (200, 24)), text="Controles", manager=self.ui_manager
+        )
+        self._botones_controles = {}   # acción -> UIButton
+        self._acciones_por_boton = {}  # UIButton -> acción (inverso, para los eventos de clic)
+        filas = (("arriba", "abajo"), ("izquierda", "derecha"), ("disparar", "pausa"))
+        for fila, (accion_izq, accion_der) in enumerate(filas):
+            y = 350 + fila * 54
+            for accion, x in ((accion_izq, 50), (accion_der, 330)):
+                boton = pygame_gui.elements.UIButton(
+                    relative_rect=pygame.Rect((x, y), (220, 44)),
+                    text=self._texto_boton_control(accion), manager=self.ui_manager,
+                )
+                self._botones_controles[accion] = boton
+                self._acciones_por_boton[boton] = accion
+        self.btn_restaurar_controles = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((50, 512), (300, 40)),
+            text='Restaurar valores por defecto', manager=self.ui_manager,
+        )
+
         # Botones
         self.btn_guardar = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((50, 350), (200, 50)), text='Guardar', manager=self.ui_manager
+            relative_rect=pygame.Rect((50, 610), (200, 50)), text='Guardar', manager=self.ui_manager
         )
         self.btn_volver = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((350, 350), (200, 50)), text='Volver', manager=self.ui_manager
+            relative_rect=pygame.Rect((350, 610), (200, 50)), text='Volver', manager=self.ui_manager
         )
+
+    def _texto_boton_control(self, accion):
+        return f"{controles.ETIQUETAS[accion]}: {controles.nombre_tecla(self.controles[accion])}"
+
+    def _actualizar_texto_control(self, accion):
+        self._botones_controles[accion].set_text(self._texto_boton_control(accion))
+
+    def _empezar_reasignacion(self, accion):
+        if self._reasignando_accion is not None:
+            self._actualizar_texto_control(self._reasignando_accion)   # restaura la anterior
+        self._reasignando_accion = accion
+        self._botones_controles[accion].set_text("Pulsa una tecla… (Esc cancela)")
+
+    def _procesar_tecla_reasignada(self, tecla):
+        accion = self._reasignando_accion
+        self._reasignando_accion = None
+        if tecla == pygame.K_ESCAPE:
+            self._actualizar_texto_control(accion)
+            return
+        conflicto = next((a for a, t in self.controles.items() if a != accion and t == tecla), None)
+        if conflicto:
+            self._aviso_conflicto = f'"{controles.nombre_tecla(tecla)}" ya la usa {controles.ETIQUETAS[conflicto]}'
+            self._aviso_conflicto_hasta = time.time() + 3.0
+            self._actualizar_texto_control(accion)
+            return
+        self.controles[accion] = tecla
+        self._actualizar_texto_control(accion)
 
     def _feedback_sonoro_efectos(self, reiniciar=False):
         """Sonido de prueba al ajustar el volumen de efectos.
@@ -350,6 +408,10 @@ class MenuManager:
                 self.estado = "PRINCIPAL"
                 self.resultado = "SALIR"
 
+            # --- Reasignación de teclas: la siguiente pulsación es la respuesta ---
+            elif event.type == pygame.KEYDOWN and self._reasignando_accion is not None:
+                self._procesar_tecla_reasignada(event.key)
+
             # --- Eventos de pygame_gui (API 0.6+: cada evento con su propio type) ---
             elif event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element in flechas:
                 # Solo marcamos la dirección; el ajuste se hace al final del frame.
@@ -366,9 +428,17 @@ class MenuManager:
                     # Arrastre de la barra: valor libre, solo recortado.
                     self._fijar_volumen(destino, _clamp_volumen(event.ui_element.get_current_value()))
 
+            elif event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element in self._acciones_por_boton:
+                self._empezar_reasignacion(self._acciones_por_boton[event.ui_element])
+
+            elif event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element == self.btn_restaurar_controles:
+                self.controles = dict(controles.POR_DEFECTO)
+                for accion in controles.ACCIONES:
+                    self._actualizar_texto_control(accion)
+
             elif event.type == pygame_gui.UI_BUTTON_PRESSED:
                 if event.ui_element == self.btn_guardar:
-                    config.guardar_configuracion(self.vol_musica, self.vol_efectos)
+                    config.guardar_configuracion(self.vol_musica, self.vol_efectos, self.controles)
                     self.estado = "PRINCIPAL"
                 elif event.ui_element == self.btn_volver:
                     self.estado = "PRINCIPAL"
@@ -399,6 +469,10 @@ class MenuManager:
         # Renderizar textos (Título, etiquetas de sliders)
         txt_opciones = self.font_titulo.render("Opciones", True, (255, 255, 255))
         self.pantalla.blit(txt_opciones, (50, 50))
+
+        if self._aviso_conflicto and time.time() < self._aviso_conflicto_hasta:
+            aviso = self.font_version.render(self._aviso_conflicto, True, (255, 120, 120))
+            self.pantalla.blit(aviso, (50, 560))
 
         self.ui_manager.draw_ui(self.pantalla)
         pygame.display.flip()
