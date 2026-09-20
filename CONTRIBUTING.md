@@ -46,9 +46,9 @@ El patrón completo está en [CLAUDE.md](CLAUDE.md). En resumen:
 
 - **Enemigo**: una clase en `src/entities/enemies.py` que herede de `EnemigoBase`.
   Sobrescribe `FACTOR_NIVEL` si escala distinto, e implementa
-  `disparo_enemigo(ahora, rm, nombre_bala)` si dispara. Regístralo en
-  `WaveManager._get_ruta` y colócalo en la fase correspondiente de
-  `WaveManager._obtener_config_enemigo`. Añade su sprite a `config.RECURSOS`.
+  `disparo_enemigo(ahora, rm, nombre_bala)` si dispara. Ponle `RECURSO` (el
+  nombre lógico de su sprite), añade ese sprite a `config.RECURSOS` y
+  colócalo en las `Fase` de los niveles que quieras en `src/core/niveles.py`.
 - **Ítem**: añade el efecto a `Item.EFECTOS` (`src/entities/items.py`), el tipo a
   `EnemigoBase.CANDIDATOS_LOOT` y su condición de utilidad a
   `EnemigoBase._loot_util`. Añade su sprite a `config.RECURSOS`.

@@ -8,40 +8,8 @@ def test_ventana_y_bucle():
     assert isinstance(settings.DEBUG, bool)
 
 
-def test_generacion_de_enemigos():
-    assert settings.GEN_MIN_INICIAL <= settings.GEN_MAX_INICIAL
-    assert settings.GEN_MIN_SUELO > 0
-    assert settings.GEN_DECREMENTO_NIVEL > 0
-
-
 def test_campana_tiene_al_menos_un_nivel():
     assert settings.NIVEL_MAX >= 1
-
-
-def test_gen_intervalo_para_nivel_decrece_y_no_baja_del_suelo():
-    minimo1, maximo1 = settings.gen_intervalo_para_nivel(1)
-    assert (minimo1, maximo1) == (settings.GEN_MIN_INICIAL, settings.GEN_MAX_INICIAL)
-
-    minimo2, maximo2 = settings.gen_intervalo_para_nivel(2)
-    assert minimo2 < minimo1 and maximo2 < maximo1
-
-    # en un nivel muy alto, nunca por debajo del suelo
-    minimo_alto, maximo_alto = settings.gen_intervalo_para_nivel(50)
-    assert minimo_alto == settings.GEN_MIN_SUELO
-    assert maximo_alto == settings.GEN_MIN_SUELO
-
-    # es una función pura: mismo resultado que el decremento manual iterado
-    minimo_iterado, maximo_iterado = settings.GEN_MIN_INICIAL, settings.GEN_MAX_INICIAL
-    for _ in range(1, 4):
-        minimo_iterado = max(settings.GEN_MIN_SUELO, minimo_iterado - settings.GEN_DECREMENTO_NIVEL)
-        maximo_iterado = max(settings.GEN_MIN_SUELO, maximo_iterado - settings.GEN_DECREMENTO_NIVEL)
-    assert settings.gen_intervalo_para_nivel(4) == (minimo_iterado, maximo_iterado)
-
-
-def test_fases_de_oleada_ordenadas():
-    assert settings.TIEMPO_FASE_2 < settings.TIEMPO_FASE_3 < settings.TIEMPO_JEFE
-    assert 0 < settings.TIEMPO_ESCALA_SUELO <= 1
-    assert 0 < settings.TIEMPO_ESCALA_NIVEL < 1
 
 
 def test_balance_de_danio_positivo():

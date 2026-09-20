@@ -7,6 +7,16 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Changed
+
+- Interno: las oleadas y los niveles pasan a ser **datos**. Cada nivel de la
+  campaña se define en una tabla (`src/core/niveles.py`): fases y reparto de
+  enemigos, cuándo llega el jefe, cadencia de aparición y música del nivel y del
+  jefe. `WaveManager` ya no tiene lógica de niveles, solo lee esa definición. Sin
+  cambios visibles: los cinco niveles reproducen exactamente los tiempos y la
+  dificultad de antes, pero ahora se pueden retocar (o distinguir) uno a uno. Las
+  constantes `TIEMPO_FASE_*`, `TIEMPO_JEFE`, `GEN_*` de `settings.py` desaparecen.
+
 ## [0.3.0] - 2026-09-20
 
 Controles reasignables y varias mejoras de menús. Sin cambios incompatibles con

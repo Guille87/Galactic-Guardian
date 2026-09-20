@@ -25,22 +25,21 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 - **Campaña con final** — `settings.NIVEL_MAX` niveles fijos; música de victoria,
   pantalla de "nivel completado" con selector de nivel (rejugar los ya
   superados en la partida actual), y pantalla de victoria final tras el último
-  jefe. Ver `[Unreleased]` → próxima versión. El modo sin fin queda pendiente
+  jefe. Ver `[0.2.0]`. El modo sin fin queda pendiente
   como **modo aparte** (ver backlog).
 - **Menú de opciones — reasignar teclas** — tecla principal de mover/disparar/
   pausa reasignable (WASD + Espacio + P por defecto); flechas y Esc fijas,
   aviso si dos acciones chocan, botón de restaurar por defecto. Persistido en
-  `config.ini`. Ver `[Unreleased]` → próxima versión.
+  `config.ini`. Ver `[0.3.0]`.
+- **Oleadas y niveles como datos** — cada nivel se define en una tabla
+  (`src/core/niveles.py`); `WaveManager` solo la lee. Añadir contenido es
+  "editar una tabla". Ver `[Unreleased]` → próxima versión.
 
 ## En curso / próximo (por orden)
 
-### 1 · Oleadas y niveles como datos (antes de meter contenido nuevo)
-- Sacar la definición de fases/enemigos/jefe/música de cada nivel de
-  `WaveManager` a una tabla de datos. Añadir contenido pasa a ser "editar una
-  tabla", no tocar lógica — y es el paso natural antes de sumar enemigos.
-- De la mano: **object pooling de proyectiles** (reutilizar balas en vez de
-  crear/destruir constantemente) — mejora de rendimiento, se hace en el mismo
-  frente porque toca el mismo código de gestión de entidades.
+### 1 · Object pooling de proyectiles
+- Reutilizar balas en vez de crear/destruir constantemente — mejora de
+  rendimiento; toca el código de gestión de entidades (`EntityManager`).
 
 ### 2 · Contenido nuevo (según lleguen los assets)
 - **Enemigos nuevos** — asset a la espera de que consigas un set de un mismo

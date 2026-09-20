@@ -5,6 +5,7 @@ import pygame
 import pygame.freetype
 
 from src.core import settings
+from src.core.niveles import definicion_nivel
 from src.core.version import __version__
 from src.entities.enemies import Jefe
 from src.entities.player import Jugador
@@ -61,9 +62,8 @@ class Juego:
         self.resultado = "MENU"  # "MENU" | "SALIR"
         self.enemigos_eliminados = 0  # contador de "piedad" para el loot
 
-        # Parámetros de dificultad
-        self.MIN_TIEMPO_GENERACION = settings.GEN_MIN_INICIAL
-        self.MAX_TIEMPO_GENERACION = settings.GEN_MAX_INICIAL
+        # Cadencia de aparición de enemigos (viene de la definición del nivel)
+        self.MIN_TIEMPO_GENERACION, self.MAX_TIEMPO_GENERACION = definicion_nivel(self.nivel).intervalo_spawn
 
         # 3. Entidades principales y estado compartido por los managers
         self.background = ScrollingBackground(
@@ -107,7 +107,7 @@ class Juego:
         self.tiempo_proximo_enemigo = 0
 
         # 6. Inicialización de Estado de Juego
-        self.audio_manager.reproducir_musica("rain_of_lasers")
+        self.audio_manager.reproducir_musica(definicion_nivel(self.nivel).musica)
         self.clasificacion = clasificacion
 
         self.jefe = None
@@ -154,7 +154,7 @@ class Juego:
             self.jugador.reiniciar(self.pantalla_ancho, self.pantalla_alto)
             self.puntuacion = 0
 
-        self.MIN_TIEMPO_GENERACION, self.MAX_TIEMPO_GENERACION = settings.gen_intervalo_para_nivel(self.nivel)
+        self.MIN_TIEMPO_GENERACION, self.MAX_TIEMPO_GENERACION = definicion_nivel(self.nivel).intervalo_spawn
 
         # Reiniciar todos los valores del juego a sus estados iniciales
         self.entity_manager.vaciar_todo(avance_nivel=avance_nivel)
@@ -185,8 +185,8 @@ class Juego:
 
         # Detenemos la música
         self.audio_manager.detener_toda_la_musica()
-        # Aseguramos que suene la música principal
-        self.audio_manager.reproducir_musica("rain_of_lasers")
+        # Aseguramos que suene la música del nivel
+        self.audio_manager.reproducir_musica(definicion_nivel(self.nivel).musica)
 
     # --- Contrato "reglas" que consume CollisionManager -------------------
     def al_eliminar_enemigo(self, enemigo):
