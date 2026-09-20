@@ -17,6 +17,8 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ### Changed
 
+- Pantalla de Puntuaciones: fondo estrellado oscurecido con una capa semitransparente
+  (como en Opciones) para que la tabla se lea mejor.
 - Interno: los textos del juego salen ya de un catálogo por idioma
   (`data/assets/idiomas/es.json`) a través de `t(...)` en vez de estar escritos
   en cada pantalla. Primer paso de la traducción a inglés; sin cambios visibles
