@@ -48,6 +48,7 @@ class RenderManager:
             self.pantalla.blit(self.juego.jugador.image, self.juego.jugador.rect)
             if self.juego.debug_hitboxes:
                 self._dibujar_hitboxes()
+            self._aplicar_temblor()   # antes del HUD: tiembla el mundo, no los textos
             self.juego.ui_manager.dibujar_interfaz(self.pantalla)
 
         # 3. Overlays superiores
@@ -63,6 +64,16 @@ class RenderManager:
             self._dibujar_pantalla_victoria_final()
 
         pygame.display.flip()
+
+    def _aplicar_temblor(self):
+        """Desplaza lo ya dibujado (fondo, entidades, nave) según el temblor.
+
+        Solo cuesta algo mientras hay temblor. Se vuelve a pintar una copia
+        desplazada sobre la propia pantalla, sin borrarla antes: las franjas del
+        borde enseñan el frame sin desplazar en vez de huecos negros."""
+        dx, dy = self.juego.effect_manager.temblor.desplazamiento()
+        if dx or dy:
+            self.pantalla.blit(self.pantalla.copy(), (dx, dy))
 
     # ------------------------------------------------------------------ PAUSA
     def _renderizar_pausa(self):

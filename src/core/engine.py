@@ -158,8 +158,10 @@ class Juego:
             self.nivel += 1
             self.jefe_derrotado = False
             # La transición ya movió a la nave fuera de la pantalla: el nivel
-            # nuevo empieza con ella en su sitio de siempre (mejoras intactas).
+            # nuevo empieza con ella en su sitio de siempre (mejoras y vidas
+            # intactas) y con la barra de salud llena.
             self.jugador.recentrar(self.pantalla_ancho, self.pantalla_alto)
+            self.jugador.curar(self.jugador.salud_maxima)
         else:
             # Partida desde cero: se restablece al jugador in situ (sin recrearlo)
             # para que los managers puedan conservar su referencia.
@@ -173,6 +175,7 @@ class Juego:
         # Reiniciar todos los valores del juego a sus estados iniciales
         self.entity_manager.vaciar_todo(avance_nivel=avance_nivel)
         self.enemigos_golpeados.clear()
+        self.effect_manager.temblor.reiniciar()
         self.enemigos_eliminados_nivel = 0
         self.tiempo_proximo_enemigo = 0
         self.tiempo_juego = 0.0
@@ -221,6 +224,7 @@ class Juego:
 
         if isinstance(enemigo, Jefe):
             self.jefe = None
+            self.effect_manager.agregar_temblor(settings.TEMBLOR_JEFE)
             if self.modo == settings.MODO_SIN_FIN:
                 # Sin fin: no hay cierre de nivel, la partida sigue con la oleada
                 # siguiente (se llevan las balas del jefe, como en la campaña).
@@ -241,8 +245,11 @@ class Juego:
 
         if self.jugador.salud > 0:
             self.effect_manager.crear_destello_recibir_danio()
+            if not self.jugador.invulnerable:   # invulnerable: el impacto no cuenta
+                self.effect_manager.agregar_temblor(settings.TEMBLOR_GOLPE)
         else:
             self.effect_manager.crear_explosion(self.jugador.rect.center)
+            self.effect_manager.agregar_temblor(settings.TEMBLOR_MUERTE)
             self._procesar_muerte_jugador()
 
     def _procesar_muerte_jugador(self):
@@ -279,6 +286,7 @@ class Juego:
 
         # El reloj de juego solo corre aquí: en pausa / Game Over se congela.
         self.tiempo_juego += dt * 1000
+        self.effect_manager.temblor.actualizar(dt)   # también durante la transición de fin de nivel
 
         if self.transicion_activa:
             # Cierre de nivel en curso: la nave no se controla (ver

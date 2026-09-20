@@ -41,6 +41,9 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
   pestañas Campaña / Sin fin en Puntuaciones. La curva es de primera pasada y
   quiere partidas de prueba para afinarla (`src/core/sin_fin.py`). Ver
   `[0.5.0]`.
+- **Screen shake** — la pantalla tiembla (solo el mundo, no el HUD) al recibir un
+  impacto, perder una vida y derrotar al jefe. Modelo de "trauma" con
+  constantes en `settings.py`. Ver `[Unreleased]` → próxima versión.
 - **Oleadas y niveles como datos** — cada nivel se define en una tabla
   (`src/core/niveles.py`); `WaveManager` solo la lee. Añadir contenido es
   "editar una tabla". Ver `[Unreleased]` → próxima versión.
@@ -50,8 +53,11 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 Primero lo que no depende de assets; el contenido nuevo va al final porque
 espera a que llegue el arte.
 
-### 1 · Screen shake y hit-stop
-- Al impactar/morir. Baratos, sin assets y muy visibles en la sensación de golpe.
+### 1 · Hit-stop y opción de efectos de pantalla
+- **Hit-stop**: congelar un instante el juego al morir un jefe o perder una vida.
+  Barato, sin assets y muy visible en la sensación de golpe.
+- **Opción "Efectos de pantalla"** en Opciones que apague tanto el hit-stop como
+  el temblor (accesibilidad). Va con el hit-stop para tocar Opciones una sola vez.
 
 ### 2 · Multiplicador de puntuación / combo
 - Sube mientras no recibes daño, se reinicia al primer golpe. Ahora que el modo

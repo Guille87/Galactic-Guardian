@@ -7,6 +7,20 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Campaña: la salud se restablece al empezar el nivel siguiente.** Antes la
+  nave arrancaba el nivel con la barra de salud que traía del anterior (las
+  mejoras y las vidas se siguen conservando). Repetir un nivel ya la restauraba.
+
+### Added
+
+- **Temblor de pantalla.** El mundo (fondo, enemigos, balas y nave) tiembla al
+  recibir un impacto, al perder una vida y, con más fuerza, al derrotar al jefe.
+  El HUD se queda quieto para poder leerse. Los golpes se acumulan y el temblor
+  se apaga solo; se congela en pausa. Los valores están en `settings.py`
+  (`TEMBLOR_*`).
+
 ## [0.5.0] - 2026-09-20
 
 Llega el modo sin fin, con su propio ranking. Sin cambios incompatibles con
