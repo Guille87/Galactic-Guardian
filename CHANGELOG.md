@@ -19,6 +19,9 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ### Changed
 
+- **Menú principal centrado.** El título y los cinco botones forman ahora un
+  bloque centrado en la pantalla, como en la pausa, en vez de quedar caídos hacia
+  abajo. El aviso de nueva versión pasa a mostrarse debajo de los botones.
 - **Las puntuaciones ahora se multiplican por el combo**, así que serán mayores
   que antes; las que ya tenías guardadas no cambian y quedarán por debajo.
 
