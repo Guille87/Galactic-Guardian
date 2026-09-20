@@ -7,11 +7,10 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
-### Fixed
+## [0.6.0] - 2026-09-20
 
-- **Campaña: la salud se restablece al empezar el nivel siguiente.** Antes la
-  nave arrancaba el nivel con la barra de salud que traía del anterior (las
-  mejoras y las vidas se siguen conservando). Repetir un nivel ya la restauraba.
+La pantalla tiembla al recibir golpes y se arregla la salud al avanzar de nivel.
+Sin cambios incompatibles con partidas, configuración ni puntuaciones anteriores.
 
 ### Added
 
@@ -20,6 +19,12 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
   El HUD se queda quieto para poder leerse. Los golpes se acumulan y el temblor
   se apaga solo; se congela en pausa. Los valores están en `settings.py`
   (`TEMBLOR_*`).
+
+### Fixed
+
+- **Campaña: la salud se restablece al empezar el nivel siguiente.** Antes la
+  nave arrancaba el nivel con la barra de salud que traía del anterior (las
+  mejoras y las vidas se siguen conservando). Repetir un nivel ya la restauraba.
 
 ## [0.5.0] - 2026-09-20
 
@@ -343,7 +348,8 @@ puesta a punto del repositorio (licencia, tests, integración continua, document
   los grupos tipados y `groupcollide`).
 - `__init__.py` vacío en la raíz del repositorio.
 
-[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.2.0...v0.3.0

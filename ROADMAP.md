@@ -32,21 +32,21 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
   `config.ini`. Ver `[0.3.0]`.
 - **Verificación del instalador** — la actualización desde el juego comprueba el
   SHA-256 del instalador (campo `digest` de la API de Releases de GitHub, sin
-  tocar `build.yml`) antes de ejecutarlo. Ver `[Unreleased]` → próxima versión.
+  tocar `build.yml`) antes de ejecutarlo. Ver `[0.4.0]`.
 - **Localización (i18n)** — inglés y español, catálogo por idioma en
   `data/assets/idiomas/`, selector en Opciones con cambio al instante y
   arranque en el idioma del sistema. Añadir otro idioma es un JSON más. Ver
-  `[Unreleased]` → próxima versión.
+  `[0.4.0]`.
 - **Modo sin fin** — oleadas de 45 s sin techo, jefe cada 5, ranking propio y
   pestañas Campaña / Sin fin en Puntuaciones. La curva es de primera pasada y
   quiere partidas de prueba para afinarla (`src/core/sin_fin.py`). Ver
   `[0.5.0]`.
 - **Screen shake** — la pantalla tiembla (solo el mundo, no el HUD) al recibir un
   impacto, perder una vida y derrotar al jefe. Modelo de "trauma" con
-  constantes en `settings.py`. Ver `[Unreleased]` → próxima versión.
+  constantes en `settings.py`. Ver `[0.6.0]`.
 - **Oleadas y niveles como datos** — cada nivel se define en una tabla
   (`src/core/niveles.py`); `WaveManager` solo la lee. Añadir contenido es
-  "editar una tabla". Ver `[Unreleased]` → próxima versión.
+  "editar una tabla". Ver `[0.4.0]`.
 
 ## En curso / próximo (por orden)
 
