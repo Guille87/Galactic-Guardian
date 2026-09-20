@@ -31,7 +31,10 @@ def test_diccionarios_de_recursos_coherentes():
     assert set(config.MUSICA).isdisjoint(config.SONIDOS)
     assert all(v.endswith(".ogg") for v in config.MUSICA.values())
     assert all(v.endswith((".wav", ".ogg")) for v in config.SONIDOS.values())
-    assert len(config.EXPLOSIONES) == 11
+    for hoja in config.HOJAS.values():
+        assert hoja["ruta"].endswith(".png") and hoja["columnas"] >= 1 and hoja["filas"] >= 1
+        assert 1 <= hoja.get("cantidad", hoja["columnas"] * hoja["filas"]) <= hoja["columnas"] * hoja["filas"]
+    assert config.HOJAS["explosion"]["cantidad"] == 11
 
 
 def test_controles_sin_config_devuelve_los_valores_por_defecto(tmp_path):
