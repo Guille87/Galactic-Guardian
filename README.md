@@ -14,7 +14,7 @@
 | src/core/paths.py                     |       23 |        3 |     87% |32, 44, 46 |
 | src/core/resources.py                 |       58 |        4 |     93% |78, 84, 94, 97 |
 | src/core/settings.py                  |       34 |        0 |    100% |           |
-| src/core/updates.py                   |      123 |       19 |     85% |73-78, 91-104, 123-124, 132, 158-161 |
+| src/core/updates.py                   |      145 |       19 |     87% |74-79, 117-131, 150-151, 159, 189-192 |
 | src/core/version.py                   |        1 |        0 |    100% |           |
 | src/entities/base/movimiento.py       |       18 |        0 |    100% |           |
 | src/entities/base/projectile\_base.py |       14 |        1 |     93% |        28 |
@@ -30,13 +30,13 @@
 | src/managers/waves.py                 |       48 |        0 |    100% |           |
 | src/ui/components/button.py           |       40 |        6 |     85% |     34-39 |
 | src/ui/hud.py                         |      107 |       13 |     88% |85, 158-176 |
-| src/ui/menu.py                        |      346 |       35 |     90% |123-126, 136-137, 145-147, 149, 151, 348, 387, 413, 428-430, 464-465, 508-524, 544-548 |
+| src/ui/menu.py                        |      346 |       35 |     90% |123-126, 136-137, 145-147, 149, 151, 350, 389, 415, 430-432, 466-467, 510-526, 546-550 |
 | src/ui/scoreboard.py                  |       45 |        2 |     96% |     56-57 |
 | src/visual/background.py              |       22 |        1 |     95% |        30 |
 | src/visual/explosions.py              |       20 |        0 |    100% |           |
 | src/visual/flash.py                   |       22 |        0 |    100% |           |
 | src/visual/flash\_constant.py         |       11 |        0 |    100% |           |
-| **TOTAL**                             | **2079** |  **205** | **90%** |           |
+| **TOTAL**                             | **2101** |  **205** | **90%** |           |
 
 
 ## Setup coverage badge
