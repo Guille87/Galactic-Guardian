@@ -55,6 +55,9 @@ TEMBLOR_JEFE = 1.0          # el jefe cae
 # Bajas seguidas sin recibir daño para llegar a ×2, ×3, ×4 y ×5 (el último es el tope).
 COMBO_UMBRALES = (10, 25, 50, 90)
 
+# --- Progresión entre partidas (ver src/core/progresion.py y mejoras.py) ---
+MONEDAS_PUNTOS = 100   # 1 moneda por cada tantos puntos de la partida
+
 # --- Menú de opciones ---
 VOLUMEN_PASO = 0.1  # cuánto sube/baja el volumen con las flechas del slider
 

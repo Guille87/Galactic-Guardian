@@ -7,6 +7,7 @@ import pygame.freetype
 from src.core import settings
 from src.core import sin_fin
 from src.core.combo import Combo
+from src.core.mejoras import Bonus
 from src.core.niveles import definicion_nivel
 from src.core.version import __version__
 from src.entities.enemies import Jefe
@@ -25,12 +26,18 @@ from src.managers.waves import WaveManager
 
 class Juego:
     def __init__(self, pantalla, audio_manager, clasificacion, resource_manager,
-                 modo=settings.MODO_CAMPANA):
+                 modo=settings.MODO_CAMPANA, progresion=None):
         # 1. Configuración básica y Hardware
         # `modo`: campaña (niveles fijos con jefe final) o sin fin (oleadas sin
         # techo). `clasificacion` es el ranking de ese modo: quien crea el `Juego`
         # elige cuál pasar.
         self.modo = modo
+        # Progresión entre partidas: las mejoras compradas dan un `Bonus` a la nave
+        # y las monedas se cobran de la puntuación (`_cobrar_monedas`). Sin ella
+        # (`None`) el juego es el de siempre.
+        self.progresion = progresion
+        self.bonus = progresion.bonus() if progresion else Bonus()
+        self.monedas_cobradas = 0   # monedas de esta partida ya ingresadas
         self.rm = resource_manager
         self.pantalla = pantalla
         self.pantalla_ancho = pantalla.get_width()
@@ -39,7 +46,7 @@ class Juego:
 
         # 2. Estado de la Partida
         self.puntuacion = 0
-        self.combo = Combo()   # bajas seguidas sin daño -> multiplicador de puntuación
+        self.combo = Combo(self.bonus.combo_factor)   # bajas seguidas sin daño -> multiplicador
         self.nivel = 1   # nivel de la campaña, o nº de oleada en el modo sin fin
         self.pausado = False
         self.estado_game_over = False
@@ -84,6 +91,7 @@ class Juego:
             self.rm.get_image_scaled("jugador", Jugador.CONFIG["tamano"]),
             self.pantalla_ancho,
             self.pantalla_alto,
+            self.bonus,
         )
         # {enemigo: ts del último contacto}. WeakKeyDictionary: si el enemigo se
         # destruye, su entrada desaparece sola (además de purgarse al morir/salir).
@@ -150,12 +158,15 @@ class Juego:
         """Restablece el estado para una nueva partida, el siguiente nivel, o
         (`nivel_forzado`) un nivel concreto elegido a mano en el selector."""
         avance_nivel = self.jefe_derrotado and nivel_forzado is None
+        if not avance_nivel:
+            self._cobrar_monedas()   # la puntuación va a ponerse a cero: cobrar antes lo pendiente
         if nivel_forzado is not None:
             # Selector de nivel: arranca ese nivel como una partida nueva.
             self.nivel = nivel_forzado
             self.jefe_derrotado = False
             self.jugador.reiniciar(self.pantalla_ancho, self.pantalla_alto)
             self.puntuacion = 0
+            self.monedas_cobradas = 0
             self.combo.romper()
         elif self.jefe_derrotado:
             self.nivel += 1
@@ -170,6 +181,7 @@ class Juego:
             # para que los managers puedan conservar su referencia.
             self.jugador.reiniciar(self.pantalla_ancho, self.pantalla_alto)
             self.puntuacion = 0
+            self.monedas_cobradas = 0
             self.combo.romper()
             if self.modo == settings.MODO_SIN_FIN:
                 self.nivel = 1   # la campaña reintenta el nivel; el sin fin vuelve a la oleada 1
@@ -268,7 +280,8 @@ class Juego:
 
         if self.jugador.vidas > 0:
             self.jugador.invulnerable = True
-            self.jugador.tiempo_invulnerable = self.tiempo_juego + settings.JUGADOR_INVULNERABLE_MS
+            self.jugador.tiempo_invulnerable = (
+                self.tiempo_juego + settings.JUGADOR_INVULNERABLE_MS + self.bonus.invulnerable_extra_ms)
             self.jugador.curar(self.jugador.salud_maxima)
             self.effect_manager.crear_destello_invulnerabilidad()
 
@@ -435,6 +448,7 @@ class Juego:
     def _finalizar_transicion_fin_de_nivel(self):
         """Termina la transición y muestra "nivel completado" o la victoria
         final si era el último nivel de la campaña."""
+        self._cobrar_monedas()   # punto de control: lo ganado hasta aquí ya no se pierde
         self.transicion_activa = False
         self.transicion_fase = None
         self.background.velocidad = settings.FONDO_VELOCIDAD_NORMAL
@@ -453,6 +467,7 @@ class Juego:
         """`destino`: "game_over" o "victoria". Si la puntuación entra en el
         top 10 se pide el nombre primero (`pidiendo_nombre_para` recuerda a qué
         pantalla ir después); si no, se muestra esa pantalla directamente."""
+        self._cobrar_monedas()   # fin de partida (Game Over / victoria): las pantallas muestran lo cobrado
         if self._cualifica_para_el_top10():
             self.pidiendo_nombre = True
             self.pidiendo_nombre_para = destino
@@ -462,13 +477,28 @@ class Juego:
         else:
             self.estado_victoria_final = True
 
+    def _cobrar_monedas(self):
+        """Ingresa en la progresión las monedas que aún no se han cobrado de esta
+        partida (`MONEDAS_PUNTOS` puntos por moneda, más el % de la mejora
+        "Botín"). Es idempotente: llamarla varias veces no duplica nada, así que
+        se llama en cada forma de terminar o pausar el progreso de una partida."""
+        if self.progresion is None:
+            return
+        total = int((self.puntuacion // settings.MONEDAS_PUNTOS) * (1 + self.bonus.monedas_pct))
+        nuevas = total - self.monedas_cobradas
+        if nuevas > 0:
+            self.progresion.ingresar(nuevas)
+            self.monedas_cobradas = total
+
     def volver_al_menu(self):
         """Solicita terminar la partida y devolver el control al menú principal."""
+        self._cobrar_monedas()
         self.resultado = "MENU"
         self.ejecutando = False
 
     def salir_del_juego(self):
         """Solicita cerrar la aplicación por completo."""
+        self._cobrar_monedas()
         self.resultado = "SALIR"
         self.ejecutando = False
 
@@ -523,5 +553,6 @@ class Juego:
             self.dibujar()
 
         # Limpieza única de audio al abandonar la partida
+        self._cobrar_monedas()   # por si se salió por un camino que no la cobró (idempotente)
         self.audio_manager.detener_toda_la_musica()
         return self.resultado

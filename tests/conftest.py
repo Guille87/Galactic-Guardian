@@ -77,14 +77,22 @@ def scoreboard(tmp_path):
 
 
 @pytest.fixture
-def hacer_juego(rm, audio, scoreboard):
+def progresion(tmp_path):
+    """Progresión sobre un archivo temporal (no toca la real)."""
+    from src.core.progresion import Progresion
+
+    return Progresion(ruta=str(tmp_path / "progresion.json"))
+
+
+@pytest.fixture
+def hacer_juego(rm, audio, scoreboard, progresion):
     """Factory: devuelve una función que crea instancias frescas de `Juego`."""
     from src.core.engine import Juego
 
     pantalla = pygame.display.get_surface()
 
     def _crear():
-        return Juego(pantalla, audio, scoreboard, rm)
+        return Juego(pantalla, audio, scoreboard, rm, progresion=progresion)
 
     return _crear
 

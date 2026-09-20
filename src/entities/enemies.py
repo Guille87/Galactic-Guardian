@@ -83,6 +83,7 @@ class EnemigoBase(pygame.sprite.Sprite, MovimientoSubpixel):
         prob = 0.05
         if isinstance(self, EnemigoTipo2): prob = 0.1
         if isinstance(self, EnemigoTipo3): prob = 0.2
+        prob += jugador.bonus.probabilidad_item      # mejora permanente "Suerte"
 
         if random.random() < prob or enemigos_eliminados >= 10:
             return random.choice(pool)
