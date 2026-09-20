@@ -7,6 +7,11 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-20
+
+El juego se puede jugar en inglés, y Opciones se reorganiza en pestañas. Sin
+cambios incompatibles con partidas o configuración anteriores.
+
 ### Added
 
 - **Inglés.** El juego está traducido al inglés y hay un selector de **Idioma**
@@ -305,7 +310,8 @@ puesta a punto del repositorio (licencia, tests, integración continua, document
   los grupos tipados y `groupcollide`).
 - `__init__.py` vacío en la raíz del repositorio.
 
-[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.1.4...v0.2.0
 [0.1.4]: https://github.com/Guille87/Galactic-Guardian/compare/v0.1.3...v0.1.4
