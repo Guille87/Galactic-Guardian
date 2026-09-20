@@ -69,6 +69,7 @@ class MenuManager:
         # Estado inicial de Opciones (ver `_sincronizar_estado`)
         self._sincronizar_estado()
         self._idioma_ui = None               # idioma con el que se construyó la UI de Opciones
+        self._instantanea = None             # lo que había al entrar en Opciones (lo restaura Volver)
         self._reasignando_accion = None      # acción esperando una pulsación, o None
         self._aviso_conflicto = None
         self._aviso_conflicto_hasta = 0
@@ -225,8 +226,37 @@ class MenuManager:
                         return False
 
     def _abrir_opciones(self):
-        """Entra en la pantalla de opciones: crea la UI (una vez) y sincroniza
-        los sliders con los volúmenes actuales, ya saneados."""
+        """Entra en Opciones (desde el menú o desde la pausa).
+
+        Los cambios se aplican al instante como vista previa, pero **Volver los
+        descarta** y solo **Guardar** los confirma (y los escribe en disco). Por
+        eso aquí se toma una instantánea de lo que se puede tocar, que
+        `_deshacer_cambios` restaura."""
+        self._instantanea = {
+            "vol_musica": self.am.vol_musica,
+            "vol_efectos": self.am.vol_efectos,
+            "idioma": i18n.idioma_actual(),
+            "controles": dict(self.controles),
+        }
+        self._preparar_ui_opciones()
+
+    def _deshacer_cambios(self):
+        """Restaura lo que había al entrar en Opciones (botón Volver, o cerrar la
+        ventana). No toca `config.ini`: nada de lo descartado llegó a guardarse."""
+        inst = self._instantanea
+        if inst is None:
+            return
+        self.vol_musica, self.vol_efectos = inst["vol_musica"], inst["vol_efectos"]
+        self.am.actualizar_volumen_musica(self.vol_musica)
+        self.am.actualizar_volumen_efectos(self.vol_efectos)
+        self.controles = dict(inst["controles"])
+        if inst["idioma"] != i18n.idioma_actual():
+            i18n.establecer_idioma(inst["idioma"])
+            self._crear_botones()          # la UI de Opciones se rehace sola (`_idioma_ui`)
+
+    def _preparar_ui_opciones(self):
+        """Crea la UI de Opciones (una vez) y sincroniza los sliders con los
+        volúmenes actuales, ya saneados. También la rehace si cambió el idioma."""
         self.estado = "OPCIONES"
         self._flecha_pendiente = None
         self._ignorar_moved = None
@@ -469,10 +499,10 @@ class MenuManager:
 
     def _menu_opciones(self, time_delta):
         """Lógica de la pantalla de opciones usando pygame_gui."""
-        if self.ui_manager is None or self._idioma_ui != i18n.idioma_actual():
-            # entrada directa sin pasar por _abrir_opciones, o idioma cambiado:
-            # se rehace la UI con los textos del idioma actual
+        if self.ui_manager is None:                 # entrada directa sin pasar por _abrir_opciones
             self._abrir_opciones()
+        elif self._idioma_ui != i18n.idioma_actual():
+            self._preparar_ui_opciones()            # idioma cambiado: rehacer la UI con los textos nuevos
 
         fondo = self.rm.get_image("imagen_fondo1")
 
@@ -487,6 +517,7 @@ class MenuManager:
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                self._deshacer_cambios()
                 self.ejecutando = False
                 self.estado = "PRINCIPAL"
                 self.resultado = "SALIR"
@@ -528,6 +559,7 @@ class MenuManager:
                                              idioma=i18n.idioma_actual())
                     self.estado = "PRINCIPAL"
                 elif event.ui_element == self.btn_volver:
+                    self._deshacer_cambios()
                     self.estado = "PRINCIPAL"
 
             self.ui_manager.process_events(event)

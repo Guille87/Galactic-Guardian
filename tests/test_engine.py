@@ -237,8 +237,8 @@ def test_actualizar_muchos_frames_sin_crash(juego):
 
 def test_opciones_desde_pausa_aplica_los_controles_reasignados(juego, monkeypatch):
     """Al volver de Opciones (abierta desde la pausa), el InputHandler de la
-    partida en curso debe usar el mapa de teclas tal cual queda en el menú,
-    se haya pulsado Guardar o no (aplicación inmediata, como el volumen)."""
+    partida en curso debe usar el mapa de teclas tal cual queda en el menú (las
+    nuevas tras Guardar, las de antes tras Volver, que descarta los cambios)."""
     import pygame
     from src.ui.menu import MenuManager
 
@@ -299,3 +299,27 @@ def test_opciones_desde_pausa_rehace_los_botones_si_cambia_el_idioma(juego, monk
     juego.dibujar()
     assert juego.boton_reanudar.texto == "Resume"
     assert juego.boton_salir.texto == "Quit"
+
+
+def test_opciones_desde_pausa_volver_descarta_las_teclas_y_guardar_las_confirma(juego, monkeypatch):
+    import pygame
+    from src.ui.menu import MenuManager
+
+    antes = dict(juego.input_handler.mapa_teclas)
+
+    def _prueba(guardar):
+        def _opciones(self):
+            self._abrir_opciones()
+            self.controles["disparar"] = pygame.K_j
+            if not guardar:
+                self._deshacer_cambios()                     # lo que hace el botón Volver
+            return None
+        return _opciones
+
+    monkeypatch.setattr(MenuManager, "mostrar_solo_opciones", _prueba(guardar=False))
+    juego.mostrar_opciones_juego()
+    assert juego.input_handler.mapa_teclas == antes           # Volver: no cambia nada
+
+    monkeypatch.setattr(MenuManager, "mostrar_solo_opciones", _prueba(guardar=True))
+    juego.mostrar_opciones_juego()
+    assert juego.input_handler.mapa_teclas["disparar"] == pygame.K_j   # Guardar: se queda

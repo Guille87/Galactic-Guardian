@@ -384,6 +384,117 @@ def test_guardar_en_el_menu_persistente_no_pisa_lo_cambiado_en_la_pausa(menu, rm
     assert config.cargar_configuracion(ruta=ruta)[0] == pytest.approx(0.9)
 
 
+# --- Volver descarta los cambios; Guardar los confirma ---
+
+def test_volver_descarta_el_volumen_probado(menu, audio):
+    musica0, efectos0 = audio.vol_musica, audio.vol_efectos
+    menu._abrir_opciones()
+    menu._fijar_volumen("musica", 0.9)
+    menu._fijar_volumen("efectos", 0.7)
+    assert audio.vol_musica == pytest.approx(0.9)          # vista previa: suena al instante
+
+    _click(menu, menu.btn_volver)
+
+    assert audio.vol_musica == pytest.approx(musica0) and audio.vol_efectos == pytest.approx(efectos0)
+    assert menu.vol_musica == pytest.approx(musica0) and menu.vol_efectos == pytest.approx(efectos0)
+    assert menu.estado == "PRINCIPAL"
+    menu._abrir_opciones()                                  # y Opciones lo enseña como antes
+    assert menu.slider_musica.get_current_value() == pytest.approx(musica0)
+
+
+def test_guardar_confirma_el_volumen_en_la_sesion_y_en_disco(menu, audio, monkeypatch, tmp_path):
+    ruta = str(tmp_path / "cfg.ini")
+    monkeypatch.setattr("src.core.config.CONFIG_FILE", ruta)
+    menu._abrir_opciones()
+    menu._fijar_volumen("musica", 0.9)
+    _click(menu, menu.btn_guardar)
+
+    assert audio.vol_musica == pytest.approx(0.9)          # sigue así en la sesión
+    from src.core import config
+    assert config.cargar_configuracion(ruta=ruta)[0] == pytest.approx(0.9)
+    menu._abrir_opciones()
+    assert menu.slider_musica.get_current_value() == pytest.approx(0.9)
+
+
+def test_volver_descarta_el_idioma(menu):
+    menu._abrir_opciones()
+    _click(menu, _boton_idioma(menu, "en"))
+    assert i18n.idioma_actual() == "en"
+
+    _click(menu, menu.btn_volver)
+
+    assert i18n.idioma_actual() == "es"
+    assert menu.btn_jugar.texto == "Jugar"                  # los botones del menú vuelven a español
+    menu._abrir_opciones()
+    textos = {e.text for e in menu.ui_manager.get_root_container().elements
+              if isinstance(e, pygame_gui.elements.UILabel)}
+    assert "Idioma" in textos and _boton_idioma(menu, "es").is_selected
+
+
+def test_guardar_confirma_el_idioma_en_la_sesion(menu, monkeypatch, tmp_path):
+    monkeypatch.setattr("src.core.config.CONFIG_FILE", str(tmp_path / "cfg.ini"))
+    menu._abrir_opciones()
+    _click(menu, _boton_idioma(menu, "en"))
+    _click(menu, menu.btn_guardar)
+    assert i18n.idioma_actual() == "en" and menu.btn_jugar.texto == "Play"
+
+
+def test_rehacer_la_ui_al_cambiar_de_idioma_no_pierde_lo_que_habia_al_entrar(menu):
+    """La UI se reconstruye al cambiar de idioma (vía `_abrir_opciones` interno);
+    eso no debe tomar una instantánea nueva: Volver tiene que volver al ORIGINAL."""
+    menu._abrir_opciones()
+    _click(menu, _boton_idioma(menu, "en"))               # varios frames: rehace la UI
+    menu._fijar_volumen("musica", 0.9)
+    _click(menu, menu.btn_volver)
+    assert i18n.idioma_actual() == "es"
+
+
+def test_volver_descarta_las_teclas_reasignadas(menu):
+    antes = menu.controles["disparar"]
+    menu._abrir_opciones()
+    _click(menu, menu._botones_controles["disparar"])
+    _pulsar_tecla_en_opciones(menu, pygame.K_j)
+    assert menu.controles["disparar"] == pygame.K_j
+
+    _click(menu, menu.btn_volver)
+
+    assert menu.controles["disparar"] == antes
+    menu._abrir_opciones()
+    assert "Espacio" in menu._botones_controles["disparar"].text
+
+
+def test_guardar_confirma_las_teclas_en_la_sesion(menu, monkeypatch, tmp_path):
+    monkeypatch.setattr("src.core.config.CONFIG_FILE", str(tmp_path / "cfg.ini"))
+    menu._abrir_opciones()
+    _click(menu, menu._botones_controles["disparar"])
+    _pulsar_tecla_en_opciones(menu, pygame.K_j)
+    _click(menu, menu.btn_guardar)
+    assert menu.controles["disparar"] == pygame.K_j
+
+
+def test_cerrar_la_ventana_en_opciones_tambien_descarta(menu, audio):
+    musica0 = audio.vol_musica
+    menu._abrir_opciones()
+    menu._fijar_volumen("musica", 0.9)
+    pygame.event.post(pygame.event.Event(pygame.QUIT))
+    menu._menu_opciones(0.016)
+    assert menu.resultado == "SALIR"
+    assert audio.vol_musica == pytest.approx(musica0)
+
+
+def test_cada_visita_a_opciones_toma_su_propia_instantanea(menu, audio, monkeypatch, tmp_path):
+    """Lo guardado en una visita es el punto de partida de la siguiente."""
+    monkeypatch.setattr("src.core.config.CONFIG_FILE", str(tmp_path / "cfg.ini"))
+    menu._abrir_opciones()
+    menu._fijar_volumen("musica", 0.9)
+    _click(menu, menu.btn_guardar)                         # 1ª visita: confirma 0.9
+
+    menu._abrir_opciones()
+    menu._fijar_volumen("musica", 0.3)
+    _click(menu, menu.btn_volver)                          # 2ª visita: descarta -> vuelve a 0.9
+    assert audio.vol_musica == pytest.approx(0.9)
+
+
 def test_ui_de_opciones_se_reutiliza(menu):
     menu._abrir_opciones()
     primero = menu.ui_manager

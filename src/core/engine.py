@@ -431,8 +431,8 @@ class Juego:
 
         resultado = menu.mostrar_solo_opciones()
         self._invalidar_botones()   # por si se cambió de idioma: sus textos están cacheados
-        # Aplicación inmediata (como el volumen), sin esperar a "Guardar":
-        # el objeto en memoria del menú, no una relectura de config.ini.
+        # Las teclas que quedan en el menú: las nuevas si se pulsó "Guardar" y las
+        # de antes si se pulsó "Volver" (que descarta los cambios).
         self.input_handler.mapa_teclas = menu.controles
         if resultado == "SALIR":
             self.salir_del_juego()

@@ -7,6 +7,14 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Changed
+
+- Opciones: **Volver descarta** los cambios (volumen, idioma y teclas vuelven a
+  como estaban al entrar) y **Guardar** los confirma, dejándolos en la sesión y
+  escribiéndolos en `config.ini`. Mientras estás en la pantalla los cambios se
+  aplican al instante como vista previa. Antes Volver dejaba el volumen y el
+  idioma cambiados durante la sesión (sin guardarlos) pero descartaba las teclas.
+
 ### Fixed
 
 - Opciones desde el menú principal ya no enseña (ni guarda) valores viejos tras
