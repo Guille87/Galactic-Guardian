@@ -412,6 +412,28 @@ def test_pantalla_de_puntuaciones_con_y_sin_nivel(menu):
     menu._menu_puntuaciones()   # no debe lanzar excepción
 
 
+def _fondo_oscurecido(menu):
+    fondo = menu.rm.get_image("imagen_fondo1").copy()
+    fondo.blit(menu._overlay_oscuro(), (0, 0))
+    return fondo
+
+
+def test_puntuaciones_oscurece_el_fondo_para_leer_mejor(menu):
+    esperado = _fondo_oscurecido(menu)
+    menu.estado = "PUNTUACIONES"
+    menu._menu_puntuaciones()
+    for pos in ((5, 795), (595, 795), (595, 5)):     # rincones sin texto
+        assert menu.pantalla.get_at(pos)[:3] == esperado.get_at(pos)[:3]
+
+
+def test_opciones_oscurece_el_fondo_para_leer_mejor(menu):
+    esperado = _fondo_oscurecido(menu)
+    menu._abrir_opciones()
+    menu._menu_opciones(0.016)
+    for pos in ((595, 5), (595, 795), (5, 795)):
+        assert menu.pantalla.get_at(pos)[:3] == esperado.get_at(pos)[:3]
+
+
 def test_pantalla_de_puntuaciones_vacia(menu):
     menu.estado = "PUNTUACIONES"
     menu._menu_puntuaciones()
