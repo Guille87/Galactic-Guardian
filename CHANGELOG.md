@@ -7,6 +7,11 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-20
+
+Controles reasignables y varias mejoras de menús. Sin cambios incompatibles con
+partidas o configuración anteriores.
+
 ### Added
 
 - **Menú de opciones — Controles**: la tecla "principal" de mover
@@ -16,6 +21,8 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
   sin poder moverse o pausar. Aviso si dos acciones chocan en la misma tecla
   (no se aplica el cambio); botón para restaurar los valores por defecto.
   Persistido en `config.ini`.
+- Botón **Reanudar** en la pantalla de pausa, encima de Opciones (antes solo se
+  podía reanudar con Esc/P).
 - Botón **Salir** en el menú principal, con confirmación (antes solo se podía
   cerrar el juego con la X de la ventana).
 - El selector de nivel ("Elegir nivel" tras completar uno) ahora incluye
@@ -23,6 +30,13 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
   avanzando sin salir de esa pantalla. Elegirlo conserva las mejoras y la
   puntuación (como Continuar); rejugar un nivel anterior sigue empezando la
   nave desde cero.
+
+### Changed
+
+- Pantalla de pausa: el título y los botones se centran juntos como un bloque
+  (antes el título estaba en el centro y los botones colgaban por debajo).
+- Pantalla de Opciones: etiquetas alineadas a la izquierda con los sliders y
+  botones, y fondo estrellado oscurecido para que el texto se lea mejor.
 
 ### Fixed
 
@@ -243,7 +257,8 @@ puesta a punto del repositorio (licencia, tests, integración continua, document
   los grupos tipados y `groupcollide`).
 - `__init__.py` vacío en la raíz del repositorio.
 
-[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.1.4...v0.2.0
 [0.1.4]: https://github.com/Guille87/Galactic-Guardian/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/Guille87/Galactic-Guardian/compare/v0.1.2...v0.1.3
