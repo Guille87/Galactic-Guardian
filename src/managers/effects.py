@@ -1,6 +1,8 @@
 from src.visual.flash import Destello
 from src.visual.flash_constant import DestelloConstante
 from src.visual.explosions import Explosion
+from src.visual.screen_shake import Temblor
+
 
 class EffectManager:
     TAMANO_EXPLOSION = (64, 64)
@@ -11,6 +13,7 @@ class EffectManager:
         self.jugador = jugador
         # Pre-cargamos y escalamos la secuencia de animación una sola vez
         self.explosion_frames = self._preparar_frames_explosion()
+        self.temblor = Temblor()   # lo avanza `Juego.actualizar` y lo aplica `RenderManager`
 
     def _preparar_frames_explosion(self):
         """Prepara y cachea los frames de la explosión escalados."""
@@ -28,6 +31,10 @@ class EffectManager:
         if self.explosion_frames:
             explosion = Explosion(posicion, self.explosion_frames)
             self.entity_manager.efectos.add(explosion)
+
+    def agregar_temblor(self, cantidad):
+        """Suma trauma al temblor de pantalla (ver `settings.TEMBLOR_*`)."""
+        self.temblor.agregar(cantidad)
 
     def crear_destello_recibir_danio(self):
         """Crea el destello rojo efímero sobre el jugador."""

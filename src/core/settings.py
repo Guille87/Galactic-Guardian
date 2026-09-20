@@ -42,6 +42,15 @@ TRANSICION_MARGEN_SALIDA = 40
 
 # Fases, cadencia de aparición y jefe de cada nivel: ver src/core/niveles.py
 
+# --- Temblor de pantalla (ver src/visual/screen_shake.py) ---
+# Trauma 0..1: el desplazamiento es TEMBLOR_MAX_PX * trauma² (golpe 0.5 ≈ 3.5 px,
+# perder una vida 0.85 ≈ 10 px, jefe derrotado 1.0 = 14 px). Decae solo.
+TEMBLOR_MAX_PX = 14
+TEMBLOR_DECAIMIENTO = 2.0   # trauma que se pierde por segundo
+TEMBLOR_GOLPE = 0.5         # la nave recibe un impacto
+TEMBLOR_MUERTE = 0.85       # la nave pierde una vida
+TEMBLOR_JEFE = 1.0          # el jefe cae
+
 # --- Menú de opciones ---
 VOLUMEN_PASO = 0.1  # cuánto sube/baja el volumen con las flechas del slider
 
