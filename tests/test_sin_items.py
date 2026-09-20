@@ -113,7 +113,7 @@ def test_la_campana_sigue_curando_al_pasar_de_nivel(juego):
 
 # --- "Botín II" sustituye a "Suerte" -----------------------------------------
 
-def test_botin_ii_es_la_ultima_de_utilidad_y_no_queda_rastro_de_suerte():
+def test_botin_ii_es_la_quinta_de_utilidad_y_no_queda_rastro_de_suerte():
     m = mejoras.POR_ID["utilidad_5"]
     assert m.efecto == {"monedas_pct": 0.25} and m.requiere == "utilidad_4"
     assert not hasattr(mejoras.Bonus(), "probabilidad_item")

@@ -17,8 +17,8 @@ def prog(tmp_path):
 
 def test_hay_tres_ramas_con_varias_mejoras_cada_una():
     assert RAMAS == ("ataque", "defensa", "utilidad")
-    assert [len(de_la_rama(r)) for r in RAMAS] == [10, 6, 5]
-    assert len(MEJORAS) == 21 and len(POR_ID) == 21          # ids únicos
+    assert [len(de_la_rama(r)) for r in RAMAS] == [10, 10, 10]
+    assert len(MEJORAS) == 30 and len(POR_ID) == 30          # ids únicos
 
 
 def test_cada_rama_es_una_cadena_ordenada_y_los_costes_suben():

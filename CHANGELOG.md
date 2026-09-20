@@ -26,7 +26,7 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 - **Disparo triple**, además del doble, y más **disparos por segundo** y **velocidad**
   desde el árbol.
 - La pantalla **Mejoras** se **desplaza** (rueda del ratón, barra lateral, teclas o
-  **arrastrando con el ratón** como en el móvil) para que quepan los 21 nodos del
+  **arrastrando con el ratón** como en el móvil) para que quepan los 30 nodos del
   árbol. Las mejoras se compran al soltar el clic, para distinguir un toque de un arrastre.
 - Con **disparo doble** las balas salen de los cañones de las alas de la nave; con
   **triple**, de los dos cañones y del morro.
@@ -38,9 +38,11 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
   - **La nave base** empieza con velocidad 5 (antes 4), 4 disparos por segundo
     (antes ~2,9) y 1 bala; el tope de velocidad se queda en 6 y el de cadencia
     sube a 8 disparos por segundo.
-  - **Árbol de 21 mejoras** (Ataque 10, Defensa 6, Utilidad 5; las cuatro últimas de
-    Ataque —Daño III y IV, Cadencia III y IV— llevan el daño a 30 y los disparos a 8 por
-    segundo) con nuevos costes
+  - **Árbol de 30 mejoras**, diez por rama. Las últimas de Ataque (Daño III y IV,
+    Cadencia III y IV) llevan el daño a 30 y los disparos a 8 por segundo; Defensa
+    suma Blindaje IV y V, Regeneración II y otra Vida extra; Utilidad, Botín III–V
+    (+150 % de monedas en total) y Maestría II y III, sin más velocidad (el tope
+    se queda en 6). Comprarlo todo cuesta 39 250 monedas con nuevos costes
     y efectos; la cadencia y la velocidad se leen en el juego como
     "+1 disparo por segundo" y "+10 % de velocidad" en vez de milisegundos.
   - **Dificultad por tablas de nivel** (`src/core/escalado.py`): vida de los

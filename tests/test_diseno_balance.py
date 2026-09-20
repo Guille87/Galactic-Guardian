@@ -152,3 +152,15 @@ def test_el_arbol_entero_lleva_daño_cadencia_y_velocidad_a_sus_topes():
     n, c = _nave(1.0), Jugador.CONFIG
     assert (n.danio, n.disparos_s, n.balas, n.velocidad) == (c["danio_max"], c["disparos_max"],
                                                               c["balas_max"], c["vel_max"])
+
+
+def test_utilidad_no_sube_la_velocidad_por_encima_de_6():
+    """La velocidad tope (6) se alcanza con Motores I y II; el resto de Utilidad es botín y combo."""
+    motores = [m for m in mejoras.MEJORAS if "velocidad_extra" in m.efecto]
+    assert len(motores) == 2
+    assert Jugador.CONFIG["vel_base"] + sum(m.efecto["velocidad_extra"] for m in motores) == Jugador.CONFIG["vel_max"]
+
+
+def test_utilidad_da_mas_monedas_que_el_resto_del_arbol_pide_de_menos():
+    """La cola del árbol es cara: el botín de Utilidad acelera comprarla (+150 % en total)."""
+    assert mejoras.calcular_bonus(m.id for m in mejoras.MEJORAS).monedas_pct == 1.5
