@@ -1027,3 +1027,35 @@ def test_las_cuatro_pestanas_caben_en_pantalla_sin_solaparse(menu):
     for izq, der in zip(rects, rects[1:]):
         assert izq.right < der.left
     assert rects[0].left >= 0 and rects[-1].right <= settings.ANCHO
+
+
+# --- Composición del menú principal ------------------------------------------
+
+def test_el_titulo_y_los_botones_forman_un_bloque_centrado_en_la_pantalla(menu):
+    from src.ui import menu as modulo_menu
+
+    alto_titulo = menu.font_titulo.size("Galactic Guardian")[1]
+    arriba = modulo_menu._MENU_TITULO_Y - alto_titulo / 2
+    abajo = menu.btn_salir.rect.bottom
+    assert abs((arriba + abajo) / 2 - settings.ALTO / 2) <= 20      # centro del bloque ~ centro de la pantalla
+
+
+def test_el_titulo_queda_por_encima_del_primer_boton_con_aire(menu):
+    from src.ui import menu as modulo_menu
+
+    alto_titulo = menu.font_titulo.size("Galactic Guardian")[1]
+    assert modulo_menu._MENU_TITULO_Y + alto_titulo / 2 + 30 <= menu.btn_jugar.rect.top
+
+
+def test_el_aviso_de_actualizacion_va_debajo_de_los_botones_sin_solaparse(menu):
+    from src.ui import menu as modulo_menu
+
+    assert menu.btn_actualizar.rect.top > menu.btn_salir.rect.bottom
+    assert menu.btn_actualizar.rect.bottom < settings.ALTO
+    assert modulo_menu._MENU_AVISO_Y > menu.btn_salir.rect.bottom            # el texto también
+
+
+def test_menu_principal_con_aviso_de_actualizacion_se_dibuja(menu):
+    menu.actualizaciones.resultado = {"version": "9.9.9", "url": "http://d", "instalador_url": None,
+                                      "instalador_sha256": None}
+    menu._menu_principal()          # no debe lanzar excepción

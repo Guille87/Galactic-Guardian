@@ -41,6 +41,10 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
   pestañas Campaña / Sin fin en Puntuaciones. La curva es de primera pasada y
   quiere partidas de prueba para afinarla (`src/core/sin_fin.py`). Ver
   `[0.5.0]`.
+- **Combo de puntuación** — racha de bajas sin recibir daño que sube el
+  multiplicador de ×1 a ×5 (umbrales en `settings.py`); se rompe al primer golpe,
+  se conserva entre niveles y oleadas, y el HUD lo muestra con una barra. Ver
+  `[Unreleased]` → próxima versión.
 - **Screen shake** — la pantalla tiembla (solo el mundo, no el HUD) al recibir un
   impacto, perder una vida y derrotar al jefe. Modelo de "trauma" con
   constantes en `settings.py`. Ver `[0.6.0]`.
@@ -56,11 +60,7 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 Primero lo que no depende de assets; el contenido nuevo va al final porque
 espera a que llegue el arte.
 
-### 1 · Multiplicador de puntuación / combo
-- Sube mientras no recibes daño, se reinicia al primer golpe. Ahora que el modo
-  sin fin tiene ranking propio, es donde más sentido tiene.
-
-### 2 · Contenido nuevo (según lleguen los assets)
+### 1 · Contenido nuevo (según lleguen los assets)
 - **Enemigos nuevos** — asset a la espera de que consigas un set de un mismo
   autor (arte consistente).
 - **Patrones de disparo reutilizables** (abanico, dirigido, ráfaga…) para

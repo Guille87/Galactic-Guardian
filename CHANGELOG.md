@@ -7,6 +7,24 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+
+- **Combo de puntuación.** Cada baja seguida sin recibir daño sube tu racha, y
+  con ella el multiplicador de puntuación: ×2 a las 10 bajas, ×3 a las 25, ×4 a
+  las 50 y ×5 a las 90 (el tope). Se rompe al primer golpe que te llega (o al
+  perder una vida); no caduca por tiempo. Se conserva al pasar de nivel en la
+  campaña y entre oleadas en el sin fin. El HUD muestra "COMBO ×n" con una barra
+  hacia el siguiente escalón, bajo la puntuación. Los umbrales están en
+  `settings.py` (`COMBO_UMBRALES`).
+
+### Changed
+
+- **Menú principal centrado.** El título y los cinco botones forman ahora un
+  bloque centrado en la pantalla, como en la pausa, en vez de quedar caídos hacia
+  abajo. El aviso de nueva versión pasa a mostrarse debajo de los botones.
+- **Las puntuaciones ahora se multiplican por el combo**, así que serán mayores
+  que antes; las que ya tenías guardadas no cambian y quedarán por debajo.
+
 ## [0.7.0] - 2026-09-20
 
 Se puede desactivar el temblor de pantalla y se arregla un halo que se quedaba

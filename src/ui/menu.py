@@ -14,6 +14,14 @@ from src.ui.components.button import Boton
 # sufijo de su clave de texto (`opciones.<nombre>`).
 PESTANAS = ("controles", "idioma", "audio", "pantalla")
 
+# Menú principal: el título y los cinco botones forman un bloque centrado en la
+# pantalla (como el de la pausa); el aviso de nueva versión, que solo aparece a
+# veces, va debajo para no reservar un hueco vacío entre el título y los botones.
+_MENU_TITULO_Y = 185        # centro del título
+_MENU_BOTONES_Y = 315       # borde superior del primer botón
+_MENU_BOTONES_PASO = 70     # separación entre botones (altura 50 + 20)
+_MENU_AVISO_Y = 685         # centro del texto del aviso; su botón va justo debajo
+
 # Escalón de las flechas ◄ ► (0.1). El arrastre de la barra es libre; solo se
 # redondea a 2 decimales para no guardar basura de coma flotante.
 _PASO_VOLUMEN = settings.VOLUMEN_PASO
@@ -128,14 +136,15 @@ class MenuManager:
         self._idioma_botones = i18n.idioma_actual()
         cx = self.pantalla.get_rect().centerx
         self.btn_actualizar = Boton(
-            t("menu.actualizar"), (255, 170, 0, 160), (0, 0, 0), cx, 270, 320, 44, 10,
+            t("menu.actualizar"), (255, 170, 0, 160), (0, 0, 0), cx, _MENU_AVISO_Y + 17, 320, 44, 10,
         )
         # `btn_jugar` es el de la campaña (el "Jugar" de siempre)
-        self.btn_jugar = Boton(t("menu.campana"), (0, 255, 0, 100), (255, 255, 255), cx, 350, 200, 50, 10)
-        self.btn_sin_fin = Boton(t("menu.sin_fin"), (170, 0, 255, 128), (255, 255, 255), cx, 420, 200, 50, 10)
-        self.btn_opciones = Boton(t("comun.opciones"), (0, 0, 255, 128), (255, 255, 255), cx, 490, 200, 50, 10)
-        self.btn_puntos = Boton(t("menu.puntuaciones"), (255, 255, 0, 128), (255, 255, 255), cx, 560, 200, 50, 10)
-        self.btn_salir = Boton(t("comun.salir"), (255, 0, 0, 150), (255, 255, 255), cx, 630, 200, 50, 10)
+        y = [_MENU_BOTONES_Y + i * _MENU_BOTONES_PASO for i in range(5)]
+        self.btn_jugar = Boton(t("menu.campana"), (0, 255, 0, 100), (255, 255, 255), cx, y[0], 200, 50, 10)
+        self.btn_sin_fin = Boton(t("menu.sin_fin"), (170, 0, 255, 128), (255, 255, 255), cx, y[1], 200, 50, 10)
+        self.btn_opciones = Boton(t("comun.opciones"), (0, 0, 255, 128), (255, 255, 255), cx, y[2], 200, 50, 10)
+        self.btn_puntos = Boton(t("menu.puntuaciones"), (255, 255, 0, 128), (255, 255, 255), cx, y[3], 200, 50, 10)
+        self.btn_salir = Boton(t("comun.salir"), (255, 0, 0, 150), (255, 255, 255), cx, y[4], 200, 50, 10)
 
     def ejecutar(self):
         """Bucle principal del menú. Devuelve el siguiente estado
@@ -198,7 +207,7 @@ class MenuManager:
         # Dibujado
         self.pantalla.blit(fondo, (0, 0))
         titulo = self.font_titulo.render("Galactic Guardian", True, (255, 255, 255))
-        self.pantalla.blit(titulo, titulo.get_rect(center=(300, 150)))
+        self.pantalla.blit(titulo, titulo.get_rect(center=(300, _MENU_TITULO_Y)))
 
         self._dibujar_aviso_actualizacion()
 
@@ -346,7 +355,7 @@ class MenuManager:
             texto = t("menu.actualizacion_disponible", version=info["version"])
 
         surf = self.font_version.render(texto, True, (255, 220, 120))
-        self.pantalla.blit(surf, surf.get_rect(center=(300, 235)))
+        self.pantalla.blit(surf, surf.get_rect(center=(300, _MENU_AVISO_Y)))
         if d is None:
             self.btn_actualizar.dibujar(self.pantalla, self.font_version)
 

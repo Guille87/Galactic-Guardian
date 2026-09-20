@@ -67,6 +67,7 @@
   "victoria.jugar_de_nuevo": "Play again",
   "hud.vidas": "LIVES: {n}",
   "hud.oleada": "WAVE {n}",
+  "hud.combo": "COMBO x{n}",
   "hud.ataque": "Attack",
   "hud.vel_ataque": "Fire rate",
   "hud.velocidad": "Speed",
