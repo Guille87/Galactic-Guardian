@@ -27,6 +27,20 @@ def _click(menu, boton, frames=5):
         menu._menu_opciones(0.016)
 
 
+def _ir_a_pestana(menu, nombre):
+    """Cambia de pestaña de Opciones con un clic real sobre su botón."""
+    if menu._pestana == nombre:
+        return
+    boton = next(b for b, n in menu._botones_pestana.items() if n == nombre)
+    _click(menu, boton, frames=2)
+    assert menu._pestana == nombre
+
+
+def _boton_control(menu, accion):
+    _ir_a_pestana(menu, "controles")
+    return menu._botones_controles[accion]
+
+
 @pytest.fixture
 def menu(rm, audio, scoreboard):
     return MenuManager(pygame.display.get_surface(), rm, audio, scoreboard)
@@ -104,6 +118,7 @@ def test_arrastre_permite_valores_libres(menu):
 
 def test_flecha_cuadra_un_valor_libre(menu):
     menu._abrir_opciones()
+    _ir_a_pestana(menu, "audio")
     _mover_slider(menu, menu.slider_efectos, 0.27)
     _click(menu, menu.slider_efectos.right_button)
     assert menu.vol_efectos == pytest.approx(0.3)   # 0.27 -> 0.3, no 0.37
@@ -112,6 +127,7 @@ def test_flecha_cuadra_un_valor_libre(menu):
 def test_flecha_desde_valor_libre_sin_salto_visible(menu):
     """El slider no debe pasar por 0.35 (±0.1 de pygame_gui) antes de cuadrar."""
     menu._abrir_opciones()
+    _ir_a_pestana(menu, "audio")
     _mover_slider(menu, menu.slider_musica, 0.25)
     menu.vol_musica = 0.25
 
@@ -131,6 +147,7 @@ def test_mantener_pulsada_la_flecha_no_dispara_el_volumen(menu):
     """pygame_gui, al mantener la flecha, arrancaba un scroll rápido; el volumen
     se "disparaba" y luego bajaba al escalón."""
     menu._abrir_opciones()
+    _ir_a_pestana(menu, "audio")
     menu._fijar_volumen("musica", 0.2)
     btn = menu.slider_musica.right_button
 
@@ -150,6 +167,7 @@ def test_mantener_pulsada_la_flecha_no_dispara_el_volumen(menu):
 def test_flecha_del_slider_de_musica_actualiza_volumen(menu):
     """Antes las flechas del slider de música no hacían nada."""
     menu._abrir_opciones()
+    _ir_a_pestana(menu, "audio")
     _mover_slider(menu, menu.slider_musica, 0.5)
     _click(menu, menu.slider_musica.left_button)
     assert menu.vol_musica == pytest.approx(0.4)
@@ -160,6 +178,7 @@ def test_volumen_fuera_de_rango_no_bloquea_los_sliders(menu):
     menu.vol_musica = -2.7755575615628914e-17
     menu.vol_efectos = -2.7755575615628914e-17
     menu._abrir_opciones()
+    _ir_a_pestana(menu, "audio")
     for _ in range(3):
         _click(menu, menu.slider_musica.right_button)
         _click(menu, menu.slider_efectos.right_button)
@@ -174,24 +193,24 @@ def _pulsar_tecla_en_opciones(menu, tecla):
 
 def test_clic_en_boton_de_control_empieza_a_escuchar(menu):
     menu._abrir_opciones()
-    _click(menu, menu._botones_controles["disparar"])
+    _click(menu, _boton_control(menu, "disparar"))
     assert menu._reasignando_accion == "disparar"
 
 
 def test_reasignar_disparar_actualiza_el_mapa_y_el_texto(menu):
     from src.core import controles
     menu._abrir_opciones()
-    _click(menu, menu._botones_controles["disparar"])
+    _click(menu, _boton_control(menu, "disparar"))
     _pulsar_tecla_en_opciones(menu, pygame.K_j)
     assert menu.controles["disparar"] == pygame.K_j
-    assert controles.nombre_tecla(pygame.K_j) in menu._botones_controles["disparar"].text
+    assert controles.nombre_tecla(pygame.K_j) in _boton_control(menu, "disparar").text
     assert menu._reasignando_accion is None
 
 
 def test_escape_cancela_la_reasignacion_sin_cambiar_nada(menu):
     menu._abrir_opciones()
     valor_previo = menu.controles["disparar"]
-    _click(menu, menu._botones_controles["disparar"])
+    _click(menu, _boton_control(menu, "disparar"))
     _pulsar_tecla_en_opciones(menu, pygame.K_ESCAPE)
     assert menu.controles["disparar"] == valor_previo
     assert menu._reasignando_accion is None
@@ -201,7 +220,7 @@ def test_conflicto_entre_acciones_no_reasigna_y_avisa(menu):
     menu._abrir_opciones()
     valor_previo = menu.controles["disparar"]
     tecla_de_pausa = menu.controles["pausa"]
-    _click(menu, menu._botones_controles["disparar"])
+    _click(menu, _boton_control(menu, "disparar"))
     _pulsar_tecla_en_opciones(menu, tecla_de_pausa)   # ya la usa "pausa"
     assert menu.controles["disparar"] == valor_previo   # no cambia
     assert menu._aviso_conflicto is not None
@@ -210,10 +229,11 @@ def test_conflicto_entre_acciones_no_reasigna_y_avisa(menu):
 def test_restaurar_valores_por_defecto(menu):
     from src.core import controles
     menu._abrir_opciones()
-    _click(menu, menu._botones_controles["disparar"])
+    _click(menu, _boton_control(menu, "disparar"))
     _pulsar_tecla_en_opciones(menu, pygame.K_j)
     assert menu.controles["disparar"] == pygame.K_j
 
+    _ir_a_pestana(menu, "controles")
     _click(menu, menu.btn_restaurar_controles)
     assert menu.controles == controles.POR_DEFECTO
 
@@ -222,7 +242,7 @@ def test_guardar_persiste_el_mapa_de_controles(menu, monkeypatch, tmp_path):
     ruta = str(tmp_path / "cfg.ini")
     monkeypatch.setattr("src.core.config.CONFIG_FILE", ruta)
     menu._abrir_opciones()
-    _click(menu, menu._botones_controles["disparar"])
+    _click(menu, _boton_control(menu, "disparar"))
     _pulsar_tecla_en_opciones(menu, pygame.K_j)
     _click(menu, menu.btn_guardar)
 
@@ -231,6 +251,7 @@ def test_guardar_persiste_el_mapa_de_controles(menu, monkeypatch, tmp_path):
 
 
 def _boton_idioma(menu, codigo):
+    _ir_a_pestana(menu, "idioma")
     return next(b for b, c in menu._botones_idioma.items() if c == codigo)
 
 
@@ -255,9 +276,10 @@ def test_cambiar_de_idioma_rehace_la_ui_de_opciones(menu):
     _click(menu, _boton_idioma(menu, "en"))
     textos = {e.text for e in menu.ui_manager.get_root_container().elements
               if isinstance(e, pygame_gui.elements.UILabel)}
-    assert {"Music", "Effects", "Language", "Controls"} <= textos
+    assert {"Music", "Effects"} <= textos
+    assert {"Audio", "Language", "Controls"} == {b.text for b in menu._botones_pestana}
     assert menu.btn_guardar.text == "Save"
-    assert "Fire" in menu._botones_controles["disparar"].text
+    assert "Fire" in _boton_control(menu, "disparar").text
     assert _boton_idioma(menu, "en").is_selected and not _boton_idioma(menu, "es").is_selected
 
 
@@ -313,7 +335,8 @@ def test_opciones_del_menu_persistente_siguen_el_idioma_cambiado_fuera(menu):
     menu._abrir_opciones()                                  # y abre Opciones
     textos = {e.text for e in menu.ui_manager.get_root_container().elements
               if isinstance(e, pygame_gui.elements.UILabel)}
-    assert {"Música", "Efectos", "Idioma", "Controles"} <= textos
+    assert {"Música", "Efectos"} <= textos
+    assert {"Audio", "Idioma", "Controles"} == {b.text for b in menu._botones_pestana}
     assert _boton_idioma(menu, "es").is_selected and not _boton_idioma(menu, "en").is_selected
 
     _click(menu, _boton_idioma(menu, "en"))                 # ahora sí responde a ambos
@@ -357,7 +380,7 @@ def test_menu_persistente_ve_las_teclas_guardadas_desde_la_pausa(menu, rm, audio
     monkeypatch.setattr("src.core.config.CONFIG_FILE", ruta)
     pausa = MenuManager(menu.pantalla, rm, audio, scoreboard)
     pausa._abrir_opciones()
-    _click(pausa, pausa._botones_controles["disparar"])
+    _click(pausa, _boton_control(pausa, "disparar"))
     _pulsar_tecla_en_opciones(pausa, pygame.K_j)
     _click(pausa, pausa.btn_guardar)                       # guardadas en config.ini
 
@@ -365,7 +388,7 @@ def test_menu_persistente_ve_las_teclas_guardadas_desde_la_pausa(menu, rm, audio
     _volver_al_menu_principal(menu)
     assert menu.controles["disparar"] == pygame.K_j
     menu._abrir_opciones()
-    assert "J" in menu._botones_controles["disparar"].text
+    assert "J" in _boton_control(menu, "disparar").text
 
 
 def test_guardar_en_el_menu_persistente_no_pisa_lo_cambiado_en_la_pausa(menu, rm, audio, scoreboard,
@@ -426,9 +449,8 @@ def test_volver_descarta_el_idioma(menu):
     assert i18n.idioma_actual() == "es"
     assert menu.btn_jugar.texto == "Jugar"                  # los botones del menú vuelven a español
     menu._abrir_opciones()
-    textos = {e.text for e in menu.ui_manager.get_root_container().elements
-              if isinstance(e, pygame_gui.elements.UILabel)}
-    assert "Idioma" in textos and _boton_idioma(menu, "es").is_selected
+    assert "Idioma" in {b.text for b in menu._botones_pestana}
+    assert _boton_idioma(menu, "es").is_selected
 
 
 def test_guardar_confirma_el_idioma_en_la_sesion(menu, monkeypatch, tmp_path):
@@ -452,7 +474,7 @@ def test_rehacer_la_ui_al_cambiar_de_idioma_no_pierde_lo_que_habia_al_entrar(men
 def test_volver_descarta_las_teclas_reasignadas(menu):
     antes = menu.controles["disparar"]
     menu._abrir_opciones()
-    _click(menu, menu._botones_controles["disparar"])
+    _click(menu, _boton_control(menu, "disparar"))
     _pulsar_tecla_en_opciones(menu, pygame.K_j)
     assert menu.controles["disparar"] == pygame.K_j
 
@@ -460,13 +482,13 @@ def test_volver_descarta_las_teclas_reasignadas(menu):
 
     assert menu.controles["disparar"] == antes
     menu._abrir_opciones()
-    assert "Espacio" in menu._botones_controles["disparar"].text
+    assert "Espacio" in _boton_control(menu, "disparar").text
 
 
 def test_guardar_confirma_las_teclas_en_la_sesion(menu, monkeypatch, tmp_path):
     monkeypatch.setattr("src.core.config.CONFIG_FILE", str(tmp_path / "cfg.ini"))
     menu._abrir_opciones()
-    _click(menu, menu._botones_controles["disparar"])
+    _click(menu, _boton_control(menu, "disparar"))
     _pulsar_tecla_en_opciones(menu, pygame.K_j)
     _click(menu, menu.btn_guardar)
     assert menu.controles["disparar"] == pygame.K_j
@@ -493,6 +515,110 @@ def test_cada_visita_a_opciones_toma_su_propia_instantanea(menu, audio, monkeypa
     menu._fijar_volumen("musica", 0.3)
     _click(menu, menu.btn_volver)                          # 2ª visita: descarta -> vuelve a 0.9
     assert audio.vol_musica == pytest.approx(0.9)
+
+
+# --- Pestañas de Opciones (Audio / Idioma / Controles) ---
+
+def _visibles(menu, nombre):
+    """True si todos los elementos de la pestaña están visibles; False si todos ocultos."""
+    estados = {e.visible for e in menu._elementos_pestana[nombre]}
+    assert len(estados) == 1, "una pestaña mezcla elementos visibles y ocultos"
+    return estados.pop()
+
+
+def test_hay_tres_pestanas_en_orden_y_se_entra_por_la_primera(menu):
+    menu._abrir_opciones()
+    assert list(menu._botones_pestana.values()) == ["controles", "idioma", "audio"]
+    assert menu._pestana == "controles"
+    assert _visibles(menu, "controles")
+    assert not _visibles(menu, "idioma") and not _visibles(menu, "audio")
+    assert next(b for b, n in menu._botones_pestana.items() if n == "controles").is_selected
+
+
+def test_cambiar_de_pestana_muestra_solo_la_elegida(menu):
+    menu._abrir_opciones()
+    for nombre in ("idioma", "controles", "audio"):
+        _ir_a_pestana(menu, nombre)
+        for otra in ("audio", "idioma", "controles"):
+            assert _visibles(menu, otra) == (otra == nombre)
+        marcadas = [n for b, n in menu._botones_pestana.items() if b.is_selected]
+        assert marcadas == [nombre]
+
+
+def test_los_elementos_de_otra_pestana_no_reciben_clics(menu):
+    """El botón de idioma "English" queda justo encima del slider de música, oculto:
+    un clic ahí, con Audio abierta, debe caer en el slider y no cambiar el idioma."""
+    menu._abrir_opciones()
+    _ir_a_pestana(menu, "audio")
+    oculto = next(b for b, c in menu._botones_idioma.items() if c == "en")
+    _click(menu, oculto)
+    assert i18n.idioma_actual() == "es"
+
+
+def test_guardar_y_volver_estan_siempre_visibles(menu):
+    menu._abrir_opciones()
+    for nombre in ("idioma", "controles", "audio"):
+        _ir_a_pestana(menu, nombre)
+        assert menu.btn_guardar.visible and menu.btn_volver.visible
+
+
+def test_al_rehacer_la_ui_por_el_idioma_se_conserva_la_pestana(menu):
+    menu._abrir_opciones()
+    _click(menu, _boton_idioma(menu, "en"))                # estamos en Idioma y se rehace la UI
+    assert menu._pestana == "idioma"
+    assert _visibles(menu, "idioma") and not _visibles(menu, "audio")
+
+
+def test_cada_entrada_a_opciones_empieza_por_la_primera_pestana(menu):
+    menu._abrir_opciones()
+    _ir_a_pestana(menu, "audio")
+    _click(menu, menu.btn_volver)
+    menu._abrir_opciones()
+    assert menu._pestana == "controles" and _visibles(menu, "controles")
+    assert not _visibles(menu, "audio")
+
+
+def test_cambiar_de_pestana_cancela_una_reasignacion_a_medias(menu):
+    menu._abrir_opciones()
+    _click(menu, _boton_control(menu, "disparar"))
+    assert menu._reasignando_accion == "disparar"
+    _ir_a_pestana(menu, "audio")
+    assert menu._reasignando_accion is None
+    assert "Pulsa" not in menu._botones_controles["disparar"].text
+
+
+def test_los_cambios_de_varias_pestanas_se_descartan_juntos_con_volver(menu, audio):
+    musica0, tecla0 = audio.vol_musica, menu.controles["disparar"]
+    menu._abrir_opciones()
+    menu._fijar_volumen("musica", 0.9)                     # Audio
+    _click(menu, _boton_idioma(menu, "en"))                # Idioma
+    _click(menu, _boton_control(menu, "disparar"))         # Controles
+    _pulsar_tecla_en_opciones(menu, pygame.K_j)
+
+    _click(menu, menu.btn_volver)
+
+    assert audio.vol_musica == pytest.approx(musica0)
+    assert i18n.idioma_actual() == "es"
+    assert menu.controles["disparar"] == tecla0
+
+
+def test_aviso_de_conflicto_solo_se_dibuja_en_la_pestana_de_controles(menu):
+    """No debe asomar un aviso de teclas encima del slider de audio."""
+    import time
+    menu._abrir_opciones()
+    _ir_a_pestana(menu, "audio")
+    menu._aviso_conflicto = "aviso de prueba"
+    menu._aviso_conflicto_hasta = time.time() + 99
+    menu._menu_opciones(0.016)          # en Audio: no debe romper ni dibujarse
+    _ir_a_pestana(menu, "controles")
+    menu._menu_opciones(0.016)
+
+
+def test_restaurar_deja_aire_respecto_a_las_teclas(menu):
+    """El botón "Restaurar" es distinto de las asignaciones: que no quede pegado."""
+    menu._abrir_opciones()
+    ultima_fila = max(b.rect.bottom for b in menu._botones_controles.values())
+    assert menu.btn_restaurar_controles.rect.top - ultima_fila >= 30
 
 
 def test_ui_de_opciones_se_reutiliza(menu):

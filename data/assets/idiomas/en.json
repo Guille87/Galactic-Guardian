@@ -15,6 +15,7 @@
   "menu.actualizacion_disponible": "New version v{version} available",
   "menu.actualizacion_fallo": "Download failed — click to open the website",
   "opciones.titulo": "Options",
+  "opciones.audio": "Audio",
   "opciones.musica": "Music",
   "opciones.efectos": "Effects",
   "opciones.idioma": "Language",

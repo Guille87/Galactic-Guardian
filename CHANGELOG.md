@@ -7,13 +7,37 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+
+- **Inglés.** El juego está traducido al inglés y hay un selector de **Idioma**
+  en Opciones (Español / English) que se aplica al instante y se guarda en
+  `config.ini`. La primera vez, el juego arranca en el idioma de Windows si es
+  inglés y en español en cualquier otro caso. Cada idioma es un JSON en
+  `data/assets/idiomas/`; ver `CONTRIBUTING.md` para añadir otros.
+
 ### Changed
 
+- Opciones se reparte en **pestañas**: Controles, Idioma y Audio (se abre por
+  Controles). Guardar y Volver son comunes a todas: actúan sobre lo tocado en
+  cualquiera.
 - Opciones: **Volver descarta** los cambios (volumen, idioma y teclas vuelven a
   como estaban al entrar) y **Guardar** los confirma, dejándolos en la sesión y
   escribiéndolos en `config.ini`. Mientras estás en la pantalla los cambios se
   aplican al instante como vista previa. Antes Volver dejaba el volumen y el
   idioma cambiados durante la sesión (sin guardarlos) pero descartaba las teclas.
+- Pantalla de Puntuaciones: fondo estrellado oscurecido con una capa
+  semitransparente (como en Opciones) para que la tabla se lea mejor.
+- Interno: los textos del juego salen ya de un catálogo por idioma
+  (`data/assets/idiomas/es.json`) a través de `t(...)` en vez de estar escritos
+  en cada pantalla (comprobado comparando capturas de todas las pantallas,
+  idénticas píxel a píxel).
+- Interno: las oleadas y los niveles pasan a ser **datos**. Cada nivel de la
+  campaña se define en una tabla (`src/core/niveles.py`): fases y reparto de
+  enemigos, cuándo llega el jefe, cadencia de aparición y música del nivel y del
+  jefe. `WaveManager` ya no tiene lógica de niveles, solo lee esa definición. Sin
+  cambios visibles: los cinco niveles reproducen exactamente los tiempos y la
+  dificultad de antes, pero ahora se pueden retocar (o distinguir) uno a uno. Las
+  constantes `TIEMPO_FASE_*`, `TIEMPO_JEFE`, `GEN_*` de `settings.py` desaparecen.
 
 ### Fixed
 
@@ -23,14 +47,6 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
   volumen en la pausa y luego pulsar Guardar en el menú principal lo dejaba en
   el valor anterior.
 
-### Added
-
-- **Inglés.** El juego está traducido al inglés y hay un selector de **Idioma**
-  en Opciones (Español / English) que se aplica al instante y se guarda en
-  `config.ini`. La primera vez, el juego arranca en el idioma de Windows si es
-  inglés y en español en cualquier otro caso. Cada idioma es un JSON en
-  `data/assets/idiomas/`; ver `CONTRIBUTING.md` para añadir otros.
-
 ### Security
 
 - La actualización desde el juego **verifica el instalador** antes de ejecutarlo:
@@ -38,23 +54,6 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
   coincide (descarga corrupta o alterada) se descarta y se ofrece abrir la web
   de descargas; si la Release no trae hash, tampoco se instala solo. No hay
   cambios en el proceso de publicación.
-
-### Changed
-
-- Pantalla de Puntuaciones: fondo estrellado oscurecido con una capa semitransparente
-  (como en Opciones) para que la tabla se lea mejor.
-- Interno: los textos del juego salen ya de un catálogo por idioma
-  (`data/assets/idiomas/es.json`) a través de `t(...)` en vez de estar escritos
-  en cada pantalla. Primer paso de la traducción a inglés; sin cambios visibles
-  (comprobado comparando capturas de todas las pantallas, idénticas píxel a
-  píxel).
-- Interno: las oleadas y los niveles pasan a ser **datos**. Cada nivel de la
-  campaña se define en una tabla (`src/core/niveles.py`): fases y reparto de
-  enemigos, cuándo llega el jefe, cadencia de aparición y música del nivel y del
-  jefe. `WaveManager` ya no tiene lógica de niveles, solo lee esa definición. Sin
-  cambios visibles: los cinco niveles reproducen exactamente los tiempos y la
-  dificultad de antes, pero ahora se pueden retocar (o distinguir) uno a uno. Las
-  constantes `TIEMPO_FASE_*`, `TIEMPO_JEFE`, `GEN_*` de `settings.py` desaparecen.
 
 ## [0.3.0] - 2026-09-20
 

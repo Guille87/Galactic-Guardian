@@ -15,6 +15,7 @@
   "menu.actualizacion_disponible": "Nueva versión v{version} disponible",
   "menu.actualizacion_fallo": "No se pudo descargar — pulsa para abrir la web",
   "opciones.titulo": "Opciones",
+  "opciones.audio": "Audio",
   "opciones.musica": "Música",
   "opciones.efectos": "Efectos",
   "opciones.idioma": "Idioma",
