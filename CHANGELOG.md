@@ -9,6 +9,8 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ### Changed
 
+- Opciones se reparte en **pestañas**: Audio, Idioma y Controles. Guardar y
+  Volver son comunes a todas: actúan sobre lo tocado en cualquiera.
 - Opciones: **Volver descarta** los cambios (volumen, idioma y teclas vuelven a
   como estaban al entrar) y **Guardar** los confirma, dejándolos en la sesión y
   escribiéndolos en `config.ini`. Mientras estás en la pantalla los cambios se

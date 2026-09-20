@@ -10,6 +10,10 @@ from src.core.i18n import t
 from src.core.version import __version__
 from src.ui.components.button import Boton
 
+# Pestañas de Opciones, en el orden en que se muestran; el nombre es también el
+# sufijo de su clave de texto (`opciones.<nombre>`).
+PESTANAS = ("audio", "idioma", "controles")
+
 # Escalón de las flechas ◄ ► (0.1). El arrastre de la barra es libre; solo se
 # redondea a 2 decimales para no guardar basura de coma flotante.
 _PASO_VOLUMEN = settings.VOLUMEN_PASO
@@ -70,6 +74,7 @@ class MenuManager:
         self._sincronizar_estado()
         self._idioma_ui = None               # idioma con el que se construyó la UI de Opciones
         self._instantanea = None             # lo que había al entrar en Opciones (lo restaura Volver)
+        self._pestana = PESTANAS[0]          # pestaña de Opciones que se está viendo
         self._reasignando_accion = None      # acción esperando una pulsación, o None
         self._aviso_conflicto = None
         self._aviso_conflicto_hasta = 0
@@ -232,6 +237,7 @@ class MenuManager:
         descarta** y solo **Guardar** los confirma (y los escribe en disco). Por
         eso aquí se toma una instantánea de lo que se puede tocar, que
         `_deshacer_cambios` restaura."""
+        self._pestana = PESTANAS[0]          # siempre se entra por la primera
         self._instantanea = {
             "vol_musica": self.am.vol_musica,
             "vol_efectos": self.am.vol_efectos,
@@ -275,6 +281,7 @@ class MenuManager:
         self.slider_efectos.set_current_value(self.vol_efectos)
         for accion in controles.ACCIONES:      # por si quedó "Pulsa una tecla…" a medias
             self._actualizar_texto_control(accion)
+        self._mostrar_pestana(self._pestana)   # la UI puede venir con otra pestaña a la vista
 
     def _descargando_actualizacion(self):
         """True mientras la descarga está en curso (ni terminada ni fallida):
@@ -326,65 +333,76 @@ class MenuManager:
     def _inicializar_interfaz_opciones(self):
         """Crea el UIManager y los elementos de la interfaz **una sola vez**.
 
+        Las opciones se reparten en pestañas (Audio / Idioma / Controles): cada
+        una es un grupo de elementos que se muestra u oculta (`_mostrar_pestana`).
+        Guardar y Volver son comunes a todas: actúan sobre lo tocado en cualquiera.
+
         Antes se recreaba en cada entrada, dejando varios UIManager vivos."""
-        # Las etiquetas (Música/Efectos/Controles y el aviso de las flechas)
-        # se centran por defecto en pygame_gui; con este tema quedan alineadas
-        # a la izquierda, al ras de los sliders y los botones.
+        # Las etiquetas (Música/Efectos y el aviso de las flechas) se centran
+        # por defecto en pygame_gui; con este tema quedan alineadas a la
+        # izquierda, al ras de los sliders y los botones.
         tema = {"label": {"misc": {"text_horiz_alignment": "left"}}}
         self.ui_manager = pygame_gui.UIManager((settings.ANCHO, settings.ALTO), tema)
         self._idioma_ui = i18n.idioma_actual()
+        self._elementos_pestana = {nombre: [] for nombre in PESTANAS}
 
-        # Etiquetas
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect((50, 120), (200, 24)), text=t("opciones.musica"), manager=self.ui_manager
-        )
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect((50, 220), (200, 24)), text=t("opciones.efectos"), manager=self.ui_manager
-        )
+        # Pestañas: una fila de botones bajo el título (la activa queda marcada).
+        self._botones_pestana = {}   # UIButton -> nombre de pestaña
+        for nombre, x in zip(PESTANAS, (50, 220, 390)):
+            boton = pygame_gui.elements.UIButton(
+                relative_rect=pygame.Rect((x, 120), (160, 44)),
+                text=t(f"opciones.{nombre}"), manager=self.ui_manager,
+            )
+            self._botones_pestana[boton] = nombre
 
+        # --- Audio ---
+        self._elementos_pestana["audio"] += [
+            pygame_gui.elements.UILabel(
+                relative_rect=pygame.Rect((50, 210), (200, 24)), text=t("opciones.musica"), manager=self.ui_manager
+            ),
+            pygame_gui.elements.UILabel(
+                relative_rect=pygame.Rect((50, 310), (200, 24)), text=t("opciones.efectos"), manager=self.ui_manager
+            ),
+        ]
         # Sliders (click_increment: las flechas ◄ ► mueven el volumen de poco en poco)
         self.slider_musica = pygame_gui.elements.UIHorizontalSlider(
-            relative_rect=pygame.Rect((50, 150), (500, 50)),
+            relative_rect=pygame.Rect((50, 240), (500, 50)),
             start_value=self.vol_musica, value_range=(0, 1),
             click_increment=settings.VOLUMEN_PASO, manager=self.ui_manager
         )
         self.slider_efectos = pygame_gui.elements.UIHorizontalSlider(
-            relative_rect=pygame.Rect((50, 250), (500, 50)),
+            relative_rect=pygame.Rect((50, 340), (500, 50)),
             start_value=self.vol_efectos, value_range=(0, 1),
             click_increment=settings.VOLUMEN_PASO, manager=self.ui_manager
         )
+        self._elementos_pestana["audio"] += [self.slider_musica, self.slider_efectos]
 
-        # Idioma: un botón por idioma disponible (el actual queda marcado). Se
-        # aplica al instante; ver `_cambiar_idioma`.
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect((50, 320), (200, 24)), text=t("opciones.idioma"), manager=self.ui_manager
-        )
+        # --- Idioma: un botón por idioma disponible (el actual queda marcado).
+        # Se aplica al instante; ver `_cambiar_idioma`.
         self._botones_idioma = {}   # UIButton -> código de idioma
         for codigo, x in zip(i18n.IDIOMAS, (50, 330)):
             boton = pygame_gui.elements.UIButton(
-                relative_rect=pygame.Rect((x, 350), (220, 44)),
+                relative_rect=pygame.Rect((x, 220), (220, 44)),
                 text=i18n.NOMBRES[codigo], manager=self.ui_manager,
             )
             self._botones_idioma[boton] = codigo
+            self._elementos_pestana["idioma"].append(boton)
         self._marcar_idioma_actual()
 
-        # Controles: un botón por acción reasignable. Las flechas y Esc son
-        # fijas (siempre funcionan, no aparecen como botón) — el aviso de abajo
+        # --- Controles: un botón por acción reasignable. Las flechas y Esc son
+        # fijas (siempre funcionan, no aparecen como botón) — el aviso de arriba
         # es justo para que el jugador sepa que no hace falta tocar nada si le
         # vale con ellas. Clic en un botón -> queda "escuchando" la próxima
         # tecla (ver `_procesar_tecla_reasignada`); Esc cancela sin cambiar nada.
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect((50, 410), (200, 24)), text=t("opciones.controles"), manager=self.ui_manager
-        )
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect((50, 434), (500, 22)),
+        self._elementos_pestana["controles"].append(pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect((50, 210), (500, 22)),
             text=t("opciones.aviso_teclas_fijas"), manager=self.ui_manager,
-        )
+        ))
         self._botones_controles = {}   # acción -> UIButton
         self._acciones_por_boton = {}  # UIButton -> acción (inverso, para los eventos de clic)
         filas = (("arriba", "abajo"), ("izquierda", "derecha"), ("disparar", "pausa"))
         for fila, (accion_izq, accion_der) in enumerate(filas):
-            y = 462 + fila * 54
+            y = 245 + fila * 54
             for accion, x in ((accion_izq, 50), (accion_der, 330)):
                 boton = pygame_gui.elements.UIButton(
                     relative_rect=pygame.Rect((x, y), (220, 44)),
@@ -392,18 +410,41 @@ class MenuManager:
                 )
                 self._botones_controles[accion] = boton
                 self._acciones_por_boton[boton] = accion
+                self._elementos_pestana["controles"].append(boton)
         self.btn_restaurar_controles = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((50, 624), (300, 40)),
+            relative_rect=pygame.Rect((50, 407), (300, 40)),
             text=t("opciones.restaurar"), manager=self.ui_manager,
         )
+        self._elementos_pestana["controles"].append(self.btn_restaurar_controles)
 
-        # Botones
+        # Botones comunes (siempre visibles)
         self.btn_guardar = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((50, 722), (200, 50)), text=t("comun.guardar"), manager=self.ui_manager
         )
         self.btn_volver = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((350, 722), (200, 50)), text=t("comun.volver"), manager=self.ui_manager
         )
+        self._mostrar_pestana(self._pestana)
+
+    def _mostrar_pestana(self, nombre):
+        """Muestra los elementos de una pestaña y oculta los de las demás.
+
+        Los ocultos no reciben clics (así no estorban los que quedan encima)."""
+        if self._reasignando_accion is not None:          # dejar de escuchar una tecla a medias
+            self._actualizar_texto_control(self._reasignando_accion)
+            self._reasignando_accion = None
+        self._pestana = nombre
+        for otra, elementos in self._elementos_pestana.items():
+            for elemento in elementos:
+                if otra == nombre:
+                    elemento.show()
+                else:
+                    elemento.hide()
+        for boton, de_esta in self._botones_pestana.items():
+            if de_esta == nombre:
+                boton.select()
+            else:
+                boton.unselect()
 
     def _marcar_idioma_actual(self):
         for boton, codigo in self._botones_idioma.items():
@@ -542,6 +583,9 @@ class MenuManager:
                     # Arrastre de la barra: valor libre, solo recortado.
                     self._fijar_volumen(destino, _clamp_volumen(event.ui_element.get_current_value()))
 
+            elif event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element in self._botones_pestana:
+                self._mostrar_pestana(self._botones_pestana[event.ui_element])
+
             elif event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element in self._botones_idioma:
                 self._cambiar_idioma(self._botones_idioma[event.ui_element])
 
@@ -590,9 +634,10 @@ class MenuManager:
         txt_opciones = self.font_titulo.render(t("opciones.titulo"), True, (255, 255, 255))
         self.pantalla.blit(txt_opciones, (50, 50))
 
-        if self._aviso_conflicto and time.time() < self._aviso_conflicto_hasta:
+        if (self._pestana == "controles" and self._aviso_conflicto
+                and time.time() < self._aviso_conflicto_hasta):
             aviso = self.font_version.render(self._aviso_conflicto, True, (255, 120, 120))
-            self.pantalla.blit(aviso, (50, 582))
+            self.pantalla.blit(aviso, (50, 460))
 
         self.ui_manager.draw_ui(self.pantalla)
         pygame.display.flip()
