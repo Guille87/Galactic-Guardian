@@ -25,8 +25,7 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 - **Campaña con final** — `settings.NIVEL_MAX` niveles fijos; música de victoria,
   pantalla de "nivel completado" con selector de nivel (rejugar los ya
   superados en la partida actual), y pantalla de victoria final tras el último
-  jefe. Ver `[0.2.0]`. El modo sin fin queda pendiente
-  como **modo aparte** (ver backlog).
+  jefe. Ver `[0.2.0]`.
 - **Menú de opciones — reasignar teclas** — tecla principal de mover/disparar/
   pausa reasignable (WASD + Espacio + P por defecto); flechas y Esc fijas,
   aviso si dos acciones chocan, botón de restaurar por defecto. Persistido en
@@ -38,6 +37,10 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
   `data/assets/idiomas/`, selector en Opciones con cambio al instante y
   arranque en el idioma del sistema. Añadir otro idioma es un JSON más. Ver
   `[Unreleased]` → próxima versión.
+- **Modo sin fin** — oleadas de 45 s sin techo, jefe cada 5, ranking propio y
+  pestañas Campaña / Sin fin en Puntuaciones. La curva es de primera pasada y
+  quiere partidas de prueba para afinarla (`src/core/sin_fin.py`). Ver
+  `[Unreleased]` → próxima versión.
 - **Oleadas y niveles como datos** — cada nivel se define en una tabla
   (`src/core/niveles.py`); `WaveManager` solo la lee. Añadir contenido es
   "editar una tabla". Ver `[Unreleased]` → próxima versión.
@@ -47,19 +50,14 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 Primero lo que no depende de assets; el contenido nuevo va al final porque
 espera a que llegue el arte.
 
-### 1 · Modo sin fin (arcade)
-- Ahora que hay campaña con final, recuperar el bucle infinito de antes como
-  modo aparte, con su propio ranking. Es lo que más rejugabilidad da con lo que
-  ya hay. Los niveles como datos (`niveles.py`) facilitan definir su curva.
-
-### 2 · Screen shake y hit-stop
+### 1 · Screen shake y hit-stop
 - Al impactar/morir. Baratos, sin assets y muy visibles en la sensación de golpe.
 
-### 3 · Multiplicador de puntuación / combo
-- Sube mientras no recibes daño, se reinicia al primer golpe. Mejor tras el modo
-  sin fin, para que el ranking tenga sentido con él.
+### 2 · Multiplicador de puntuación / combo
+- Sube mientras no recibes daño, se reinicia al primer golpe. Ahora que el modo
+  sin fin tiene ranking propio, es donde más sentido tiene.
 
-### 4 · Contenido nuevo (según lleguen los assets)
+### 3 · Contenido nuevo (según lleguen los assets)
 - **Enemigos nuevos** — asset a la espera de que consigas un set de un mismo
   autor (arte consistente).
 - **Patrones de disparo reutilizables** (abanico, dirigido, ráfaga…) para

@@ -14,16 +14,18 @@ class WaveManager:
         self.jefe_generado = False
         self.tiempo_inicio_espera_jefe = 0
 
-    def spawn_enemigo(self, tiempo_nivel, tiempo_juego, jugador, nivel):
+    def spawn_enemigo(self, tiempo_nivel, tiempo_juego, jugador, nivel, definicion=None):
         """
         Decide y crea la instancia del enemigo correspondiente.
 
         `tiempo_nivel`: ms transcurridos en el nivel actual (para las fases).
         `tiempo_juego`: reloj de juego absoluto en ms (para la espera del jefe).
+        `definicion`: la del nivel en curso; por defecto la de la campaña para
+        `nivel` (el modo sin fin pasa la de su oleada).
         Retorna la instancia del enemigo o None.
         """
         tipo_clase, nombre_recurso, es_jefe = self._obtener_config_enemigo(
-            tiempo_nivel, tiempo_juego, nivel
+            tiempo_nivel, tiempo_juego, nivel, definicion
         )
 
         if not tipo_clase:
@@ -53,13 +55,13 @@ class WaveManager:
         # Tipos 2 y 3 comparten firma de constructor
         return tipo_clase(img_final, x, y, self.ancho, nivel, jugador)
 
-    def _obtener_config_enemigo(self, tiempo_nivel, tiempo_juego, nivel):
+    def _obtener_config_enemigo(self, tiempo_nivel, tiempo_juego, nivel, definicion=None):
         """
         Decide qué enemigo toca generar según la definición del nivel
         (`src/core/niveles.py`) y el tiempo transcurrido en él.
         Retorna (ClaseEnemigo, nombre_recurso, es_jefe)
         """
-        definicion = definicion_nivel(nivel)
+        definicion = definicion or definicion_nivel(nivel)
 
         # Fase Jefe
         if tiempo_nivel >= definicion.tiempo_jefe_ms:

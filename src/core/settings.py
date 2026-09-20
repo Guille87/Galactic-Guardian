@@ -20,6 +20,10 @@ FPS = 60
 # --- Campaña ---
 NIVEL_MAX = 5   # nº fijo de niveles; el jefe del último da la pantalla de victoria
 
+# --- Modos de juego ---
+MODO_CAMPANA = "campana"
+MODO_SIN_FIN = "sin_fin"   # oleadas sin techo; la curva está en src/core/sin_fin.py
+
 # --- Fondo ---
 FONDO_VELOCIDAD_NORMAL = 0.5   # px/frame-a-60fps del scroll normal
 

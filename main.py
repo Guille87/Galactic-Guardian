@@ -12,6 +12,8 @@ from src.core.config import RECURSOS, MUSICA, SONIDOS, EXPLOSIONES, DIR_ASSETS, 
 from src.core.version import __version__
 from src.ui.scoreboard import SistemaClasificacion
 
+RANKING_SIN_FIN = "puntuaciones_sin_fin.json"
+
 
 def cargar_activos_del_juego(rm):
     """Carga imágenes y efectos en memoria; la música solo registra su ruta."""
@@ -51,17 +53,19 @@ def _smoke(frames=120):
     audio_manager = AudioManager(resource_manager, 0.2, 0.2)
     sistema_clasificacion = SistemaClasificacion()
 
-    menu = MenuManager(pantalla, resource_manager, audio_manager, sistema_clasificacion)
+    menu = MenuManager(pantalla, resource_manager, audio_manager, sistema_clasificacion,
+                       SistemaClasificacion(nombre_archivo=RANKING_SIN_FIN))
     menu._menu_principal()
     menu._abrir_opciones()
     for _ in range(5):
         menu._menu_opciones(1 / settings.FPS)
 
-    juego = Juego(pantalla, audio_manager, sistema_clasificacion, resource_manager)
-    juego.jugador.vidas = 999  # que no acabe la partida durante el humo
-    for _ in range(frames):
-        juego.actualizar(1 / settings.FPS)
-        juego.dibujar()
+    for modo in (settings.MODO_CAMPANA, settings.MODO_SIN_FIN):
+        juego = Juego(pantalla, audio_manager, sistema_clasificacion, resource_manager, modo=modo)
+        juego.jugador.vidas = 999  # que no acabe la partida durante el humo
+        for _ in range(frames):
+            juego.actualizar(1 / settings.FPS)
+            juego.dibujar()
 
     pygame.quit()
     print(f"smoke OK ({frames} frames, v{__version__})")
@@ -99,10 +103,13 @@ def main():
     # Un único AudioManager compartido entre el menú y la partida
     audio_manager = AudioManager(resource_manager, vol_musica, vol_efectos)
 
+    # Un ranking por modo de juego (cada uno en su archivo)
     sistema_clasificacion = SistemaClasificacion()
+    clasificacion_sin_fin = SistemaClasificacion(nombre_archivo=RANKING_SIN_FIN)
 
     # El menú es persistente; se reutiliza cada vez que se vuelve a él
-    menu = MenuManager(pantalla, resource_manager, audio_manager, sistema_clasificacion)
+    menu = MenuManager(pantalla, resource_manager, audio_manager, sistema_clasificacion,
+                       clasificacion_sin_fin)
 
     # --- Máquina de estados de alto nivel ---
     # Cada pantalla (menú / juego) devuelve el siguiente estado en lugar de
@@ -110,9 +117,13 @@ def main():
     estado = "MENU"
     while estado != "SALIR":
         if estado == "MENU":
-            estado = menu.ejecutar()  # -> "JUGAR" o "SALIR"
-        elif estado == "JUGAR":
-            juego = Juego(pantalla, audio_manager, sistema_clasificacion, resource_manager)
+            estado = menu.ejecutar()  # -> "JUGAR", "JUGAR_SIN_FIN" o "SALIR"
+        elif estado in ("JUGAR", "JUGAR_SIN_FIN"):
+            if estado == "JUGAR_SIN_FIN":
+                juego = Juego(pantalla, audio_manager, clasificacion_sin_fin, resource_manager,
+                              modo=settings.MODO_SIN_FIN)
+            else:
+                juego = Juego(pantalla, audio_manager, sistema_clasificacion, resource_manager)
             estado = juego.ejecutar()  # -> "MENU" o "SALIR"
         else:
             estado = "SALIR"

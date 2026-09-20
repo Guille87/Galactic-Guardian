@@ -7,6 +7,20 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+
+- **Modo sin fin.** Nuevo botón **Sin fin** en el menú principal (el de siempre
+  pasa a llamarse **Campaña**). Oleadas de 45 s sin techo: cada una trae más
+  enemigos por segundo (hasta un suelo de 200 ms entre apariciones) y más vida,
+  y **cada 5 oleadas sale un jefe** —sin más enemigos mientras dura— tras el que
+  la partida sigue sin pantallas intermedias. La puntuación se multiplica por el
+  número de oleada. Al morir, Game Over con la oleada alcanzada y Reintentar
+  vuelve a la oleada 1. La curva vive en `src/core/sin_fin.py`.
+- **Ranking propio del sin fin**, en `puntuaciones_sin_fin.json`: no se mezcla con
+  el de la campaña. La pantalla de Puntuaciones tiene pestañas **Campaña / Sin
+  fin** (la del sin fin muestra la columna *Oleada* en vez de *Nivel*).
+- El HUD del sin fin muestra la oleada en curso bajo la puntuación.
+
 ## [0.4.0] - 2026-09-20
 
 El juego se puede jugar en inglés, y Opciones se reorganiza en pestañas. Sin

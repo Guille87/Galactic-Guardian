@@ -104,6 +104,12 @@ class RenderManager:
                                                  self.juego.pantalla_alto // 2 - 150))
         self.pantalla.blit(texto_surf, texto_rect)
 
+        if self.juego.modo == settings.MODO_SIN_FIN:
+            self._dibujar_estadisticas([
+                t("game_over.oleada", n=self.juego.nivel),
+                t("game_over.puntuacion", n=self.juego.puntuacion),
+            ], self.juego.pantalla_alto // 2 - 90)
+
         # Botones creados una sola vez y cacheados
         if self.juego.boton_reintentar is None:
             centro_x = self.juego.pantalla_ancho // 2
