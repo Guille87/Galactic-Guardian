@@ -1,6 +1,7 @@
 import pygame
 
 from src.core import config
+from src.core.i18n import t
 from src.ui.components.button import Boton
 
 
@@ -181,9 +182,9 @@ class InputHandler:
         """Gestiona el bucle de espera para la confirmación de salida."""
         # Creamos los botones necesarios para el diálogo
         centro_x = self.juego.pantalla_ancho // 2
-        boton_si = Boton("Sí", (50, 50, 50), (255, 255, 255),
+        boton_si = Boton(t("comun.si"), (50, 50, 50), (255, 255, 255),
                          centro_x - 100, 320, 100, 50)
-        boton_no = Boton("No", (50, 50, 50), (255, 255, 255),
+        boton_no = Boton(t("comun.no"), (50, 50, 50), (255, 255, 255),
                          centro_x + 110, 320, 100, 50)
 
         # Delegamos el dibujo al UIManager

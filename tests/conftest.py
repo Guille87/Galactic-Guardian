@@ -29,6 +29,16 @@ def _pygame_headless():
     pygame.quit()
 
 
+@pytest.fixture(autouse=True)
+def _idioma_espanol():
+    """Los tests comparan textos en español: cada test parte (y termina) en `es`."""
+    from src.core import i18n
+
+    i18n.establecer_idioma("es")
+    yield
+    i18n.establecer_idioma("es")
+
+
 @pytest.fixture(scope="session")
 def rm():
     """ResourceManager (singleton) con todos los recursos del juego cargados."""

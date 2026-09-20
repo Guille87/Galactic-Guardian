@@ -6,6 +6,7 @@ import pygame
 import pygame_gui
 
 from src.core import config, controles, settings, updates
+from src.core.i18n import t
 from src.core.version import __version__
 from src.ui.components.button import Boton
 
@@ -88,7 +89,7 @@ class MenuManager:
         # Aviso de nueva versión (comprobación en segundo plano, best-effort)
         self.actualizaciones = updates.ComprobadorActualizaciones()
         self.btn_actualizar = Boton(
-            "Actualizar", (255, 170, 0, 160), (0, 0, 0),
+            t("menu.actualizar"), (255, 170, 0, 160), (0, 0, 0),
             self.pantalla.get_rect().centerx, 270, 320, 44, 10,
         )
         self._descarga = None          # updates.DescargaActualizacion en curso
@@ -100,10 +101,10 @@ class MenuManager:
 
     def _crear_botones(self):
         cx = self.pantalla.get_rect().centerx
-        self.btn_jugar = Boton("Jugar", (0, 255, 0, 100), (255, 255, 255), cx, 350, 200, 50, 10)
-        self.btn_opciones = Boton("Opciones", (0, 0, 255, 128), (255, 255, 255), cx, 420, 200, 50, 10)
-        self.btn_puntos = Boton("Puntuaciones", (255, 255, 0, 128), (255, 255, 255), cx, 490, 200, 50, 10)
-        self.btn_salir = Boton("Salir", (255, 0, 0, 150), (255, 255, 255), cx, 560, 200, 50, 10)
+        self.btn_jugar = Boton(t("menu.jugar"), (0, 255, 0, 100), (255, 255, 255), cx, 350, 200, 50, 10)
+        self.btn_opciones = Boton(t("comun.opciones"), (0, 0, 255, 128), (255, 255, 255), cx, 420, 200, 50, 10)
+        self.btn_puntos = Boton(t("menu.puntuaciones"), (255, 255, 0, 128), (255, 255, 255), cx, 490, 200, 50, 10)
+        self.btn_salir = Boton(t("comun.salir"), (255, 0, 0, 150), (255, 255, 255), cx, 560, 200, 50, 10)
 
     def ejecutar(self):
         """Bucle principal del menú. Devuelve el siguiente estado ("JUGAR"/"SALIR")."""
@@ -128,7 +129,7 @@ class MenuManager:
         return self.resultado or "SALIR"
 
     def _menu_principal(self):
-        pygame.display.set_caption(f"Galactic Guardian v{__version__} - Menú")
+        pygame.display.set_caption(t("ventana.titulo_menu", version=__version__))
         fondo = self.rm.get_image("imagen_fondo1")
 
         for event in pygame.event.get():
@@ -178,8 +179,8 @@ class MenuManager:
         """Diálogo bloqueante "¿Seguro que quieres salir?". Devuelve True si
         se confirma (también al cerrar la ventana con la X)."""
         cx = self.pantalla.get_rect().centerx
-        boton_si = Boton("Sí", (50, 50, 50), (255, 255, 255), cx - 100, 320, 100, 50)
-        boton_no = Boton("No", (50, 50, 50), (255, 255, 255), cx + 110, 320, 100, 50)
+        boton_si = Boton(t("comun.si"), (50, 50, 50), (255, 255, 255), cx - 100, 320, 100, 50)
+        boton_no = Boton(t("comun.no"), (50, 50, 50), (255, 255, 255), cx + 110, 320, 100, 50)
 
         fondo_oscuro = pygame.Surface((settings.ANCHO, settings.ALTO))
         fondo_oscuro.set_alpha(200)
@@ -188,7 +189,7 @@ class MenuManager:
 
         rect_dialogo = pygame.Rect(50, 200, 500, 200)
         pygame.draw.rect(self.pantalla, (255, 255, 255), rect_dialogo)
-        texto = self.font_estandar.render("¿Seguro que quieres salir?", True, (0, 0, 0))
+        texto = self.font_estandar.render(t("menu.confirmar_salida"), True, (0, 0, 0))
         self.pantalla.blit(texto, texto.get_rect(center=(rect_dialogo.centerx, rect_dialogo.centery - 50)))
         boton_si.dibujar(self.pantalla, self.font_estandar)
         boton_no.dibujar(self.pantalla, self.font_estandar)
@@ -261,11 +262,11 @@ class MenuManager:
             d = None
 
         if d is not None:
-            texto = f"Descargando actualización…  {int(d.progreso * 100)}%"
+            texto = t("menu.actualizacion_descargando", pct=int(d.progreso * 100))
         elif self._descarga_fallo:
-            texto = "No se pudo descargar — pulsa para abrir la web"
+            texto = t("menu.actualizacion_fallo")
         else:
-            texto = f"Nueva versión v{info['version']} disponible"
+            texto = t("menu.actualizacion_disponible", version=info["version"])
 
         surf = self.font_version.render(texto, True, (255, 220, 120))
         self.pantalla.blit(surf, surf.get_rect(center=(300, 235)))
@@ -284,10 +285,10 @@ class MenuManager:
 
         # Etiquetas
         pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect((50, 120), (200, 24)), text="Música", manager=self.ui_manager
+            relative_rect=pygame.Rect((50, 120), (200, 24)), text=t("opciones.musica"), manager=self.ui_manager
         )
         pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect((50, 220), (200, 24)), text="Efectos", manager=self.ui_manager
+            relative_rect=pygame.Rect((50, 220), (200, 24)), text=t("opciones.efectos"), manager=self.ui_manager
         )
 
         # Sliders (click_increment: las flechas ◄ ► mueven el volumen de poco en poco)
@@ -308,11 +309,11 @@ class MenuManager:
         # vale con ellas. Clic en un botón -> queda "escuchando" la próxima
         # tecla (ver `_procesar_tecla_reasignada`); Esc cancela sin cambiar nada.
         pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect((50, 320), (200, 24)), text="Controles", manager=self.ui_manager
+            relative_rect=pygame.Rect((50, 320), (200, 24)), text=t("opciones.controles"), manager=self.ui_manager
         )
         pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect((50, 344), (500, 22)),
-            text="Las flechas y Esc funcionan siempre, sin reasignar", manager=self.ui_manager,
+            text=t("opciones.aviso_teclas_fijas"), manager=self.ui_manager,
         )
         self._botones_controles = {}   # acción -> UIButton
         self._acciones_por_boton = {}  # UIButton -> acción (inverso, para los eventos de clic)
@@ -328,19 +329,20 @@ class MenuManager:
                 self._acciones_por_boton[boton] = accion
         self.btn_restaurar_controles = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((50, 534), (300, 40)),
-            text='Restaurar valores por defecto', manager=self.ui_manager,
+            text=t("opciones.restaurar"), manager=self.ui_manager,
         )
 
         # Botones
         self.btn_guardar = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((50, 632), (200, 50)), text='Guardar', manager=self.ui_manager
+            relative_rect=pygame.Rect((50, 632), (200, 50)), text=t("comun.guardar"), manager=self.ui_manager
         )
         self.btn_volver = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((350, 632), (200, 50)), text='Volver', manager=self.ui_manager
+            relative_rect=pygame.Rect((350, 632), (200, 50)), text=t("comun.volver"), manager=self.ui_manager
         )
 
     def _texto_boton_control(self, accion):
-        return f"{controles.ETIQUETAS[accion]}: {controles.nombre_tecla(self.controles[accion])}"
+        return t("opciones.control_boton", accion=controles.etiqueta(accion),
+                 tecla=controles.nombre_tecla(self.controles[accion]))
 
     def _actualizar_texto_control(self, accion):
         self._botones_controles[accion].set_text(self._texto_boton_control(accion))
@@ -349,7 +351,7 @@ class MenuManager:
         if self._reasignando_accion is not None:
             self._actualizar_texto_control(self._reasignando_accion)   # restaura la anterior
         self._reasignando_accion = accion
-        self._botones_controles[accion].set_text("Pulsa una tecla… (Esc cancela)")
+        self._botones_controles[accion].set_text(t("opciones.pulsa_tecla"))
 
     def _procesar_tecla_reasignada(self, tecla):
         accion = self._reasignando_accion
@@ -359,7 +361,8 @@ class MenuManager:
             return
         conflicto = next((a for a, t in self.controles.items() if a != accion and t == tecla), None)
         if conflicto:
-            self._aviso_conflicto = f'"{controles.nombre_tecla(tecla)}" ya la usa {controles.ETIQUETAS[conflicto]}'
+            self._aviso_conflicto = t("opciones.tecla_en_uso", tecla=controles.nombre_tecla(tecla),
+                                     accion=controles.etiqueta(conflicto))
             self._aviso_conflicto_hasta = time.time() + 3.0
             self._actualizar_texto_control(accion)
             return
@@ -491,7 +494,7 @@ class MenuManager:
         self.pantalla.blit(self._overlay_opciones(), (0, 0))
 
         # Renderizar textos (Título, etiquetas de sliders)
-        txt_opciones = self.font_titulo.render("Opciones", True, (255, 255, 255))
+        txt_opciones = self.font_titulo.render(t("opciones.titulo"), True, (255, 255, 255))
         self.pantalla.blit(txt_opciones, (50, 50))
 
         if self._aviso_conflicto and time.time() < self._aviso_conflicto_hasta:
@@ -553,14 +556,14 @@ class MenuManager:
         self.pantalla.blit(fondo, (0, 0))
 
         # Título
-        txt_titulo = self.font_titulo.render("Puntuaciones", True, (255, 255, 255))
+        txt_titulo = self.font_titulo.render(t("puntuaciones.titulo"), True, (255, 255, 255))
         self.pantalla.blit(txt_titulo, txt_titulo.get_rect(center=(300, 100)))
 
         # Listado de puntos: cabecera + filas en columnas (nº, nombre, puntos, nivel).
         # `x` en "Puntos" es el borde derecho de la columna (texto alineado a la derecha).
         if puntuaciones_top:
-            columnas = (("#", 60, "izq"), ("Nombre", 110, "izq"),
-                       ("Puntos", 420, "der"), ("Nivel", 480, "izq"))
+            columnas = (("#", 60, "izq"), (t("puntuaciones.col_nombre"), 110, "izq"),
+                       (t("puntuaciones.col_puntos"), 420, "der"), (t("puntuaciones.col_nivel"), 480, "izq"))
             y = 170
             self._dibujar_fila_puntuaciones(
                 [c[0] for c in columnas], columnas, y, (200, 200, 200))
@@ -571,11 +574,11 @@ class MenuManager:
                 self._dibujar_fila_puntuaciones(textos, columnas, y, (255, 255, 255))
                 y += 36
         else:
-            aviso = self.font_estandar.render("No hay puntuaciones aún", True, (200, 200, 200))
+            aviso = self.font_estandar.render(t("puntuaciones.vacio"), True, (200, 200, 200))
             self.pantalla.blit(aviso, aviso.get_rect(center=(300, 400)))
 
         # Mensaje de salida
-        txt_salir = self.font_estandar.render("Clic para volver", True, (150, 150, 150))
+        txt_salir = self.font_estandar.render(t("puntuaciones.volver"), True, (150, 150, 150))
         self.pantalla.blit(txt_salir, txt_salir.get_rect(center=(300, 750)))
 
         pygame.display.flip()

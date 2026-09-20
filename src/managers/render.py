@@ -1,5 +1,6 @@
 import pygame
 from src.core import settings
+from src.core.i18n import t
 from src.ui.components.button import Boton
 
 
@@ -74,7 +75,7 @@ class RenderManager:
         # Título + 3 botones como un bloque centrado en la pantalla (antes el
         # título estaba en el centro exacto y los botones colgaban por debajo,
         # descuadrando el conjunto hacia abajo cada vez que se añadía uno).
-        self._mostrar_texto_centralizado("Juego Pausado", (255, 255, 255), desplazamiento_y=-99)
+        self._mostrar_texto_centralizado(t("pausa.titulo"), (255, 255, 255), desplazamiento_y=-99)
         self._dibujar_botones_pausa()
 
     def _dibujar_botones_pausa(self):
@@ -82,11 +83,11 @@ class RenderManager:
         if self.juego.boton_reanudar is None:
             centro_x = self.juego.pantalla_ancho // 2
             centro_y = self.juego.pantalla_alto // 2
-            self.juego.boton_reanudar = Boton("Reanudar", (0, 255, 0, 150), (255, 255, 255),
+            self.juego.boton_reanudar = Boton(t("pausa.reanudar"), (0, 255, 0, 150), (255, 255, 255),
                                               centro_x, centro_y - 33, 150, 50, radio_borde=10)
-            self.juego.boton_opciones = Boton("Opciones", (0, 255, 255, 150), (255, 255, 255),
+            self.juego.boton_opciones = Boton(t("comun.opciones"), (0, 255, 255, 150), (255, 255, 255),
                                               centro_x, centro_y + 33, 150, 50, radio_borde=10)
-            self.juego.boton_salir = Boton("Salir", (255, 0, 0, 150), (255, 255, 255),
+            self.juego.boton_salir = Boton(t("comun.salir"), (255, 0, 0, 150), (255, 255, 255),
                                            centro_x, centro_y + 99, 150, 50, radio_borde=10)
 
         self.juego.boton_reanudar.dibujar(self.pantalla, self.font_botones)
@@ -98,7 +99,7 @@ class RenderManager:
         """Dibuja la UI de fin de juego."""
         self.pantalla.blit(self.juego.background.img1, (0, 0))
 
-        texto_surf = self.font_game_over.render("Game Over", True, (255, 255, 255))
+        texto_surf = self.font_game_over.render(t("game_over.titulo"), True, (255, 255, 255))
         texto_rect = texto_surf.get_rect(center=(self.juego.pantalla_ancho // 2,
                                                  self.juego.pantalla_alto // 2 - 150))
         self.pantalla.blit(texto_surf, texto_rect)
@@ -106,9 +107,9 @@ class RenderManager:
         # Botones creados una sola vez y cacheados
         if self.juego.boton_reintentar is None:
             centro_x = self.juego.pantalla_ancho // 2
-            self.juego.boton_reintentar = Boton("Reintentar", (255, 0, 0, 128), (255, 255, 255),
+            self.juego.boton_reintentar = Boton(t("game_over.reintentar"), (255, 0, 0, 128), (255, 255, 255),
                                                 centro_x, 400, 200, 50, radio_borde=10)
-            self.juego.boton_salir_post = Boton("Salir", (255, 0, 255, 128), (255, 255, 255),
+            self.juego.boton_salir_post = Boton(t("comun.salir"), (255, 0, 255, 128), (255, 255, 255),
                                                 centro_x, 470, 200, 50, radio_borde=10)
 
         self.juego.boton_reintentar.dibujar(self.pantalla, self.font_botones)
@@ -130,19 +131,19 @@ class RenderManager:
         self.pantalla.blit(j.background.img1, (0, 0))
         cx = j.pantalla_ancho // 2
 
-        titulo = self.font_game_over.render(f"NIVEL {j.nivel} COMPLETADO", True, (255, 215, 0))
+        titulo = self.font_game_over.render(t("nivel_completado.titulo", n=j.nivel), True, (255, 215, 0))
         self.pantalla.blit(titulo, titulo.get_rect(center=(cx, 180)))
 
         self._dibujar_estadisticas([
-            f"Puntuación: {j.puntuacion}",
-            f"Enemigos destruidos: {j.enemigos_eliminados_nivel}",
-            f"Tiempo: {j.tiempo_juego / 1000:.1f} s",
+            t("nivel_completado.puntuacion", n=j.puntuacion),
+            t("nivel_completado.enemigos", n=j.enemigos_eliminados_nivel),
+            t("nivel_completado.tiempo", s=j.tiempo_juego / 1000),
         ], 280)
 
         if j.boton_continuar is None:
-            j.boton_continuar = Boton("Continuar", (0, 255, 0, 150), (255, 255, 255),
+            j.boton_continuar = Boton(t("nivel_completado.continuar"), (0, 255, 0, 150), (255, 255, 255),
                                       cx, 480, 220, 50, radio_borde=10)
-            j.boton_elegir_nivel = Boton("Elegir nivel", (0, 150, 255, 150), (255, 255, 255),
+            j.boton_elegir_nivel = Boton(t("nivel_completado.elegir_nivel"), (0, 150, 255, 150), (255, 255, 255),
                                          cx, 550, 220, 50, radio_borde=10)
         j.boton_continuar.dibujar(self.pantalla, self.font_botones)
         j.boton_elegir_nivel.dibujar(self.pantalla, self.font_botones)
@@ -155,7 +156,7 @@ class RenderManager:
         self.pantalla.blit(j.background.img1, (0, 0))
         cx = j.pantalla_ancho // 2
 
-        titulo = self.font_game_over.render("ELEGIR NIVEL", True, (255, 255, 255))
+        titulo = self.font_game_over.render(t("seleccion_nivel.titulo"), True, (255, 255, 255))
         self.pantalla.blit(titulo, titulo.get_rect(center=(cx, 150)))
 
         nivel_maximo_listado = min(j.nivel + 1, settings.NIVEL_MAX)
@@ -163,7 +164,7 @@ class RenderManager:
             j.botones_seleccion_nivel = []
             y = 250
             for n in range(1, nivel_maximo_listado + 1):
-                etiqueta = f"Nivel {n}" + (" (siguiente)" if n == j.nivel + 1 else "")
+                etiqueta = t("seleccion_nivel.nivel_siguiente" if n == j.nivel + 1 else "seleccion_nivel.nivel", n=n)
                 boton = Boton(etiqueta, (0, 150, 255, 150), (255, 255, 255),
                              cx, y, 260, 50, radio_borde=10)
                 j.botones_seleccion_nivel.append((n, boton))
@@ -178,20 +179,20 @@ class RenderManager:
         self.pantalla.blit(j.background.img1, (0, 0))
         cx = j.pantalla_ancho // 2
 
-        titulo = self.font_game_over.render("¡VICTORIA!", True, (255, 215, 0))
+        titulo = self.font_game_over.render(t("victoria.titulo"), True, (255, 215, 0))
         self.pantalla.blit(titulo, titulo.get_rect(center=(cx, 150)))
-        subtitulo = self.font_botones.render("Has completado Galactic Guardian", True, (255, 255, 255))
+        subtitulo = self.font_botones.render(t("victoria.subtitulo"), True, (255, 255, 255))
         self.pantalla.blit(subtitulo, subtitulo.get_rect(center=(cx, 210)))
 
         self._dibujar_estadisticas([
-            f"Puntuación final: {j.puntuacion}",
-            f"Nivel: {j.nivel}",
+            t("victoria.puntuacion_final", n=j.puntuacion),
+            t("victoria.nivel", n=j.nivel),
         ], 280)
 
         if j.boton_reintentar_final is None:
-            j.boton_reintentar_final = Boton("Jugar de nuevo", (255, 0, 0, 128), (255, 255, 255),
+            j.boton_reintentar_final = Boton(t("victoria.jugar_de_nuevo"), (255, 0, 0, 128), (255, 255, 255),
                                              cx, 450, 220, 50, radio_borde=10)
-            j.boton_menu_final = Boton("Menú", (255, 0, 255, 128), (255, 255, 255),
+            j.boton_menu_final = Boton(t("comun.menu"), (255, 0, 255, 128), (255, 255, 255),
                                        cx, 520, 220, 50, radio_borde=10)
         j.boton_reintentar_final.dibujar(self.pantalla, self.font_botones)
         j.boton_menu_final.dibujar(self.pantalla, self.font_botones)

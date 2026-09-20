@@ -31,6 +31,9 @@ Gracias por tu interés. El proyecto es pequeño; estas son las convenciones.
 - **Números "mágicos" a `src/core/settings.py`** (ventana, FPS, balance, hitboxes,
   umbrales de oleada). Las constantes propias de una clase se quedan en la clase
   (`Jugador.CONFIG`, `EnemigoBase.TAMANO_ESTANDAR`, `Bala.TAMANO`...).
+- **Textos visibles**: nunca escritos a mano en la pantalla; van al catálogo
+  (`data/assets/idiomas/es.json`) y se piden con `t("espacio.clave", n=...)`
+  (`src/core/i18n.py`). El español es el idioma de referencia.
 - **Recursos**: registra el nombre lógico y su ruta en `src/core/config.py`
   (`RECURSOS`, `MUSICA`, `SONIDOS`, `EXPLOSIONES`); nunca escribas rutas de assets
   a mano en el código.

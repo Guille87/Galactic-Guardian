@@ -17,6 +17,11 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ### Changed
 
+- Interno: los textos del juego salen ya de un catálogo por idioma
+  (`data/assets/idiomas/es.json`) a través de `t(...)` en vez de estar escritos
+  en cada pantalla. Primer paso de la traducción a inglés; sin cambios visibles
+  (comprobado comparando capturas de todas las pantallas, idénticas píxel a
+  píxel).
 - Interno: las oleadas y los niveles pasan a ser **datos**. Cada nivel de la
   campaña se define en una tabla (`src/core/niveles.py`): fases y reparto de
   enemigos, cuándo llega el jefe, cadencia de aparición y música del nivel y del

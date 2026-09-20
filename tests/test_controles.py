@@ -5,7 +5,8 @@ from src.core import controles
 
 
 def test_todas_las_acciones_tienen_etiqueta_y_valor_por_defecto():
-    assert set(controles.ETIQUETAS) == set(controles.ACCIONES)
+    for accion in controles.ACCIONES:
+        assert controles.etiqueta(accion) != f"controles.{accion}"    # existe en el catálogo
     assert set(controles.POR_DEFECTO) == set(controles.ACCIONES)
 
 

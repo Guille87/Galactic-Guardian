@@ -12,13 +12,9 @@ el resto de opciones de usuario.
 
 import pygame
 
-ACCIONES = ("arriba", "abajo", "izquierda", "derecha", "disparar", "pausa")
+from src.core.i18n import t
 
-ETIQUETAS = {
-    "arriba": "Arriba", "abajo": "Abajo",
-    "izquierda": "Izquierda", "derecha": "Derecha",
-    "disparar": "Disparar", "pausa": "Pausa",
-}
+ACCIONES = ("arriba", "abajo", "izquierda", "derecha", "disparar", "pausa")
 
 POR_DEFECTO = {
     "arriba": pygame.K_w,
@@ -30,8 +26,13 @@ POR_DEFECTO = {
 }
 
 
+def etiqueta(accion):
+    """Nombre de la acción en el idioma actual (p. ej. "Disparar")."""
+    return t(f"controles.{accion}")
+
+
 def nombre_tecla(codigo):
-    """Nombre legible de una tecla (p.ej. "w", "espacio")."""
+    """Nombre legible de una tecla (p.ej. "W", "Espacio")."""
     if codigo == pygame.K_SPACE:
-        return "Espacio"
+        return t("controles.tecla_espacio")
     return pygame.key.name(codigo).capitalize()

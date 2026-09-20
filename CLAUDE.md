@@ -41,6 +41,8 @@ Assets live under `data/assets/` (`imagenes/`, `musica/`, `sonidos/`). Logical a
 
 Tunable gameplay/loop constants (window size, FPS, invuln/contact windows, damage/health balance) live in `src/core/settings.py`. **What each level contains** does not: it lives in `src/core/niveles.py`.
 
+**Texts / i18n** (`src/core/i18n.py`): every user-visible string goes through `t("namespace.key", **datos)`, never a literal in a screen. Each language is a flat JSON in `data/assets/idiomas/<code>.json` (bundled with the rest of `data/assets/`, so no `.spec` change); **Spanish (`es`, `i18n.REFERENCIA`) is the reference** — every key exists there and it is the fallback when another language lacks one, and a key missing everywhere returns the key itself (`t()` never raises). Placeholders are `str.format` (`"Nivel {n}"`, `t("...", n=3)`). `i18n.establecer_idioma(code)` sets the current language (module state, doesn't touch `config.ini`). Not translated on purpose: `print`/console messages, the F1 debug overlay (FPS, `t:`, stat numbers) and the docs. Action names go through `controles.etiqueta(accion)` and key names through `controles.nombre_tecla()` (`"Espacio"` is a catalog entry). `tests/conftest.py` forces `es` for every test; `tests/test_i18n.py` checks that every `"namespace.key"` literal used in `src/` exists in `es.json`.
+
 **Level definitions** (`src/core/niveles.py`, pure data): `NIVELES` is a tuple of `DefinicionNivel` — one per campaign level, exactly `settings.NIVEL_MAX` (a test enforces it) — with `fases` (`Fase(desde_ms, enemigos)`; `enemigos` is a tuple of enemy classes picked uniformly, repeat a class to weight it), `tiempo_jefe_ms`, `espera_jefe_ms`, `intervalo_spawn` `(min, max)`, `jefe` (class), `musica` and `musica_jefe`. Adding or retuning a level means editing that table; `WaveManager` and `Juego` only read it via `definicion_nivel(n)` (clamps out-of-range `n`). The values are literals, not derived from a formula; health scaling by level is still entity-side (`FACTOR_NIVEL`). Entity-local constants stay on their class (`Jugador.CONFIG`, `EnemigoBase.TAMANO_ESTANDAR`, `Bala.TAMANO`, …).
 
 ## Architecture
@@ -114,7 +116,7 @@ The "god object": audit item 14 is largely done — every mechanical manager (Wa
 ### Directory layout
 
 ```
-src/core/      engine, config, settings, niveles, resources, audio, input, controles, paths, version, updates
+src/core/      engine, config, settings, niveles, i18n, resources, audio, input, controles, paths, version, updates
 src/managers/  entities, collision, waves, render, effects
 src/entities/  player, enemies, bullet, bullet_enemy, items, base/ (projectile_base, movimiento)
 src/ui/        menu, hud, scoreboard, components/button.py
