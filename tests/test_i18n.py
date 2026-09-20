@@ -2,6 +2,7 @@
 import json
 import os
 import re
+import string
 
 import pytest
 
@@ -83,3 +84,62 @@ def test_claves_dinamicas_existen():
     claves = set(_claves_es())
     assert {f"controles.{a}" for a in controles.ACCIONES} <= claves
     assert {"hud.ataque", "hud.vel_ataque", "hud.velocidad"} <= claves
+
+
+# --- Catálogos reales: todos los idiomas cubren lo mismo que el de referencia ---
+
+def _catalogo_real(codigo):
+    with open(paths.recurso("data", "assets", "idiomas", f"{codigo}.json"), encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _huecos(texto):
+    return {nombre for _, nombre, _, _ in string.Formatter().parse(texto) if nombre is not None}
+
+
+@pytest.mark.parametrize("codigo", [c for c in i18n.IDIOMAS if c != i18n.REFERENCIA])
+def test_cada_idioma_tiene_las_mismas_claves_que_el_espanol(codigo):
+    referencia, otro = _catalogo_real(i18n.REFERENCIA), _catalogo_real(codigo)
+    assert set(otro) == set(referencia), set(otro) ^ set(referencia)
+
+
+@pytest.mark.parametrize("codigo", [c for c in i18n.IDIOMAS if c != i18n.REFERENCIA])
+def test_cada_traduccion_conserva_los_huecos_del_espanol(codigo):
+    referencia, otro = _catalogo_real(i18n.REFERENCIA), _catalogo_real(codigo)
+    for clave, texto in referencia.items():
+        assert _huecos(otro[clave]) == _huecos(texto), clave
+
+
+@pytest.mark.parametrize("codigo", i18n.IDIOMAS)
+def test_ningun_texto_esta_vacio(codigo):
+    assert all(texto.strip() for texto in _catalogo_real(codigo).values())
+
+
+def test_cada_idioma_disponible_tiene_nombre_y_catalogo():
+    assert set(i18n.NOMBRES) == set(i18n.IDIOMAS)
+    assert i18n.REFERENCIA in i18n.IDIOMAS
+    for codigo in i18n.IDIOMAS:
+        assert _catalogo_real(codigo)
+
+
+def test_el_ingles_traduce_de_verdad():
+    i18n.establecer_idioma("en")
+    assert i18n.t("menu.jugar") == "Play"
+    assert i18n.t("nivel_completado.titulo", n=2) == "LEVEL 2 COMPLETE"
+    assert i18n.t("controles.tecla_espacio") == "Space"
+
+
+# --- Idioma del sistema ---
+
+@pytest.mark.parametrize("windows,locale_,esperado", [
+    ("en", None, "en"),           # Windows en inglés
+    ("es", "en", "es"),           # manda Windows, no el locale
+    (None, "en", "en"),           # sin dato de Windows: el locale
+    (None, "es", "es"),
+    (None, "fr", "es"),           # idioma no disponible: español
+    (None, None, "es"),           # nada de nada: español
+])
+def test_detectar_idioma_sistema(monkeypatch, windows, locale_, esperado):
+    monkeypatch.setattr(i18n, "_idioma_windows", lambda: windows)
+    monkeypatch.setattr(i18n, "_idioma_locale", lambda: locale_)
+    assert i18n.detectar_idioma_sistema() == esperado

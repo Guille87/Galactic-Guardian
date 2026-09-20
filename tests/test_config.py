@@ -62,3 +62,26 @@ def test_controles_tecla_guardada_invalida_cae_a_esa_accion_por_defecto(tmp_path
     assert mapa["disparar"] == controles.POR_DEFECTO["disparar"]   # cae a la de defecto
     assert mapa["pausa"] == pygame.K_ESCAPE                         # esta sí es válida
     assert mapa["arriba"] == controles.POR_DEFECTO["arriba"]        # no estaba en el ini
+
+
+def test_idioma_roundtrip(tmp_path):
+    ruta = str(tmp_path / "cfg.ini")
+    config.guardar_configuracion(0.3, 0.7, idioma="en", ruta=ruta)
+    assert config.cargar_idioma(ruta=ruta) == "en"
+
+
+def test_idioma_sin_config_es_none(tmp_path):
+    """None = primer arranque: quien llama usa el idioma del sistema."""
+    assert config.cargar_idioma(ruta=str(tmp_path / "no_existe.ini")) is None
+
+
+def test_idioma_guardado_no_disponible_es_none(tmp_path):
+    ruta = tmp_path / "raro.ini"
+    ruta.write_text("[IDIOMA]\ncodigo = klingon\n")
+    assert config.cargar_idioma(ruta=str(ruta)) is None
+
+
+def test_guardar_sin_idioma_no_escribe_esa_seccion(tmp_path):
+    ruta = str(tmp_path / "cfg.ini")
+    config.guardar_configuracion(0.3, 0.7, ruta=ruta)
+    assert config.cargar_idioma(ruta=ruta) is None

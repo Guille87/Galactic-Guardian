@@ -5,7 +5,7 @@ import webbrowser
 import pygame
 import pygame_gui
 
-from src.core import config, controles, settings, updates
+from src.core import config, controles, i18n, settings, updates
 from src.core.i18n import t
 from src.core.version import __version__
 from src.ui.components.button import Boton
@@ -66,11 +66,10 @@ class MenuManager:
         self.ejecutando = True
         self.resultado = None  # "JUGAR" | "SALIR"
 
-        # Cargar config inicial
-        vol_musica, vol_efectos = config.cargar_configuracion()
-        self.vol_musica = _clamp_volumen(vol_musica)
-        self.vol_efectos = _clamp_volumen(vol_efectos)
-        self.controles = config.cargar_controles()
+        # Estado inicial de Opciones (ver `_sincronizar_estado`)
+        self._sincronizar_estado()
+        self._idioma_ui = None               # idioma con el que se construyó la UI de Opciones
+        self._instantanea = None             # lo que había al entrar en Opciones (lo restaura Volver)
         self._reasignando_accion = None      # acción esperando una pulsación, o None
         self._aviso_conflicto = None
         self._aviso_conflicto_hasta = 0
@@ -88,19 +87,36 @@ class MenuManager:
 
         # Aviso de nueva versión (comprobación en segundo plano, best-effort)
         self.actualizaciones = updates.ComprobadorActualizaciones()
-        self.btn_actualizar = Boton(
-            t("menu.actualizar"), (255, 170, 0, 160), (0, 0, 0),
-            self.pantalla.get_rect().centerx, 270, 320, 44, 10,
-        )
         self._descarga = None          # updates.DescargaActualizacion en curso
         self._descarga_fallo = False
+
+    def _sincronizar_estado(self):
+        """Vuelve a leer de la fuente de verdad lo que Opciones muestra.
+
+        Volúmenes: los del `AudioManager` compartido, que son los que suenan
+        ahora (los del `config.ini` pueden ser más viejos: un cambio hecho desde
+        la pausa se aplica al instante pero solo se guarda con "Guardar").
+        Teclas: las de `config.ini`, que es de donde lee cada partida nueva.
+
+        Sin esto, el menú principal (persistente) enseñaba en Opciones lo que
+        leyó al crearse y, al pulsar Guardar, pisaba con ello lo cambiado desde
+        la pausa (que usa otro `MenuManager`, temporal)."""
+        self.vol_musica = _clamp_volumen(self.am.vol_musica)
+        self.vol_efectos = _clamp_volumen(self.am.vol_efectos)
+        self.controles = config.cargar_controles()
 
     def _preparar_musica(self):
         """Usa el AudioManager para gestionar la música del menú."""
         self.am.reproducir_musica("skyfire_theme")
 
     def _crear_botones(self):
+        """Botones del menú principal (sus textos se cachean: se rehacen al
+        cambiar de idioma)."""
+        self._idioma_botones = i18n.idioma_actual()
         cx = self.pantalla.get_rect().centerx
+        self.btn_actualizar = Boton(
+            t("menu.actualizar"), (255, 170, 0, 160), (0, 0, 0), cx, 270, 320, 44, 10,
+        )
         self.btn_jugar = Boton(t("menu.jugar"), (0, 255, 0, 100), (255, 255, 255), cx, 350, 200, 50, 10)
         self.btn_opciones = Boton(t("comun.opciones"), (0, 0, 255, 128), (255, 255, 255), cx, 420, 200, 50, 10)
         self.btn_puntos = Boton(t("menu.puntuaciones"), (255, 255, 0, 128), (255, 255, 255), cx, 490, 200, 50, 10)
@@ -112,6 +128,9 @@ class MenuManager:
         self.ejecutando = True
         self.estado = "PRINCIPAL"
         self.resultado = None
+        self._sincronizar_estado()                         # por si Opciones se tocó desde la pausa
+        if self._idioma_botones != i18n.idioma_actual():   # ídem el idioma
+            self._crear_botones()
 
         self._preparar_musica()  # Solo activamos la música aquí, al lanzar el menú completo
         self.actualizaciones.comprobar_en_segundo_plano()  # no-op si ya se lanzó
@@ -207,8 +226,37 @@ class MenuManager:
                         return False
 
     def _abrir_opciones(self):
-        """Entra en la pantalla de opciones: crea la UI (una vez) y sincroniza
-        los sliders con los volúmenes actuales, ya saneados."""
+        """Entra en Opciones (desde el menú o desde la pausa).
+
+        Los cambios se aplican al instante como vista previa, pero **Volver los
+        descarta** y solo **Guardar** los confirma (y los escribe en disco). Por
+        eso aquí se toma una instantánea de lo que se puede tocar, que
+        `_deshacer_cambios` restaura."""
+        self._instantanea = {
+            "vol_musica": self.am.vol_musica,
+            "vol_efectos": self.am.vol_efectos,
+            "idioma": i18n.idioma_actual(),
+            "controles": dict(self.controles),
+        }
+        self._preparar_ui_opciones()
+
+    def _deshacer_cambios(self):
+        """Restaura lo que había al entrar en Opciones (botón Volver, o cerrar la
+        ventana). No toca `config.ini`: nada de lo descartado llegó a guardarse."""
+        inst = self._instantanea
+        if inst is None:
+            return
+        self.vol_musica, self.vol_efectos = inst["vol_musica"], inst["vol_efectos"]
+        self.am.actualizar_volumen_musica(self.vol_musica)
+        self.am.actualizar_volumen_efectos(self.vol_efectos)
+        self.controles = dict(inst["controles"])
+        if inst["idioma"] != i18n.idioma_actual():
+            i18n.establecer_idioma(inst["idioma"])
+            self._crear_botones()          # la UI de Opciones se rehace sola (`_idioma_ui`)
+
+    def _preparar_ui_opciones(self):
+        """Crea la UI de Opciones (una vez) y sincroniza los sliders con los
+        volúmenes actuales, ya saneados. También la rehace si cambió el idioma."""
         self.estado = "OPCIONES"
         self._flecha_pendiente = None
         self._ignorar_moved = None
@@ -219,6 +267,8 @@ class MenuManager:
         # descuadrado y sin responder.
         self.vol_musica = _clamp_volumen(self.vol_musica)
         self.vol_efectos = _clamp_volumen(self.vol_efectos)
+        if self.ui_manager is not None and self._idioma_ui != i18n.idioma_actual():
+            self.ui_manager = None       # construida en otro idioma (p. ej. cambiado desde la pausa)
         if self.ui_manager is None:
             self._inicializar_interfaz_opciones()
         self.slider_musica.set_current_value(self.vol_musica)
@@ -282,6 +332,7 @@ class MenuManager:
         # a la izquierda, al ras de los sliders y los botones.
         tema = {"label": {"misc": {"text_horiz_alignment": "left"}}}
         self.ui_manager = pygame_gui.UIManager((settings.ANCHO, settings.ALTO), tema)
+        self._idioma_ui = i18n.idioma_actual()
 
         # Etiquetas
         pygame_gui.elements.UILabel(
@@ -303,23 +354,37 @@ class MenuManager:
             click_increment=settings.VOLUMEN_PASO, manager=self.ui_manager
         )
 
+        # Idioma: un botón por idioma disponible (el actual queda marcado). Se
+        # aplica al instante; ver `_cambiar_idioma`.
+        pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect((50, 320), (200, 24)), text=t("opciones.idioma"), manager=self.ui_manager
+        )
+        self._botones_idioma = {}   # UIButton -> código de idioma
+        for codigo, x in zip(i18n.IDIOMAS, (50, 330)):
+            boton = pygame_gui.elements.UIButton(
+                relative_rect=pygame.Rect((x, 350), (220, 44)),
+                text=i18n.NOMBRES[codigo], manager=self.ui_manager,
+            )
+            self._botones_idioma[boton] = codigo
+        self._marcar_idioma_actual()
+
         # Controles: un botón por acción reasignable. Las flechas y Esc son
         # fijas (siempre funcionan, no aparecen como botón) — el aviso de abajo
         # es justo para que el jugador sepa que no hace falta tocar nada si le
         # vale con ellas. Clic en un botón -> queda "escuchando" la próxima
         # tecla (ver `_procesar_tecla_reasignada`); Esc cancela sin cambiar nada.
         pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect((50, 320), (200, 24)), text=t("opciones.controles"), manager=self.ui_manager
+            relative_rect=pygame.Rect((50, 410), (200, 24)), text=t("opciones.controles"), manager=self.ui_manager
         )
         pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect((50, 344), (500, 22)),
+            relative_rect=pygame.Rect((50, 434), (500, 22)),
             text=t("opciones.aviso_teclas_fijas"), manager=self.ui_manager,
         )
         self._botones_controles = {}   # acción -> UIButton
         self._acciones_por_boton = {}  # UIButton -> acción (inverso, para los eventos de clic)
         filas = (("arriba", "abajo"), ("izquierda", "derecha"), ("disparar", "pausa"))
         for fila, (accion_izq, accion_der) in enumerate(filas):
-            y = 372 + fila * 54
+            y = 462 + fila * 54
             for accion, x in ((accion_izq, 50), (accion_der, 330)):
                 boton = pygame_gui.elements.UIButton(
                     relative_rect=pygame.Rect((x, y), (220, 44)),
@@ -328,17 +393,37 @@ class MenuManager:
                 self._botones_controles[accion] = boton
                 self._acciones_por_boton[boton] = accion
         self.btn_restaurar_controles = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((50, 534), (300, 40)),
+            relative_rect=pygame.Rect((50, 624), (300, 40)),
             text=t("opciones.restaurar"), manager=self.ui_manager,
         )
 
         # Botones
         self.btn_guardar = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((50, 632), (200, 50)), text=t("comun.guardar"), manager=self.ui_manager
+            relative_rect=pygame.Rect((50, 722), (200, 50)), text=t("comun.guardar"), manager=self.ui_manager
         )
         self.btn_volver = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((350, 632), (200, 50)), text=t("comun.volver"), manager=self.ui_manager
+            relative_rect=pygame.Rect((350, 722), (200, 50)), text=t("comun.volver"), manager=self.ui_manager
         )
+
+    def _marcar_idioma_actual(self):
+        for boton, codigo in self._botones_idioma.items():
+            if codigo == i18n.idioma_actual():
+                boton.select()
+            else:
+                boton.unselect()
+
+    def _cambiar_idioma(self, codigo):
+        """Aplica un idioma al instante (como el volumen; se guarda con "Guardar").
+
+        Los textos de los botones están cacheados (los de este menú y, en una
+        partida, los de `Juego`), así que se rehacen: los del menú principal ya,
+        y la UI de Opciones cuando `_menu_opciones` ve que `_idioma_ui` ya no es
+        el actual (al empezar el próximo frame, no en mitad de un bucle de
+        eventos que aún referencia los elementos viejos)."""
+        if codigo == i18n.idioma_actual():
+            return
+        i18n.establecer_idioma(codigo)
+        self._crear_botones()
 
     def _texto_boton_control(self, accion):
         return t("opciones.control_boton", accion=controles.etiqueta(accion),
@@ -416,6 +501,8 @@ class MenuManager:
         """Lógica de la pantalla de opciones usando pygame_gui."""
         if self.ui_manager is None:                 # entrada directa sin pasar por _abrir_opciones
             self._abrir_opciones()
+        elif self._idioma_ui != i18n.idioma_actual():
+            self._preparar_ui_opciones()            # idioma cambiado: rehacer la UI con los textos nuevos
 
         fondo = self.rm.get_image("imagen_fondo1")
 
@@ -430,6 +517,7 @@ class MenuManager:
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                self._deshacer_cambios()
                 self.ejecutando = False
                 self.estado = "PRINCIPAL"
                 self.resultado = "SALIR"
@@ -454,6 +542,9 @@ class MenuManager:
                     # Arrastre de la barra: valor libre, solo recortado.
                     self._fijar_volumen(destino, _clamp_volumen(event.ui_element.get_current_value()))
 
+            elif event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element in self._botones_idioma:
+                self._cambiar_idioma(self._botones_idioma[event.ui_element])
+
             elif event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element in self._acciones_por_boton:
                 self._empezar_reasignacion(self._acciones_por_boton[event.ui_element])
 
@@ -464,9 +555,11 @@ class MenuManager:
 
             elif event.type == pygame_gui.UI_BUTTON_PRESSED:
                 if event.ui_element == self.btn_guardar:
-                    config.guardar_configuracion(self.vol_musica, self.vol_efectos, self.controles)
+                    config.guardar_configuracion(self.vol_musica, self.vol_efectos, self.controles,
+                                             idioma=i18n.idioma_actual())
                     self.estado = "PRINCIPAL"
                 elif event.ui_element == self.btn_volver:
+                    self._deshacer_cambios()
                     self.estado = "PRINCIPAL"
 
             self.ui_manager.process_events(event)

@@ -10,10 +10,17 @@ clave (se ve raro en pantalla, pero el juego no se cae por un texto).
 """
 
 import json
+import locale
+import os
+import sys
 
 from src.core import paths
 
 REFERENCIA = "es"
+IDIOMAS = ("es", "en")
+# Cada idioma se muestra en su propio idioma (no se traduce): así el jugador
+# lo encuentra aunque el juego esté en un idioma que no entiende.
+NOMBRES = {"es": "Español", "en": "English"}
 
 _idioma = REFERENCIA
 _catalogos = {}
@@ -30,6 +37,37 @@ def _catalogo(codigo):
         except (OSError, ValueError):
             _catalogos[codigo] = {}
     return _catalogos[codigo]
+
+
+def _idioma_windows():
+    """Idioma de la interfaz de Windows ("en"/"es"), o None si no se sabe."""
+    if sys.platform != "win32":
+        return None
+    try:
+        import ctypes
+        primario = ctypes.windll.kernel32.GetUserDefaultUILanguage() & 0x3FF
+    except (OSError, AttributeError, ValueError):
+        return None
+    return {0x09: "en", 0x0A: "es"}.get(primario)
+
+
+def _idioma_locale():
+    """Idioma según la configuración regional / variables de entorno."""
+    for variable in ("LC_ALL", "LC_MESSAGES", "LANG"):
+        valor = os.environ.get(variable)
+        if valor:
+            return valor[:2].lower()
+    try:
+        return (locale.getlocale()[0] or "")[:2].lower() or None
+    except (ValueError, TypeError):
+        return None
+
+
+def detectar_idioma_sistema():
+    """Idioma para la primera vez que se abre el juego: el del sistema si está
+    disponible (inglés/español) y, si no, el de referencia (español)."""
+    codigo = _idioma_windows() or _idioma_locale()
+    return codigo if codigo in IDIOMAS else REFERENCIA
 
 
 def idioma_actual():

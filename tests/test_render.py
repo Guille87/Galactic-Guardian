@@ -1,6 +1,8 @@
 """src/managers/render.py + src/ui/hud.py — que dibujar en cada estado no crashea."""
 import pygame
+import pytest
 
+from src.core import i18n
 from src.entities.enemies import EnemigoBase, EnemigoTipo1, Jefe
 
 DT60 = 1.0 / 60.0
@@ -77,3 +79,15 @@ def test_seleccion_nivel_no_pasa_del_ultimo_nivel_de_la_campana(juego, monkeypat
     juego.dibujar()
     niveles = [n for n, _ in juego.botones_seleccion_nivel]
     assert niveles == [1, 2, 3]
+
+
+@pytest.mark.parametrize("codigo", i18n.IDIOMAS)
+def test_todas_las_pantallas_se_dibujan_en_cada_idioma(juego, codigo):
+    i18n.establecer_idioma(codigo)
+    juego.dibujar()
+    estados = ("pausado", "estado_game_over", "estado_nivel_completado",
+               "mostrando_seleccion_nivel", "estado_victoria_final", "pidiendo_nombre")
+    for estado in estados:
+        setattr(juego, estado, True)
+        juego.dibujar()
+        setattr(juego, estado, False)

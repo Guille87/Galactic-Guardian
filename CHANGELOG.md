@@ -7,6 +7,30 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Changed
+
+- Opciones: **Volver descarta** los cambios (volumen, idioma y teclas vuelven a
+  como estaban al entrar) y **Guardar** los confirma, dejándolos en la sesión y
+  escribiéndolos en `config.ini`. Mientras estás en la pantalla los cambios se
+  aplican al instante como vista previa. Antes Volver dejaba el volumen y el
+  idioma cambiados durante la sesión (sin guardarlos) pero descartaba las teclas.
+
+### Fixed
+
+- Opciones desde el menú principal ya no enseña (ni guarda) valores viejos tras
+  cambiar algo desde la pausa de una partida: el volumen, las teclas reasignadas
+  y el idioma se releen de donde están de verdad. Antes, por ejemplo, subir el
+  volumen en la pausa y luego pulsar Guardar en el menú principal lo dejaba en
+  el valor anterior.
+
+### Added
+
+- **Inglés.** El juego está traducido al inglés y hay un selector de **Idioma**
+  en Opciones (Español / English) que se aplica al instante y se guarda en
+  `config.ini`. La primera vez, el juego arranca en el idioma de Windows si es
+  inglés y en español en cualquier otro caso. Cada idioma es un JSON en
+  `data/assets/idiomas/`; ver `CONTRIBUTING.md` para añadir otros.
+
 ### Security
 
 - La actualización desde el juego **verifica el instalador** antes de ejecutarlo:
