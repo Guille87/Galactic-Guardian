@@ -15,6 +15,9 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
   muertes cuesta, con builds del árbol de referencia y tres perfiles de jugador;
   simula una partida y la progresión entre partidas para calcular cuántas
   hacen falta para completar la campaña. Está validado contra el juego real.
+  Incluye también `tools/propuesta.py`, una propuesta de reequilibrio (nave base,
+  árbol ampliado, tablas por nivel y economía) expresada como datos y evaluable
+  con la misma herramienta.
 
 ### Changed
 

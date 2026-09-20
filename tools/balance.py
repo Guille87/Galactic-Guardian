@@ -57,12 +57,13 @@ class Perfil:
     impacto_contacto: float # fracción de los enemigos que se te escapan y llegan a chocar contigo
     impacto_jefe: float     # ídem con las balas del jefe (apuntadas y lentas: se esquivan más)
     combo_medio: float      # multiplicador de puntuación medio que mantienes
+    sin_golpe: float        # fracción del tiempo que pasas sin recibir daño (cuando regenera la salud)
 
 
 PERFILES = {
-    "torpe": Perfil("torpe", 0.40, 0.65, 0.30, 0.20, 0.20, 1.3),
-    "medio": Perfil("medio", 0.55, 0.80, 0.15, 0.10, 0.08, 2.0),
-    "habil": Perfil("hábil", 0.70, 0.90, 0.08, 0.05, 0.03, 3.0),
+    "torpe": Perfil("torpe", 0.45, 0.70, 0.22, 0.15, 0.13, 1.5, 0.35),
+    "medio": Perfil("medio", 0.55, 0.80, 0.15, 0.10, 0.08, 2.0, 0.50),
+    "habil": Perfil("hábil", 0.65, 0.85, 0.10, 0.07, 0.05, 2.7, 0.65),
 }
 
 
@@ -77,6 +78,7 @@ class Nave:
     velocidad: float
     invulnerable_ms: int
     monedas_pct: float
+    regen_s: float = 0.0            # salud que se recupera por segundo sin recibir daño
 
     @property
     def dps(self):
@@ -116,6 +118,7 @@ class Modelo:
     danio_x: Callable = lambda nivel: 1.0                  # multiplicador del daño enemigo por nivel
     arbol: tuple = field(default_factory=lambda: mejoras.MEJORAS)
     nave: Callable = nave_de                               # ids de mejoras -> Nave
+    monedas_puntos: int = settings.MONEDAS_PUNTOS          # puntos que valen una moneda
 
 
 MODELO_ACTUAL = Modelo()
@@ -145,6 +148,7 @@ class ResultadoNivel:
     danio_jefe: float
     duracion_s: float
     puntos: float
+    curacion: float = 0.0           # salud recuperada por regeneración durante el nivel
 
     @property
     def afluencia_max(self):
@@ -156,7 +160,8 @@ class ResultadoNivel:
 
     @property
     def danio(self):
-        return self.danio_fases + self.danio_jefe
+        """Daño recibido, ya descontada la regeneración (nunca negativo)."""
+        return max(0.0, self.danio_fases + self.danio_jefe - self.curacion)
 
     def muertes(self, nave):
         """Veces que se pierde toda la salud, en esperanza: daño ÷ salud máxima."""
@@ -200,7 +205,8 @@ def analizar_nivel(nave, nivel, perfil, modelo=MODELO_ACTUAL):
     danio_jefe = ttk * entrante * modelo.danio_x(nivel) * perfil.impacto_jefe
     puntos = (sum(f.puntos for f in fases) + d.jefe.VALOR * nivel) * perfil.combo_medio
     duracion = (d.tiempo_jefe_ms + d.espera_jefe_ms) / 1000 + ttk
-    return ResultadoNivel(nivel, fases, ttk, vida_jefe, danio_jefe, duracion, puntos)
+    curacion = nave.regen_s * perfil.sin_golpe * duracion
+    return ResultadoNivel(nivel, fases, ttk, vida_jefe, danio_jefe, duracion, puntos, curacion)
 
 
 # ----------------------------------------------------------------------------- una partida
@@ -225,15 +231,15 @@ def jugar(nave, perfil, modelo=MODELO_ACTUAL, niveles_campana=NIVELES_CAMPANA):
             fraccion = (nave.vidas - muertes) / r.muertes(nave)
             puntos += r.puntos * fraccion
             segundos += r.duracion_s * fraccion
-            return Partida(hechos, n - 1 + fraccion, False, puntos, _monedas(puntos, nave), segundos / 60)
+            return Partida(hechos, n - 1 + fraccion, False, puntos, _monedas(puntos, nave, modelo), segundos / 60)
         muertes += r.muertes(nave)
         puntos += r.puntos
         segundos += r.duracion_s
-    return Partida(hechos, float(niveles_campana), True, puntos, _monedas(puntos, nave), segundos / 60)
+    return Partida(hechos, float(niveles_campana), True, puntos, _monedas(puntos, nave, modelo), segundos / 60)
 
 
-def _monedas(puntos, nave):
-    return int(puntos // settings.MONEDAS_PUNTOS * (1 + nave.monedas_pct))
+def _monedas(puntos, nave, modelo=MODELO_ACTUAL):
+    return int(puntos // modelo.monedas_puntos * (1 + nave.monedas_pct))
 
 
 # ----------------------------------------------------------------------------- el árbol
@@ -266,26 +272,28 @@ def build_al(orden, fraccion):
 class Progreso:
     partidas_hasta_victoria: int            # 0 = no llega en MAX_PARTIDAS
     curva: list                             # (nº de partida, % del árbol, nivel alcanzado)
+    compras: list = field(default_factory=list)     # (nº de partida, id de la mejora comprada tras ella)
 
 
 def progresion(perfil, modelo=MODELO_ACTUAL):
     """Partida tras partida: se juega, se cobran las monedas y se compra lo siguiente del árbol."""
     orden = orden_de_compra(modelo.arbol)
     total = sum(m.coste for m in orden)
-    monedas, comprado, gastado, curva = 0, [], 0, []
+    monedas, comprado, gastado, curva, compras = 0, [], 0, [], []
     for n in range(1, MAX_PARTIDAS + 1):
         nave = modelo.nave(comprado)
         p = jugar(nave, perfil, modelo)
         curva.append((n, gastado / total, p.nivel_alcanzado))
         if p.victoria:
-            return Progreso(n, curva)
+            return Progreso(n, curva, compras)
         monedas += p.monedas
         while len(comprado) < len(orden) and monedas >= orden[len(comprado)].coste:
             m = orden[len(comprado)]
             monedas -= m.coste
             gastado += m.coste
             comprado.append(m.id)
-    return Progreso(0, curva)
+            compras.append((n, m.id))
+    return Progreso(0, curva, compras)
 
 
 # ----------------------------------------------------------------------------- informe
@@ -370,6 +378,15 @@ def informe_progresion(perfiles, modelo, objetivo):
         print(f"  {p.nombre:<8} completa la campaña en: {texto}{marca}")
     p = perfiles[min(1, len(perfiles) - 1)]
     pr = progresion(p, modelo)
+    print(f"\n  Calendario de compras del perfil {p.nombre} (tras cada partida, en el orden barato-primero):")
+    por_partida = {}
+    for n, id_ in pr.compras:
+        por_partida.setdefault(n, []).append(id_)
+    for n in sorted(por_partida):
+        print(f"    tras la partida {n:>3}: {', '.join(por_partida[n])}")
+    huecos = [b - a for a, b in zip(sorted(por_partida), sorted(por_partida)[1:])]
+    if huecos:
+        print(f"    (la espera más larga entre compras: {max(huecos)} partidas)")
     print(f"\n  Curva del perfil {p.nombre} (partida | árbol comprado | nivel alcanzado):")
     mostrar = {1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 25, 30, 40, 50, 75, 100}
     for n, frac, nivel in pr.curva:
