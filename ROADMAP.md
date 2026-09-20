@@ -54,44 +54,46 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 - **Oleadas y niveles como datos** — cada nivel se define en una tabla
   (`src/core/niveles.py`); `WaveManager` solo la lee. Añadir contenido es
   "editar una tabla". Ver `[0.4.0]`.
+- **Hojas de sprites** — una animación puede ser una sola imagen con los
+  fotogramas en una rejilla (`config.HOJAS`, `load_spritesheet` / `get_frames`);
+  la explosión ya se carga así. Ver `[Unreleased]` → próxima versión.
 
 ## En curso / próximo (por orden)
 
-Primero lo que no depende de assets; el contenido nuevo va al final porque
-espera a que llegue el arte.
+**Ya no se añadirán assets nuevos** (arte ni sonido): el autor los reserva para
+un futuro juego en Unity. Aquí se sigue añadiendo lógica y sistemas, y como
+mucho algún icono suelto; lo que dependía de arte nuevo está en "Descartado".
 
-### 1 · Contenido nuevo (según lleguen los assets)
-- **Enemigos nuevos** — asset a la espera de que consigas un set de un mismo
-  autor (arte consistente).
-- **Patrones de disparo reutilizables** (abanico, dirigido, ráfaga…) para
-  enemigos y jefes.
-- **Jefe con fases** por umbral de vida.
-- **Mini-jefe**: variante reforzada y más grande de un enemigo normal (más vida,
-  quizá un patrón extra) — encaja en el sistema sin ser una pieza nueva.
-- **Ítems nuevos**: **escudo temporal** (confirmado); **bomba de pantalla**
-  (daño en área + limpia balas) pendiente de encontrar el icono a juego con el
-  resto de assets.
-- **Eventos ambientales**: **lluvia de asteroides** (confirmado, assets vistos);
-  **campo de minas** (probable, mismo caso).
+### 1 · Progresión entre partidas
+- Moneda ganada jugando y **árbol de mejoras permanentes** fuera de la partida
+  (de la nave y/o desbloqueables). Es lo que más ilusión le hace al autor. Es lo
+  más grande de la lista: empieza con un plan (qué se compra, cuánto cuesta,
+  cómo se guarda y cómo encaja con el combo y el sin fin). Puede necesitar
+  algún icono suelto para el árbol.
+
+### 2 · Patrones de disparo reutilizables
+- Abanico, dirigido, ráfaga… para enemigos y jefes, con los sprites que ya hay.
+  Es la vía para dar variedad sin arte nuevo, y prepara el punto siguiente.
+
+### 3 · Jefe con fases
+- Por umbral de vida, cambiando de patrón (depende de los patrones de disparo).
+
+### 4 · Mini-jefe
+- Variante reforzada y más grande de un enemigo normal (más vida, quizá un
+  patrón extra) — reutiliza el sprite existente, sin ser una pieza nueva.
+
+### 5 · Ítems nuevos
+- **Escudo temporal** (confirmado) y **bomba de pantalla** (daño en área + limpia
+  balas). Cada uno necesita un icono suelto.
 
 ## Backlog — con intención clara de hacerse
 
-- **Progresión entre partidas**: moneda ganada jugando + mejoras permanentes de
-  la nave y/o desbloqueables. Es lo que más ilusión le hace al autor — candidato
-  a subir de prioridad cuando acabe la lista de "En curso / próximo" o tras el
-  modo sin fin.
 - **Guardado de partida**: no a mitad de nivel, sino "partida en curso" que se
   pueda cerrar y continuar más tarde — con autoguardado de seguridad en puntos
   concretos (cambio de nivel, por ejemplo) para no perder progreso si el juego
   crashea o se cierra sin querer.
-- **Bomba de pantalla** (ver "Contenido nuevo" — depende del asset).
-- **Varias naves jugables** con estadísticas distintas. Pendiente de pensar qué
-  estadísticas además de daño/cadencia/velocidad tienen sentido (vida máxima,
-  tamaño de hitbox = facilidad para esquivar, un disparo especial propio,
-  regeneración, capacidad de ítems…) — mirar referencias de otros shoot 'em ups
-  antes de diseñarlas.
 - **Partículas de impacto** (hoy solo hay explosión al morir, no al golpear) —
-  pendiente de revisar qué assets encajan.
+  dibujadas por código, sin assets.
 - **Intro / transiciones entre niveles** con narrativa ligera — el autor revisa
   y ajusta, la redacción la propone Claude.
 - **HUD reescalable y más limpio** — con cuidado: el juego es vertical (nave
@@ -104,7 +106,7 @@ espera a que llegue el arte.
 - **Builds de Linux/macOS** en `build.yml` — hoy no se pueden probar; se
   retoma si hace falta.
 - **Publicación en itch.io** — la hace el autor; candidato natural: cuando la
-  campaña y algo del contenido nuevo estén listos, para enseñar algo
+  progresión y algo del contenido nuevo estén listos, para enseñar algo
   más que el juego base.
 - **Ranking online** — necesita un sitio donde guardar las puntuaciones
   (servidor/base de datos). El juego tiene que seguir siendo 100 % gratis de
@@ -113,6 +115,17 @@ espera a que llegue el arte.
 
 ## Descartado (por ahora)
 
+- **Assets nuevos en general** (arte y sonido) — el autor prefiere reservarlos
+  para un futuro juego en Unity, que le resulta más cómodo para trabajar en un
+  videojuego. Este proyecto sigue con el arte que tiene. Las hojas de sprites ya
+  están listas por si algún día hicieran falta, pero no se espera usarlas. Lo que
+  dependía de arte nuevo queda aquí:
+  - **Enemigos nuevos** — necesitaban un set de arte de un mismo autor.
+  - **Eventos ambientales** (lluvia de asteroides, campo de minas) — necesitan
+    sprites nuevos.
+  - **Varias naves jugables** con estadísticas distintas — necesitan arte por
+    nave. La variedad de estadísticas la cubrirán las mejoras permanentes de la
+    progresión, sobre la nave actual.
 - **Reto diario con semilla fija + ranking del día** — complejidad que no
   compensa para lo que se busca con este juego.
 - **Accesibilidad dedicada** (reducir destellos, modo daltónico) — no se
