@@ -66,11 +66,8 @@ class MenuManager:
         self.ejecutando = True
         self.resultado = None  # "JUGAR" | "SALIR"
 
-        # Cargar config inicial
-        vol_musica, vol_efectos = config.cargar_configuracion()
-        self.vol_musica = _clamp_volumen(vol_musica)
-        self.vol_efectos = _clamp_volumen(vol_efectos)
-        self.controles = config.cargar_controles()
+        # Estado inicial de Opciones (ver `_sincronizar_estado`)
+        self._sincronizar_estado()
         self._idioma_ui = None               # idioma con el que se construyó la UI de Opciones
         self._reasignando_accion = None      # acción esperando una pulsación, o None
         self._aviso_conflicto = None
@@ -91,6 +88,21 @@ class MenuManager:
         self.actualizaciones = updates.ComprobadorActualizaciones()
         self._descarga = None          # updates.DescargaActualizacion en curso
         self._descarga_fallo = False
+
+    def _sincronizar_estado(self):
+        """Vuelve a leer de la fuente de verdad lo que Opciones muestra.
+
+        Volúmenes: los del `AudioManager` compartido, que son los que suenan
+        ahora (los del `config.ini` pueden ser más viejos: un cambio hecho desde
+        la pausa se aplica al instante pero solo se guarda con "Guardar").
+        Teclas: las de `config.ini`, que es de donde lee cada partida nueva.
+
+        Sin esto, el menú principal (persistente) enseñaba en Opciones lo que
+        leyó al crearse y, al pulsar Guardar, pisaba con ello lo cambiado desde
+        la pausa (que usa otro `MenuManager`, temporal)."""
+        self.vol_musica = _clamp_volumen(self.am.vol_musica)
+        self.vol_efectos = _clamp_volumen(self.am.vol_efectos)
+        self.controles = config.cargar_controles()
 
     def _preparar_musica(self):
         """Usa el AudioManager para gestionar la música del menú."""
@@ -115,7 +127,8 @@ class MenuManager:
         self.ejecutando = True
         self.estado = "PRINCIPAL"
         self.resultado = None
-        if self._idioma_botones != i18n.idioma_actual():   # cambiado desde la pausa de una partida
+        self._sincronizar_estado()                         # por si Opciones se tocó desde la pausa
+        if self._idioma_botones != i18n.idioma_actual():   # ídem el idioma
             self._crear_botones()
 
         self._preparar_musica()  # Solo activamos la música aquí, al lanzar el menú completo

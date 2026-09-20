@@ -323,6 +323,67 @@ def test_opciones_del_menu_persistente_siguen_el_idioma_cambiado_fuera(menu):
     assert _boton_idioma(menu, "es").is_selected
 
 
+def _volver_al_menu_principal(menu):
+    menu._menu_principal = lambda: setattr(menu, "ejecutando", False)   # una sola pasada del bucle
+    menu.ejecutar()
+
+
+def test_menu_persistente_ve_el_volumen_cambiado_desde_la_pausa(menu, rm, audio, scoreboard):
+    """El menú de la pausa es otro MenuManager: sus cambios de volumen suenan al
+    instante, y el menú principal debe partir de ellos (no de lo que leyó al
+    crearse) para no pisarlos con "Guardar"."""
+    pausa = MenuManager(menu.pantalla, rm, audio, scoreboard)
+    pausa._abrir_opciones()
+    pausa._fijar_volumen("musica", 0.9)
+    pausa._fijar_volumen("efectos", 0.7)
+
+    _volver_al_menu_principal(menu)
+    menu._abrir_opciones()
+    assert menu.slider_musica.get_current_value() == pytest.approx(0.9)
+    assert menu.slider_efectos.get_current_value() == pytest.approx(0.7)
+
+
+def test_menu_nuevo_parte_del_volumen_que_suena_no_del_del_disco(menu, rm, audio, scoreboard):
+    """Reabrir Opciones desde la pausa tras un cambio sin guardar."""
+    menu._abrir_opciones()
+    menu._fijar_volumen("musica", 0.85)
+    otro = MenuManager(menu.pantalla, rm, audio, scoreboard)
+    assert otro.vol_musica == pytest.approx(0.85)
+
+
+def test_menu_persistente_ve_las_teclas_guardadas_desde_la_pausa(menu, rm, audio, scoreboard,
+                                                                monkeypatch, tmp_path):
+    ruta = str(tmp_path / "cfg.ini")
+    monkeypatch.setattr("src.core.config.CONFIG_FILE", ruta)
+    pausa = MenuManager(menu.pantalla, rm, audio, scoreboard)
+    pausa._abrir_opciones()
+    _click(pausa, pausa._botones_controles["disparar"])
+    _pulsar_tecla_en_opciones(pausa, pygame.K_j)
+    _click(pausa, pausa.btn_guardar)                       # guardadas en config.ini
+
+    assert menu.controles["disparar"] == pygame.K_SPACE     # el persistente aún no lo sabe
+    _volver_al_menu_principal(menu)
+    assert menu.controles["disparar"] == pygame.K_j
+    menu._abrir_opciones()
+    assert "J" in menu._botones_controles["disparar"].text
+
+
+def test_guardar_en_el_menu_persistente_no_pisa_lo_cambiado_en_la_pausa(menu, rm, audio, scoreboard,
+                                                                       monkeypatch, tmp_path):
+    ruta = str(tmp_path / "cfg.ini")
+    monkeypatch.setattr("src.core.config.CONFIG_FILE", ruta)
+    pausa = MenuManager(menu.pantalla, rm, audio, scoreboard)
+    pausa._abrir_opciones()
+    pausa._fijar_volumen("musica", 0.9)
+    _click(pausa, pausa.btn_guardar)
+
+    _volver_al_menu_principal(menu)
+    menu._abrir_opciones()
+    _click(menu, menu.btn_guardar)                          # guardar sin tocar nada
+    from src.core import config
+    assert config.cargar_configuracion(ruta=ruta)[0] == pytest.approx(0.9)
+
+
 def test_ui_de_opciones_se_reutiliza(menu):
     menu._abrir_opciones()
     primero = menu.ui_manager

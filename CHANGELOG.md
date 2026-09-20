@@ -7,6 +7,14 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Opciones desde el menú principal ya no enseña (ni guarda) valores viejos tras
+  cambiar algo desde la pausa de una partida: el volumen, las teclas reasignadas
+  y el idioma se releen de donde están de verdad. Antes, por ejemplo, subir el
+  volumen en la pausa y luego pulsar Guardar en el menú principal lo dejaba en
+  el valor anterior.
+
 ### Added
 
 - **Inglés.** El juego está traducido al inglés y hay un selector de **Idioma**
