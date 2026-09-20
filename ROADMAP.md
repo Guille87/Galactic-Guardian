@@ -54,6 +54,11 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 - **Oleadas y niveles como datos** — cada nivel se define en una tabla
   (`src/core/niveles.py`); `WaveManager` solo la lee. Añadir contenido es
   "editar una tabla". Ver `[0.4.0]`.
+- **Progresión entre partidas** — monedas ganadas jugando (puntuación ÷ 100) y un
+  árbol de 12 mejoras permanentes en tres ramas (Ataque, Defensa, Utilidad), con
+  pantalla propia en el menú, guardado en `data/saves/progresion.json` y
+  restablecer gratis. Los costes y el ritmo de monedas son de primera pasada y
+  quieren partidas de prueba. Ver `[Unreleased]` → próxima versión.
 - **Hojas de sprites** — una animación puede ser una sola imagen con los
   fotogramas en una rejilla (`config.HOJAS`, `load_spritesheet` / `get_frames`);
   la explosión ya se carga así. Ver `[Unreleased]` → próxima versión.
@@ -64,25 +69,18 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 un futuro juego en Unity. Aquí se sigue añadiendo lógica y sistemas, y como
 mucho algún icono suelto; lo que dependía de arte nuevo está en "Descartado".
 
-### 1 · Progresión entre partidas
-- Moneda ganada jugando y **árbol de mejoras permanentes** fuera de la partida
-  (de la nave y/o desbloqueables). Es lo que más ilusión le hace al autor. Es lo
-  más grande de la lista: empieza con un plan (qué se compra, cuánto cuesta,
-  cómo se guarda y cómo encaja con el combo y el sin fin). Puede necesitar
-  algún icono suelto para el árbol.
-
-### 2 · Patrones de disparo reutilizables
+### 1 · Patrones de disparo reutilizables
 - Abanico, dirigido, ráfaga… para enemigos y jefes, con los sprites que ya hay.
   Es la vía para dar variedad sin arte nuevo, y prepara el punto siguiente.
 
-### 3 · Jefe con fases
+### 2 · Jefe con fases
 - Por umbral de vida, cambiando de patrón (depende de los patrones de disparo).
 
-### 4 · Mini-jefe
+### 3 · Mini-jefe
 - Variante reforzada y más grande de un enemigo normal (más vida, quizá un
   patrón extra) — reutiliza el sprite existente, sin ser una pieza nueva.
 
-### 5 · Ítems nuevos
+### 4 · Ítems nuevos
 - **Escudo temporal** (confirmado) y **bomba de pantalla** (daño en área + limpia
   balas). Cada uno necesita un icono suelto.
 

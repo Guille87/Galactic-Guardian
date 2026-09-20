@@ -11,6 +11,7 @@ from src.core import i18n, preferencias, settings
 from src.core.config import (RECURSOS, MUSICA, SONIDOS, HOJAS, DIR_ASSETS, cargar_configuracion,
                              cargar_temblor, cargar_idioma)
 from src.core.version import __version__
+from src.core.progresion import Progresion
 from src.ui.scoreboard import SistemaClasificacion
 
 RANKING_SIN_FIN = "puntuaciones_sin_fin.json"
@@ -59,15 +60,21 @@ def _smoke(frames=120):
     audio_manager = AudioManager(resource_manager, 0.2, 0.2)
     sistema_clasificacion = SistemaClasificacion()
 
+    progresion = Progresion(persistir=False)   # el humo no toca los datos del usuario
     menu = MenuManager(pantalla, resource_manager, audio_manager, sistema_clasificacion,
-                       SistemaClasificacion(nombre_archivo=RANKING_SIN_FIN))
+                       SistemaClasificacion(nombre_archivo=RANKING_SIN_FIN), progresion)
     menu._menu_principal()
+    menu._abrir_mejoras()
+    for _ in range(3):
+        menu._menu_mejoras()
+    menu.estado = "PRINCIPAL"
     menu._abrir_opciones()
     for _ in range(5):
         menu._menu_opciones(1 / settings.FPS)
 
     for modo in (settings.MODO_CAMPANA, settings.MODO_SIN_FIN):
-        juego = Juego(pantalla, audio_manager, sistema_clasificacion, resource_manager, modo=modo)
+        juego = Juego(pantalla, audio_manager, sistema_clasificacion, resource_manager, modo=modo,
+                      progresion=progresion)
         juego.jugador.vidas = 999  # que no acabe la partida durante el humo
         for _ in range(frames):
             juego.actualizar(1 / settings.FPS)
@@ -114,9 +121,13 @@ def main():
     sistema_clasificacion = SistemaClasificacion()
     clasificacion_sin_fin = SistemaClasificacion(nombre_archivo=RANKING_SIN_FIN)
 
+    # Monedas y mejoras permanentes: una sola instancia, compartida por el menú
+    # (donde se compran) y por cada partida (que cobra monedas y lee el bonus).
+    progresion = Progresion()
+
     # El menú es persistente; se reutiliza cada vez que se vuelve a él
     menu = MenuManager(pantalla, resource_manager, audio_manager, sistema_clasificacion,
-                       clasificacion_sin_fin)
+                       clasificacion_sin_fin, progresion)
 
     # --- Máquina de estados de alto nivel ---
     # Cada pantalla (menú / juego) devuelve el siguiente estado en lugar de
@@ -128,9 +139,10 @@ def main():
         elif estado in ("JUGAR", "JUGAR_SIN_FIN"):
             if estado == "JUGAR_SIN_FIN":
                 juego = Juego(pantalla, audio_manager, clasificacion_sin_fin, resource_manager,
-                              modo=settings.MODO_SIN_FIN)
+                              modo=settings.MODO_SIN_FIN, progresion=progresion)
             else:
-                juego = Juego(pantalla, audio_manager, sistema_clasificacion, resource_manager)
+                juego = Juego(pantalla, audio_manager, sistema_clasificacion, resource_manager,
+                              progresion=progresion)
             estado = juego.ejecutar()  # -> "MENU" o "SALIR"
         else:
             estado = "SALIR"

@@ -1,6 +1,7 @@
 import pygame
 
 from src.core import controles, settings
+from src.core.mejoras import Bonus
 from .bullet import Bala
 from .base.movimiento import MovimientoSubpixel
 
@@ -18,8 +19,10 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
 
     destello_constante = None   # halo de invulnerabilidad en pantalla (lo crea `EffectManager`)
 
-    def __init__(self, imagen, pantalla_ancho, pantalla_alto):
+    def __init__(self, imagen, pantalla_ancho, pantalla_alto, bonus=None):
         super().__init__()
+        # Mejoras permanentes (ver `mejoras.py`): suben el valor de arranque.
+        self.bonus = bonus or Bonus()
         # Recibimos la Surface ya escalada y cacheada por el ResourceManager
         self.image = imagen
         self.rect = self.image.get_rect()
@@ -42,16 +45,18 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
         self.rect.bottom = pantalla_alto - 10
 
         # 2. Atributos de Estado (Estadísticas)
-        self.vidas = self.CONFIG["vidas_init"]
-        self.salud = self.CONFIG["salud_max"]
-        self.salud_maxima = self.CONFIG["salud_max"]
-        self.velocidad = 4
-        self.danio = 1
+        # (las mejoras permanentes suben el arranque, nunca los topes de `CONFIG`)
+        b = self.bonus
+        self.vidas = self.CONFIG["vidas_init"] + b.vidas_extra
+        self.salud_maxima = self.CONFIG["salud_max"] + b.salud_extra
+        self.salud = self.salud_maxima
+        self.velocidad = min(self.CONFIG["vel_max"], 4 + b.velocidad_extra)
+        self.danio = min(self.CONFIG["danio_max"], 1 + b.danio_extra)
 
         # 3. Sistema de Armas
-        self.cadencia_disparo = 350
+        self.cadencia_disparo = max(self.CONFIG["cadencia_max"], 350 - b.cadencia_menos_ms)
         self.ultimo_disparo = 0
-        self.tipo_disparo = "simple"  # simple, doble, triple
+        self.tipo_disparo = b.disparo_inicial  # simple, doble, triple
 
         # 4. Estado Físico
         self.terminar_invulnerabilidad()

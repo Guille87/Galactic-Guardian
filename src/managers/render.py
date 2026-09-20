@@ -115,19 +115,22 @@ class RenderManager:
                                                  self.juego.pantalla_alto // 2 - 150))
         self.pantalla.blit(texto_surf, texto_rect)
 
-        if self.juego.modo == settings.MODO_SIN_FIN:
-            self._dibujar_estadisticas([
-                t("game_over.oleada", n=self.juego.nivel),
-                t("game_over.puntuacion", n=self.juego.puntuacion),
-            ], self.juego.pantalla_alto // 2 - 90)
+        j = self.juego
+        lineas = []
+        if j.modo == settings.MODO_SIN_FIN:
+            lineas.append(t("game_over.oleada", n=j.nivel))
+        lineas.append(t("game_over.puntuacion", n=j.puntuacion))
+        if j.progresion is not None:
+            lineas.append(t("game_over.monedas", n=j.monedas_cobradas, total=j.progresion.monedas))
+        self._dibujar_estadisticas(lineas, j.pantalla_alto // 2 - 98)
 
         # Botones creados una sola vez y cacheados
         if self.juego.boton_reintentar is None:
             centro_x = self.juego.pantalla_ancho // 2
             self.juego.boton_reintentar = Boton(t("game_over.reintentar"), (255, 0, 0, 128), (255, 255, 255),
-                                                centro_x, 400, 200, 50, radio_borde=10)
+                                                centro_x, 425, 200, 50, radio_borde=10)
             self.juego.boton_salir_post = Boton(t("comun.salir"), (255, 0, 255, 128), (255, 255, 255),
-                                                centro_x, 470, 200, 50, radio_borde=10)
+                                                centro_x, 495, 200, 50, radio_borde=10)
 
         self.juego.boton_reintentar.dibujar(self.pantalla, self.font_botones)
         self.juego.boton_salir_post.dibujar(self.pantalla, self.font_botones)
@@ -201,10 +204,13 @@ class RenderManager:
         subtitulo = self.font_botones.render(t("victoria.subtitulo"), True, (255, 255, 255))
         self.pantalla.blit(subtitulo, subtitulo.get_rect(center=(cx, 210)))
 
-        self._dibujar_estadisticas([
+        lineas = [
             t("victoria.puntuacion_final", n=j.puntuacion),
             t("victoria.nivel", n=j.nivel),
-        ], 280)
+        ]
+        if j.progresion is not None:
+            lineas.append(t("victoria.monedas", n=j.monedas_cobradas, total=j.progresion.monedas))
+        self._dibujar_estadisticas(lineas, 280)
 
         if j.boton_reintentar_final is None:
             j.boton_reintentar_final = Boton(t("victoria.jugar_de_nuevo"), (255, 0, 0, 128), (255, 255, 255),

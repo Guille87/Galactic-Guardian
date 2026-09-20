@@ -9,6 +9,34 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ### Added
 
+- **Progresión entre partidas.** Ganas **monedas** jugando (1 por cada 100 puntos,
+  con lo que ya cuenta el combo, el nivel y la oleada) y las gastas en la nueva
+  pantalla **Mejoras** del menú principal: un árbol de tres ramas —**Ataque**,
+  **Defensa** y **Utilidad**— con cuatro mejoras cada una, que se desbloquean en
+  orden. Suben con lo que empieza la nave (daño, cadencia, disparo doble,
+  salud, vidas, escudo de reaparición, velocidad, más monedas, más ítems y un
+  combo más fácil), sin tocar los topes, así que los ítems de la partida siguen
+  importando.
+  - **Restablecer** deshace todas las compras y devuelve todas las monedas
+    gastadas, sin coste.
+  - Las monedas se cobran al terminar la partida por cualquier camino (Game Over,
+    victoria, salir al menú o cerrar la ventana), y también al acabar cada nivel;
+    Game Over y victoria muestran "Monedas: +N (total M)".
+  - Se guarda en `data/saves/progresion.json`, en la carpeta de datos de usuario
+    (sobrevive a las actualizaciones). Un archivo dañado no rompe el juego: se
+    aparta a `.corrupto` y se empieza de cero.
+  - Costes, efectos y ritmo de monedas son de primera pasada (`mejoras.py`,
+    `settings.MONEDAS_PUNTOS`).
+
+### Changed
+
+- **Menú principal con seis botones**: entra **Mejoras** (título y botones siguen
+  centrados como un bloque; el aviso de nueva versión, debajo).
+- Las pantallas de Game Over y de victoria muestran también la puntuación y las
+  monedas ganadas.
+
+### Added
+
 - **Hojas de sprites.** Una animación puede ser ahora una sola imagen con todos
   sus fotogramas en una rejilla (`config.HOJAS`, `ResourceManager.load_spritesheet`
   y `get_frames`), en vez de un archivo por fotograma. Pensado para los assets

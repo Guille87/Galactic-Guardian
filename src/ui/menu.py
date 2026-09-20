@@ -5,7 +5,8 @@ import webbrowser
 import pygame
 import pygame_gui
 
-from src.core import config, controles, i18n, preferencias, settings, updates
+from src.core import config, controles, i18n, mejoras, preferencias, settings, updates
+from src.core.progresion import BLOQUEADA, COMPRADA, DISPONIBLE, SIN_SALDO, Progresion
 from src.core.i18n import t
 from src.core.version import __version__
 from src.ui.components.button import Boton
@@ -17,10 +18,38 @@ PESTANAS = ("controles", "idioma", "audio", "pantalla")
 # Menú principal: el título y los cinco botones forman un bloque centrado en la
 # pantalla (como el de la pausa); el aviso de nueva versión, que solo aparece a
 # veces, va debajo para no reservar un hueco vacío entre el título y los botones.
-_MENU_TITULO_Y = 185        # centro del título
-_MENU_BOTONES_Y = 315       # borde superior del primer botón
+_MENU_TITULO_Y = 150        # centro del título
+_MENU_BOTONES_Y = 265       # borde superior del primer botón
 _MENU_BOTONES_PASO = 70     # separación entre botones (altura 50 + 20)
-_MENU_AVISO_Y = 685         # centro del texto del aviso; su botón va justo debajo
+_MENU_AVISO_Y = 700         # centro del texto del aviso; su botón va justo debajo
+
+# Pantalla "Mejoras": tres columnas (una por rama) de cuatro nodos.
+_MEJ_COL_X = (15, 215, 415)     # borde izquierdo de cada columna
+_MEJ_ANCHO = 170
+_MEJ_Y0 = 215                   # borde superior del primer nodo
+_MEJ_ALTO = 98
+_MEJ_PASO = 112                 # de un nodo al siguiente (alto + hueco para el conector)
+_MEJ_AVISO_MS = 2500            # cuánto dura un aviso de la pantalla
+
+
+def _rect_mejora(rama_i, orden):
+    """Rect del nodo `orden` (0..3) de la rama número `rama_i`."""
+    return pygame.Rect(_MEJ_COL_X[rama_i], _MEJ_Y0 + orden * _MEJ_PASO, _MEJ_ANCHO, _MEJ_ALTO)
+
+
+def _ajustar_texto(fuente, texto, ancho):
+    """Parte `texto` en líneas que quepan en `ancho` píxeles (por palabras)."""
+    lineas, actual = [], ""
+    for palabra in texto.split():
+        prueba = f"{actual} {palabra}".strip()
+        if actual and fuente.size(prueba)[0] > ancho:
+            lineas.append(actual)
+            actual = palabra
+        else:
+            actual = prueba
+    if actual:
+        lineas.append(actual)
+    return lineas
 
 # Escalón de las flechas ◄ ► (0.1). El arrastre de la barra es libre; solo se
 # redondea a 2 decimales para no guardar basura de coma flotante.
@@ -65,24 +94,32 @@ class MenuManager:
     """
 
     def __init__(self, pantalla, resource_manager, audio_manager, sistema_clasificacion,
-                 clasificacion_sin_fin=None):
+                 clasificacion_sin_fin=None, progresion=None):
         self.pantalla = pantalla
         self.rm = resource_manager
         self.am = audio_manager
         self.clasificacion = sistema_clasificacion
         self.clasificacion_sin_fin = clasificacion_sin_fin
+        # Monedas y mejoras (pantalla "Mejoras"); sin ella, una en memoria que no toca el disco
+        self.progresion = progresion if progresion is not None else Progresion(persistir=False)
+        self._aviso_mejoras = None              # (texto, instante en que caduca)
+        self._rects_mejoras = {                 # id de mejora -> Rect de su nodo
+            m.id: _rect_mejora(i, orden)
+            for i, rama in enumerate(mejoras.RAMAS) for orden, m in enumerate(mejoras.de_la_rama(rama))
+        }
         self._modo_puntuaciones = settings.MODO_CAMPANA   # ranking que enseña la pantalla de Puntuaciones
         self._pestanas_puntuaciones = {}                  # modo -> Rect de su pestaña (lo rellena el dibujado)
         self.font_titulo = pygame.font.Font(None, 76)
         self.font_estandar = pygame.font.Font(None, 36)
         self.font_version = pygame.font.Font(None, 24)
+        self.font_mini = pygame.font.Font(None, 20)
         self.ui_manager = None          # UI de opciones (pygame_gui); se crea una vez
 
         # Reloj único de la instancia (no crear uno nuevo por frame)
         self.clock = pygame.time.Clock()
 
         # Estado inicial
-        self.estado = "PRINCIPAL"  # Posibles: PRINCIPAL, OPCIONES, PUNTUACIONES
+        self.estado = "PRINCIPAL"  # Posibles: PRINCIPAL, OPCIONES, PUNTUACIONES, MEJORAS
         self.ejecutando = True
         self.resultado = None  # "JUGAR" | "JUGAR_SIN_FIN" | "SALIR"
 
@@ -139,12 +176,17 @@ class MenuManager:
             t("menu.actualizar"), (255, 170, 0, 160), (0, 0, 0), cx, _MENU_AVISO_Y + 17, 320, 44, 10,
         )
         # `btn_jugar` es el de la campaña (el "Jugar" de siempre)
-        y = [_MENU_BOTONES_Y + i * _MENU_BOTONES_PASO for i in range(5)]
+        y = [_MENU_BOTONES_Y + i * _MENU_BOTONES_PASO for i in range(6)]
         self.btn_jugar = Boton(t("menu.campana"), (0, 255, 0, 100), (255, 255, 255), cx, y[0], 200, 50, 10)
         self.btn_sin_fin = Boton(t("menu.sin_fin"), (170, 0, 255, 128), (255, 255, 255), cx, y[1], 200, 50, 10)
-        self.btn_opciones = Boton(t("comun.opciones"), (0, 0, 255, 128), (255, 255, 255), cx, y[2], 200, 50, 10)
-        self.btn_puntos = Boton(t("menu.puntuaciones"), (255, 255, 0, 128), (255, 255, 255), cx, y[3], 200, 50, 10)
-        self.btn_salir = Boton(t("comun.salir"), (255, 0, 0, 150), (255, 255, 255), cx, y[4], 200, 50, 10)
+        self.btn_mejoras = Boton(t("menu.mejoras"), (255, 130, 0, 140), (255, 255, 255), cx, y[2], 200, 50, 10)
+        self.btn_opciones = Boton(t("comun.opciones"), (0, 0, 255, 128), (255, 255, 255), cx, y[3], 200, 50, 10)
+        self.btn_puntos = Boton(t("menu.puntuaciones"), (255, 255, 0, 128), (255, 255, 255), cx, y[4], 200, 50, 10)
+        self.btn_salir = Boton(t("comun.salir"), (255, 0, 0, 150), (255, 255, 255), cx, y[5], 200, 50, 10)
+        # Botones de la pantalla "Mejoras"
+        self.btn_restablecer_mejoras = Boton(t("mejoras.restablecer"), (255, 130, 0, 150), (255, 255, 255),
+                                             150, 705, 200, 50, 10)
+        self.btn_volver_mejoras = Boton(t("comun.volver"), (0, 0, 255, 128), (255, 255, 255), 450, 705, 200, 50, 10)
 
     def ejecutar(self):
         """Bucle principal del menú. Devuelve el siguiente estado
@@ -169,6 +211,8 @@ class MenuManager:
                 self._menu_opciones(time_delta)
             elif self.estado == "PUNTUACIONES":
                 self._menu_puntuaciones()
+            elif self.estado == "MEJORAS":
+                self._menu_mejoras()
 
         return self.resultado or "SALIR"
 
@@ -194,6 +238,8 @@ class MenuManager:
                     self.am.detener_musica("skyfire_theme")
                     self.ejecutando = False
                     self.resultado = "JUGAR_SIN_FIN"
+                elif self.btn_mejoras.clic_en_boton(event.pos):
+                    self._abrir_mejoras()
                 elif self.btn_opciones.clic_en_boton(event.pos):
                     self._abrir_opciones()
                 elif self.btn_puntos.clic_en_boton(event.pos):
@@ -213,6 +259,7 @@ class MenuManager:
 
         self.btn_jugar.dibujar(self.pantalla, self.font_estandar)
         self.btn_sin_fin.dibujar(self.pantalla, self.font_estandar)
+        self.btn_mejoras.dibujar(self.pantalla, self.font_estandar)
         self.btn_opciones.dibujar(self.pantalla, self.font_estandar)
         self.btn_puntos.dibujar(self.pantalla, self.font_estandar)
         self.btn_salir.dibujar(self.pantalla, self.font_estandar)
@@ -734,6 +781,108 @@ class MenuManager:
             surf = self.font_version.render(texto, True, color)
             px = x - surf.get_width() if alineacion == "der" else x
             self.pantalla.blit(surf, (px, y))
+
+    # ------------------------------------------------------------------ MEJORAS
+    def _abrir_mejoras(self):
+        self._aviso_mejoras = None
+        self.estado = "MEJORAS"
+
+    def _avisar_mejoras(self, texto):
+        self._aviso_mejoras = (texto, pygame.time.get_ticks() + _MEJ_AVISO_MS)
+
+    def _clic_mejoras(self, pos):
+        """Volver, Restablecer o comprar el nodo pulsado."""
+        if self.btn_volver_mejoras.clic_en_boton(pos):
+            self.estado = "PRINCIPAL"
+        elif self.btn_restablecer_mejoras.clic_en_boton(pos):
+            devuelto = self.progresion.restablecer()
+            self._avisar_mejoras(t("mejoras.aviso_restablecido", n=devuelto) if devuelto
+                                 else t("mejoras.aviso_nada"))
+        else:
+            for id_, rect in self._rects_mejoras.items():
+                if rect.collidepoint(pos):
+                    resultado = self.progresion.comprar(id_)
+                    if resultado == SIN_SALDO:
+                        self._avisar_mejoras(t("mejoras.aviso_sin_saldo"))
+                    elif resultado == BLOQUEADA:
+                        self._avisar_mejoras(t("mejoras.aviso_bloqueada"))
+                    break
+
+    def _dibujar_nodo_mejora(self, mejora, rect):
+        estado = self.progresion.estado(mejora.id)
+        asequible = self.progresion.monedas >= mejora.coste
+        if estado == COMPRADA:
+            fondo, borde, color_pie, pie = (30, 100, 55), (120, 230, 150), (150, 255, 170), t("mejoras.comprada")
+        elif estado == DISPONIBLE:
+            fondo, borde = ((30, 70, 140), (130, 190, 255)) if asequible else ((45, 45, 65), (110, 110, 140))
+            color_pie = (255, 215, 0) if asequible else (255, 130, 130)
+            pie = t("mejoras.coste", n=mejora.coste)
+        else:
+            fondo, borde, color_pie, pie = (25, 25, 30), (70, 70, 80), (110, 110, 120), t("mejoras.bloqueada")
+        bloqueada = estado == BLOQUEADA
+
+        capa = pygame.Surface(rect.size, pygame.SRCALPHA)
+        pygame.draw.rect(capa, (*fondo, 215), capa.get_rect(), border_radius=8)
+        self.pantalla.blit(capa, rect)
+        pygame.draw.rect(self.pantalla, borde, rect, 2, border_radius=8)
+
+        color_texto = (130, 130, 140) if bloqueada else (255, 255, 255)
+        nombre = self.font_version.render(t(f"mejoras.{mejora.id}.nombre"), True, color_texto)
+        self.pantalla.blit(nombre, (rect.x + 10, rect.y + 8))
+        y = rect.y + 32
+        for linea in _ajustar_texto(self.font_mini, t(f"mejoras.{mejora.id}.desc"), rect.width - 20)[:3]:
+            texto = self.font_mini.render(linea, True, (170, 170, 180) if bloqueada else (215, 215, 225))
+            self.pantalla.blit(texto, (rect.x + 10, y))
+            y += 16
+        surf_pie = self.font_version.render(pie, True, color_pie)
+        self.pantalla.blit(surf_pie, (rect.x + 10, rect.bottom - 26))
+
+    def _menu_mejoras(self):
+        """Pantalla de mejoras permanentes: tres ramas de cuatro mejoras que se
+        compran con las monedas ganadas jugando. Clic en un nodo = comprarlo."""
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.ejecutando = False
+                self.resultado = "SALIR"
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                self.estado = "PRINCIPAL"
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                self._clic_mejoras(event.pos)
+
+        self.pantalla.blit(self.rm.get_image("imagen_fondo1"), (0, 0))
+        self.pantalla.blit(self._overlay_oscuro(), (0, 0))
+
+        titulo = self.font_titulo.render(t("mejoras.titulo"), True, (255, 255, 255))
+        self.pantalla.blit(titulo, titulo.get_rect(center=(300, 65)))
+        monedas = self.font_estandar.render(t("mejoras.monedas", n=self.progresion.monedas), True, (255, 215, 0))
+        self.pantalla.blit(monedas, monedas.get_rect(center=(300, 122)))
+        pista = self.font_mini.render(t("mejoras.pista"), True, (160, 160, 170))
+        self.pantalla.blit(pista, pista.get_rect(center=(300, 150)))
+
+        for i, rama in enumerate(mejoras.RAMAS):
+            cabecera = self.font_estandar.render(t(f"mejoras.rama_{rama}"), True, (255, 255, 255))
+            self.pantalla.blit(cabecera, cabecera.get_rect(center=(_MEJ_COL_X[i] + _MEJ_ANCHO // 2, 190)))
+            cadena = mejoras.de_la_rama(rama)
+            for orden, mejora in enumerate(cadena):
+                rect = self._rects_mejoras[mejora.id]
+                if orden:                                    # conector con el nodo anterior
+                    hecha = self.progresion.estado(cadena[orden - 1].id) == COMPRADA
+                    x = rect.centerx
+                    pygame.draw.line(self.pantalla, (255, 215, 0) if hecha else (80, 80, 90),
+                                     (x, rect.top - (_MEJ_PASO - _MEJ_ALTO)), (x, rect.top), 3)
+                self._dibujar_nodo_mejora(mejora, rect)
+
+        if self._aviso_mejoras is not None:
+            texto, hasta = self._aviso_mejoras
+            if pygame.time.get_ticks() < hasta:
+                aviso = self.font_version.render(texto, True, (255, 220, 120))
+                self.pantalla.blit(aviso, aviso.get_rect(center=(300, 675)))
+            else:
+                self._aviso_mejoras = None
+
+        self.btn_restablecer_mejoras.dibujar(self.pantalla, self.font_estandar)
+        self.btn_volver_mejoras.dibujar(self.pantalla, self.font_estandar)
+        pygame.display.flip()
 
     def _clasificacion_de(self, modo):
         return self.clasificacion_sin_fin if modo == settings.MODO_SIN_FIN else self.clasificacion
