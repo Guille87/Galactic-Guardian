@@ -44,7 +44,7 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
     (+150 % de monedas en total) y Maestría II y III, sin más velocidad (el tope
     se queda en 6). Comprarlo todo cuesta 39 250 monedas con nuevos costes
     y efectos; la cadencia y la velocidad se leen en el juego como
-    "+1 disparo por segundo" y "+10 % de velocidad" en vez de milisegundos.
+    "+25 % de velocidad de ataque" y "+10 % de velocidad" en vez de milisegundos.
   - **Dificultad por tablas de nivel** (`src/core/escalado.py`): vida de los
     enemigos, vida del jefe y daño enemigo por nivel; el primer nivel hace un 40 %
     menos de daño, así que se supera sin mejoras. Los enemigos aparecen más

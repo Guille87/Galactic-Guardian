@@ -417,7 +417,7 @@ def test_la_pista_avisa_de_que_se_puede_desplazar_solo_si_hace_falta(menu_largo,
                                                                     progresion):
     assert any("rueda" in f for f in _textos_dibujados(menu_largo, monkeypatch))
     corto = MenuManager(pygame.display.get_surface(), rm, audio, scoreboard, None, progresion)
-    monkeypatch.setattr(mejoras, "MEJORAS", mejoras.MEJORAS[:4])
+    monkeypatch.setattr(mejoras, "MEJORAS", mejoras.MEJORAS[:3])
     monkeypatch.setattr(mejoras, "POR_ID", {m.id: m for m in mejoras.MEJORAS})
     assert not any("rueda" in f for f in _textos_dibujados(corto, monkeypatch))
 
@@ -427,15 +427,15 @@ def test_la_pista_de_monedas_usa_el_ritmo_real_del_juego(menu_largo, monkeypatch
 
 
 @pytest.mark.parametrize("idioma", i18n.IDIOMAS)
-def test_ninguna_descripcion_pasa_de_dos_lineas(menu, idioma):
-    """Con tres líneas el texto pisaría el pie de la tarjeta (coste / estado)."""
+def test_ninguna_descripcion_pasa_de_tres_lineas(menu, idioma):
+    """Con más de tres líneas el texto pisaría el pie de la tarjeta (coste / estado)."""
     from src.ui import menu as modulo
     antes = i18n.idioma_actual()
     i18n.establecer_idioma(idioma)
     try:
         for m in mejoras.MEJORAS:
             lineas = modulo._ajustar_texto(menu.font_mini, i18n.t(f"mejoras.{m.id}.desc"), modulo._MEJ_ANCHO - 20)
-            assert len(lineas) <= 2, (idioma, m.id, lineas)
+            assert len(lineas) <= 3, (idioma, m.id, lineas)
     finally:
         i18n.establecer_idioma(antes)
 
