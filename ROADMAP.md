@@ -37,11 +37,7 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 
 ## En curso / próximo (por orden)
 
-### 1 · Object pooling de proyectiles
-- Reutilizar balas en vez de crear/destruir constantemente — mejora de
-  rendimiento; toca el código de gestión de entidades (`EntityManager`).
-
-### 2 · Contenido nuevo (según lleguen los assets)
+### 1 · Contenido nuevo (según lleguen los assets)
 - **Enemigos nuevos** — asset a la espera de que consigas un set de un mismo
   autor (arte consistente).
 - **Patrones de disparo reutilizables** (abanico, dirigido, ráfaga…) para
@@ -108,6 +104,14 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
   compensa para lo que se busca con este juego.
 - **Accesibilidad dedicada** (reducir destellos, modo daltónico) — no se
   considera necesaria para el alcance actual del juego.
+- **Object pooling de proyectiles** — medido y descartado: crear una bala cuesta
+  ~0,46 µs y reutilizarla ~0,44 µs, así que no ahorra nada. Lo que escala es
+  cada bala *viva* (mover + colisionar + dibujar, ~1–2 µs por frame), que el
+  pooling no reduce: con 300 balas a la vez el frame usa ~5 % del presupuesto
+  de 16,7 ms; con 1.000, ~12 %; con 2.000, ~23 % (headless, esta máquina). Más
+  cadencia o más tipos de bala no cambian eso. Volver a mirarlo solo si aparecen
+  miles de balas simultáneas o lentitud medida con un profiler; entonces las
+  palancas serían colisiones más baratas o dibujar menos, no el pooling.
 - **Menú de opciones — vídeo** (ventana 1×/2×/pantalla completa/automático,
   `pygame.SCALED`) — implementado y descartado tras probarlo: la experiencia
   con varios tamaños de ventana no convenció al autor. El juego se queda fijo
