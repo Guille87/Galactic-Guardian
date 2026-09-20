@@ -68,7 +68,7 @@ def test_efectos_especiales():
     assert b.monedas_pct == pytest.approx(0.5)                   # Botín I (+25 %) y Botín II (+25 %)
     assert b.combo_factor == pytest.approx(0.8)
     assert b.invulnerable_extra_ms == 2000 and b.vidas_extra == 1 and b.regen_s == pytest.approx(0.5)
-    assert b.velocidad_extra == pytest.approx(1.0)               # Motores I y II
+    assert b.velocidad_extra == pytest.approx(0.5)               # Motores I y II (+0,25 cada uno)
 
 
 def test_ids_desconocidos_se_ignoran():

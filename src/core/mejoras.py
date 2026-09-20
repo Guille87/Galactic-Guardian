@@ -67,14 +67,14 @@ MEJORAS = (
     Mejora("defensa_9", "defensa", 2200, {"vidas_extra": 1}, requiere="defensa_8", icono="curacion"),
     Mejora("defensa_10", "defensa", 2600, {"salud_extra": 25}, requiere="defensa_9", icono="curacion"),
     # --- Utilidad: velocidad, monedas y combo
-    Mejora("utilidad_1", "utilidad", 60, {"velocidad_extra": 0.5}, icono="potenciador_velocidad"),
+    Mejora("utilidad_1", "utilidad", 60, {"velocidad_extra": 0.25}, icono="potenciador_velocidad"),
     Mejora("utilidad_2", "utilidad", 120, {"monedas_pct": 0.25}, requiere="utilidad_1"),
-    Mejora("utilidad_3", "utilidad", 500, {"velocidad_extra": 0.5}, requiere="utilidad_2", icono="potenciador_velocidad"),
+    Mejora("utilidad_3", "utilidad", 500, {"velocidad_extra": 0.25}, requiere="utilidad_2", icono="potenciador_velocidad"),
     Mejora("utilidad_4", "utilidad", 750, {"combo_factor": 0.8}, requiere="utilidad_3"),
     Mejora("utilidad_5", "utilidad", 1000, {"monedas_pct": 0.25}, requiere="utilidad_4"),
     Mejora("utilidad_6", "utilidad", 1200, {"monedas_pct": 0.25}, requiere="utilidad_5"),
-    Mejora("utilidad_7", "utilidad", 1600, {"combo_factor": 0.8}, requiere="utilidad_6"),
-    Mejora("utilidad_8", "utilidad", 2000, {"monedas_pct": 0.25}, requiere="utilidad_7"),
+    Mejora("utilidad_7", "utilidad", 1600, {"velocidad_extra": 0.25}, requiere="utilidad_6", icono="potenciador_velocidad"),
+    Mejora("utilidad_8", "utilidad", 2000, {"velocidad_extra": 0.25}, requiere="utilidad_7", icono="potenciador_velocidad"),
     Mejora("utilidad_9", "utilidad", 2500, {"combo_factor": 0.8}, requiere="utilidad_8"),
     Mejora("utilidad_10", "utilidad", 3000, {"monedas_pct": 0.5}, requiere="utilidad_9"),
 )

@@ -47,7 +47,7 @@ def test_las_mejoras_suben_los_valores_de_arranque(rm, audio, scoreboard, progre
     assert j.vidas == 4
     assert j.salud_maxima == 100 and j.salud == 100
     assert j.danio == 20 and j.disparos_s == 6.0 and j.balas_por_disparo == 3
-    assert j.velocidad == pytest.approx(6.0) and j.regen_s == pytest.approx(0.5)
+    assert j.velocidad == pytest.approx(5.5) and j.regen_s == pytest.approx(0.5)
 
 
 def test_los_bonus_nunca_pasan_de_los_topes_de_la_nave(rm):

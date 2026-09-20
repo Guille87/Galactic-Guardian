@@ -40,11 +40,11 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
     sube a 8 disparos por segundo.
   - **Árbol de 30 mejoras**, diez por rama. Las últimas de Ataque (Daño III y IV,
     Cadencia III y IV) llevan el daño a 30 y los disparos a 8 por segundo; Defensa
-    suma Blindaje IV y V, Regeneración II y otra Vida extra; Utilidad, Botín III–V
-    (+150 % de monedas en total) y Maestría II y III, sin más velocidad (el tope
-    se queda en 6). Comprarlo todo cuesta 39 250 monedas con nuevos costes
+    suma Blindaje IV y V, Regeneración II y otra Vida extra; Utilidad, Botín III y IV
+    (+125 % de monedas en total con Botín I y II), Maestría II y Motores III y IV. La
+    velocidad sube en cuatro pasos de +5 % (Motores I–IV) hasta el tope de 6. Comprarlo todo cuesta 39 250 monedas con nuevos costes
     y efectos; la cadencia y la velocidad se leen en el juego como
-    "+25 % de velocidad de ataque" y "+10 % de velocidad" en vez de milisegundos.
+    "+25 % de velocidad de ataque" y "+5 % de velocidad" en vez de milisegundos.
   - **Dificultad por tablas de nivel** (`src/core/escalado.py`): vida de los
     enemigos, vida del jefe y daño enemigo por nivel; el primer nivel hace un 40 %
     menos de daño, así que se supera sin mejoras. Los enemigos aparecen más
