@@ -7,9 +7,9 @@
 | main.py                               |       87 |       63 |     28% |47-84, 88-151 |
 | src/core/audio.py                     |       40 |        0 |    100% |           |
 | src/core/combo.py                     |       22 |        0 |    100% |           |
-| src/core/config.py                    |       60 |        2 |     97% |     97-98 |
+| src/core/config.py                    |       60 |        2 |     97% |     96-97 |
 | src/core/controles.py                 |       10 |        0 |    100% |           |
-| src/core/engine.py                    |      332 |       11 |     97% |475-478, 524, 543-553 |
+| src/core/engine.py                    |      325 |       11 |     97% |470-473, 519, 538-548 |
 | src/core/i18n.py                      |       57 |       16 |     72% |44-51, 56-63 |
 | src/core/input.py                     |      135 |       38 |     72% |61-62, 101-108, 128-143, 184-207 |
 | src/core/mejoras.py                   |       37 |        0 |    100% |           |
@@ -18,7 +18,7 @@
 | src/core/preferencias.py              |        5 |        0 |    100% |           |
 | src/core/progresion.py                |       97 |        4 |     96% |102-103, 121-122 |
 | src/core/resources.py                 |       81 |        4 |     95% |122, 128, 138, 141 |
-| src/core/settings.py                  |       43 |        0 |    100% |           |
+| src/core/settings.py                  |       44 |        0 |    100% |           |
 | src/core/sin\_fin.py                  |       30 |        0 |    100% |           |
 | src/core/updates.py                   |      145 |       19 |     87% |74-79, 117-131, 150-151, 159, 189-192 |
 | src/core/version.py                   |        1 |        0 |    100% |           |
@@ -26,24 +26,23 @@
 | src/entities/base/projectile\_base.py |       14 |        1 |     93% |        28 |
 | src/entities/bullet.py                |       10 |        0 |    100% |           |
 | src/entities/bullet\_enemy.py         |       11 |        0 |    100% |           |
-| src/entities/enemies.py               |      135 |        3 |     98% |74, 208, 216 |
-| src/entities/items.py                 |       20 |        0 |    100% |           |
-| src/entities/player.py                |      115 |        2 |     98% |  116, 124 |
-| src/managers/collision.py             |       53 |        0 |    100% |           |
+| src/entities/enemies.py               |      109 |        2 |     98% |  169, 177 |
+| src/entities/player.py                |      104 |        4 |     96% |88, 92, 116, 124 |
+| src/managers/collision.py             |       48 |        0 |    100% |           |
 | src/managers/effects.py               |       33 |        0 |    100% |           |
-| src/managers/entities.py              |       60 |        1 |     98% |        85 |
+| src/managers/entities.py              |       58 |        1 |     98% |        83 |
 | src/managers/render.py                |      158 |        1 |     99% |       245 |
 | src/managers/waves.py                 |       48 |        0 |    100% |           |
 | src/ui/components/button.py           |       40 |        6 |     85% |     34-39 |
 | src/ui/hud.py                         |      128 |       13 |     90% |112, 185-203 |
-| src/ui/menu.py                        |      587 |       26 |     96% |210-215, 225-226, 244, 328, 578, 618, 644, 756-772, 916-917 |
+| src/ui/menu.py                        |      599 |       26 |     96% |212-217, 227-228, 246, 330, 580, 620, 646, 758-774, 932-933 |
 | src/ui/scoreboard.py                  |       45 |        2 |     96% |     58-59 |
 | src/visual/background.py              |       22 |        1 |     95% |        30 |
 | src/visual/explosions.py              |       20 |        0 |    100% |           |
 | src/visual/flash.py                   |       22 |        0 |    100% |           |
 | src/visual/flash\_constant.py         |       11 |        0 |    100% |           |
 | src/visual/screen\_shake.py           |       21 |        0 |    100% |           |
-| **TOTAL**                             | **2789** |  **216** | **92%** |           |
+| **TOTAL**                             | **2731** |  **217** | **92%** |           |
 
 
 ## Setup coverage badge
