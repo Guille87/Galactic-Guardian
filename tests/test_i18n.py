@@ -58,7 +58,7 @@ def test_idioma_sin_archivo_usa_el_espanol():
 
 
 def test_catalogo_espanol_real_carga():
-    assert i18n.t("menu.jugar") == "Jugar"
+    assert i18n.t("menu.campana") == "Campaña"
     assert i18n.t("nivel_completado.titulo", n=2) == "NIVEL 2 COMPLETADO"
     assert i18n.t("nivel_completado.tiempo", s=12.34) == "Tiempo: 12.3 s"
 
@@ -124,7 +124,7 @@ def test_cada_idioma_disponible_tiene_nombre_y_catalogo():
 
 def test_el_ingles_traduce_de_verdad():
     i18n.establecer_idioma("en")
-    assert i18n.t("menu.jugar") == "Play"
+    assert i18n.t("menu.campana") == "Campaign"
     assert i18n.t("nivel_completado.titulo", n=2) == "LEVEL 2 COMPLETE"
     assert i18n.t("controles.tecla_espacio") == "Space"
 

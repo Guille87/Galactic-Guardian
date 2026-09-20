@@ -48,15 +48,23 @@ class MenuManager:
     Clase principal para gestionar las pantallas del menú (Estado).
 
     `ejecutar()` corre el bucle del menú y devuelve el siguiente estado de la
-    máquina de alto nivel: "JUGAR" o "SALIR". El objeto es persistente: se
-    reutiliza cada vez que se vuelve al menú desde la partida.
+    máquina de alto nivel: "JUGAR" (campaña), "JUGAR_SIN_FIN" o "SALIR". El
+    objeto es persistente: se reutiliza cada vez que se vuelve al menú desde la
+    partida.
+
+    `sistema_clasificacion` es el ranking de la campaña y `clasificacion_sin_fin`
+    el del modo sin fin (la pausa, que solo abre Opciones, no lo necesita).
     """
 
-    def __init__(self, pantalla, resource_manager, audio_manager, sistema_clasificacion):
+    def __init__(self, pantalla, resource_manager, audio_manager, sistema_clasificacion,
+                 clasificacion_sin_fin=None):
         self.pantalla = pantalla
         self.rm = resource_manager
         self.am = audio_manager
         self.clasificacion = sistema_clasificacion
+        self.clasificacion_sin_fin = clasificacion_sin_fin
+        self._modo_puntuaciones = settings.MODO_CAMPANA   # ranking que enseña la pantalla de Puntuaciones
+        self._pestanas_puntuaciones = {}                  # modo -> Rect de su pestaña (lo rellena el dibujado)
         self.font_titulo = pygame.font.Font(None, 76)
         self.font_estandar = pygame.font.Font(None, 36)
         self.font_version = pygame.font.Font(None, 24)
@@ -68,7 +76,7 @@ class MenuManager:
         # Estado inicial
         self.estado = "PRINCIPAL"  # Posibles: PRINCIPAL, OPCIONES, PUNTUACIONES
         self.ejecutando = True
-        self.resultado = None  # "JUGAR" | "SALIR"
+        self.resultado = None  # "JUGAR" | "JUGAR_SIN_FIN" | "SALIR"
 
         # Estado inicial de Opciones (ver `_sincronizar_estado`)
         self._sincronizar_estado()
@@ -122,13 +130,16 @@ class MenuManager:
         self.btn_actualizar = Boton(
             t("menu.actualizar"), (255, 170, 0, 160), (0, 0, 0), cx, 270, 320, 44, 10,
         )
-        self.btn_jugar = Boton(t("menu.jugar"), (0, 255, 0, 100), (255, 255, 255), cx, 350, 200, 50, 10)
-        self.btn_opciones = Boton(t("comun.opciones"), (0, 0, 255, 128), (255, 255, 255), cx, 420, 200, 50, 10)
-        self.btn_puntos = Boton(t("menu.puntuaciones"), (255, 255, 0, 128), (255, 255, 255), cx, 490, 200, 50, 10)
-        self.btn_salir = Boton(t("comun.salir"), (255, 0, 0, 150), (255, 255, 255), cx, 560, 200, 50, 10)
+        # `btn_jugar` es el de la campaña (el "Jugar" de siempre)
+        self.btn_jugar = Boton(t("menu.campana"), (0, 255, 0, 100), (255, 255, 255), cx, 350, 200, 50, 10)
+        self.btn_sin_fin = Boton(t("menu.sin_fin"), (170, 0, 255, 128), (255, 255, 255), cx, 420, 200, 50, 10)
+        self.btn_opciones = Boton(t("comun.opciones"), (0, 0, 255, 128), (255, 255, 255), cx, 490, 200, 50, 10)
+        self.btn_puntos = Boton(t("menu.puntuaciones"), (255, 255, 0, 128), (255, 255, 255), cx, 560, 200, 50, 10)
+        self.btn_salir = Boton(t("comun.salir"), (255, 0, 0, 150), (255, 255, 255), cx, 630, 200, 50, 10)
 
     def ejecutar(self):
-        """Bucle principal del menú. Devuelve el siguiente estado ("JUGAR"/"SALIR")."""
+        """Bucle principal del menú. Devuelve el siguiente estado
+        ("JUGAR"/"JUGAR_SIN_FIN"/"SALIR")."""
         # Reinicio de estado por si volvemos desde una partida
         self.ejecutando = True
         self.estado = "PRINCIPAL"
@@ -170,9 +181,14 @@ class MenuManager:
                     self.am.detener_musica("skyfire_theme")
                     self.ejecutando = False
                     self.resultado = "JUGAR"
+                elif self.btn_sin_fin.clic_en_boton(event.pos):
+                    self.am.detener_musica("skyfire_theme")
+                    self.ejecutando = False
+                    self.resultado = "JUGAR_SIN_FIN"
                 elif self.btn_opciones.clic_en_boton(event.pos):
                     self._abrir_opciones()
                 elif self.btn_puntos.clic_en_boton(event.pos):
+                    self._modo_puntuaciones = settings.MODO_CAMPANA
                     self.estado = "PUNTUACIONES"
                 elif self.btn_salir.clic_en_boton(event.pos):
                     if self._confirmar_salida():
@@ -187,6 +203,7 @@ class MenuManager:
         self._dibujar_aviso_actualizacion()
 
         self.btn_jugar.dibujar(self.pantalla, self.font_estandar)
+        self.btn_sin_fin.dibujar(self.pantalla, self.font_estandar)
         self.btn_opciones.dibujar(self.pantalla, self.font_estandar)
         self.btn_puntos.dibujar(self.pantalla, self.font_estandar)
         self.btn_salir.dibujar(self.pantalla, self.font_estandar)
@@ -677,18 +694,48 @@ class MenuManager:
             px = x - surf.get_width() if alineacion == "der" else x
             self.pantalla.blit(surf, (px, y))
 
+    def _clasificacion_de(self, modo):
+        return self.clasificacion_sin_fin if modo == settings.MODO_SIN_FIN else self.clasificacion
+
+    def _dibujar_pestanas_puntuaciones(self, y):
+        """Pestañas Campaña / Sin fin de la pantalla de Puntuaciones; guarda sus
+        rects para que el clic sepa cuál se ha pulsado."""
+        ancho, alto, hueco = 170, 38, 10
+        x = (settings.ANCHO - (2 * ancho + hueco)) // 2
+        for modo, clave in ((settings.MODO_CAMPANA, "puntuaciones.modo_campana"),
+                            (settings.MODO_SIN_FIN, "puntuaciones.modo_sin_fin")):
+            rect = pygame.Rect(x, y, ancho, alto)
+            self._pestanas_puntuaciones[modo] = rect
+            activa = modo == self._modo_puntuaciones
+            fondo = pygame.Surface(rect.size, pygame.SRCALPHA)
+            pygame.draw.rect(fondo, (255, 255, 0, 150) if activa else (60, 60, 60, 170),
+                             fondo.get_rect(), border_radius=8)
+            self.pantalla.blit(fondo, rect)
+            color = (255, 255, 255) if activa else (170, 170, 170)
+            texto = self.font_version.render(t(clave), True, color)
+            self.pantalla.blit(texto, texto.get_rect(center=rect.center))
+            x += ancho + hueco
+
     def _menu_puntuaciones(self):
-        """Pantalla de puntuaciones"""
-        # Espera un clic para volver
+        """Pantalla de puntuaciones: pestañas Campaña / Sin fin; un clic fuera de
+        ellas vuelve al menú."""
         fondo = self.rm.get_image("imagen_fondo1")
-        puntuaciones_top = self.clasificacion.obtener_puntuaciones_top()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.ejecutando = False
                 self.resultado = "SALIR"
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                self.estado = "PRINCIPAL"
+                for modo, rect in self._pestanas_puntuaciones.items():
+                    if rect.collidepoint(event.pos):
+                        self._modo_puntuaciones = modo
+                        break
+                else:
+                    self.estado = "PRINCIPAL"
+
+        # Después de los eventos: una pestaña recién pulsada se dibuja ya con su ranking
+        clasificacion = self._clasificacion_de(self._modo_puntuaciones)
+        puntuaciones_top = clasificacion.obtener_puntuaciones_top() if clasificacion else []
 
         # Dibujado
         self.pantalla.blit(fondo, (0, 0))
@@ -696,14 +743,17 @@ class MenuManager:
 
         # Título
         txt_titulo = self.font_titulo.render(t("puntuaciones.titulo"), True, (255, 255, 255))
-        self.pantalla.blit(txt_titulo, txt_titulo.get_rect(center=(300, 100)))
+        self.pantalla.blit(txt_titulo, txt_titulo.get_rect(center=(300, 90)))
+        self._dibujar_pestanas_puntuaciones(140)
 
-        # Listado de puntos: cabecera + filas en columnas (nº, nombre, puntos, nivel).
+        # Listado de puntos: cabecera + filas en columnas (nº, nombre, puntos, nivel/oleada).
         # `x` en "Puntos" es el borde derecho de la columna (texto alineado a la derecha).
         if puntuaciones_top:
+            col_progreso = ("puntuaciones.col_oleada" if self._modo_puntuaciones == settings.MODO_SIN_FIN
+                            else "puntuaciones.col_nivel")
             columnas = (("#", 60, "izq"), (t("puntuaciones.col_nombre"), 110, "izq"),
-                       (t("puntuaciones.col_puntos"), 420, "der"), (t("puntuaciones.col_nivel"), 480, "izq"))
-            y = 170
+                        (t("puntuaciones.col_puntos"), 420, "der"), (t(col_progreso), 480, "izq"))
+            y = 205
             self._dibujar_fila_puntuaciones(
                 [c[0] for c in columnas], columnas, y, (200, 200, 200))
             y += 36

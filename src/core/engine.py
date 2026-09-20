@@ -5,6 +5,7 @@ import pygame
 import pygame.freetype
 
 from src.core import settings
+from src.core import sin_fin
 from src.core.niveles import definicion_nivel
 from src.core.version import __version__
 from src.entities.enemies import Jefe
@@ -22,8 +23,13 @@ from src.managers.waves import WaveManager
 
 
 class Juego:
-    def __init__(self, pantalla, audio_manager, clasificacion, resource_manager):
+    def __init__(self, pantalla, audio_manager, clasificacion, resource_manager,
+                 modo=settings.MODO_CAMPANA):
         # 1. Configuración básica y Hardware
+        # `modo`: campaña (niveles fijos con jefe final) o sin fin (oleadas sin
+        # techo). `clasificacion` es el ranking de ese modo: quien crea el `Juego`
+        # elige cuál pasar.
+        self.modo = modo
         self.rm = resource_manager
         self.pantalla = pantalla
         self.pantalla_ancho = pantalla.get_width()
@@ -32,7 +38,7 @@ class Juego:
 
         # 2. Estado de la Partida
         self.puntuacion = 0
-        self.nivel = 1
+        self.nivel = 1   # nivel de la campaña, o nº de oleada en el modo sin fin
         self.pausado = False
         self.estado_game_over = False
         self.pidiendo_nombre = False
@@ -63,7 +69,7 @@ class Juego:
         self.enemigos_eliminados = 0  # contador de "piedad" para el loot
 
         # Cadencia de aparición de enemigos (viene de la definición del nivel)
-        self.MIN_TIEMPO_GENERACION, self.MAX_TIEMPO_GENERACION = definicion_nivel(self.nivel).intervalo_spawn
+        self.MIN_TIEMPO_GENERACION, self.MAX_TIEMPO_GENERACION = self._definicion().intervalo_spawn
 
         # 3. Entidades principales y estado compartido por los managers
         self.background = ScrollingBackground(
@@ -107,7 +113,7 @@ class Juego:
         self.tiempo_proximo_enemigo = 0
 
         # 6. Inicialización de Estado de Juego
-        self.audio_manager.reproducir_musica(definicion_nivel(self.nivel).musica)
+        self.audio_manager.reproducir_musica(self._definicion().musica)
         self.clasificacion = clasificacion
 
         self.jefe = None
@@ -123,6 +129,12 @@ class Juego:
         self.botones_seleccion_nivel = None   # lista, se recrea si cambia el nivel máximo
         self.boton_reintentar_final = None
         self.boton_menu_final = None
+
+    def _definicion(self):
+        """Definición del nivel (campaña) o de la oleada (sin fin) en curso."""
+        if self.modo == settings.MODO_SIN_FIN:
+            return sin_fin.definicion_oleada(self.nivel)
+        return definicion_nivel(self.nivel)
 
     def pausar_juego(self):
         """Pausa el juego. `tiempo_juego` deja de avanzar solo (no se llama a
@@ -153,8 +165,10 @@ class Juego:
             # para que los managers puedan conservar su referencia.
             self.jugador.reiniciar(self.pantalla_ancho, self.pantalla_alto)
             self.puntuacion = 0
+            if self.modo == settings.MODO_SIN_FIN:
+                self.nivel = 1   # la campaña reintenta el nivel; el sin fin vuelve a la oleada 1
 
-        self.MIN_TIEMPO_GENERACION, self.MAX_TIEMPO_GENERACION = definicion_nivel(self.nivel).intervalo_spawn
+        self.MIN_TIEMPO_GENERACION, self.MAX_TIEMPO_GENERACION = self._definicion().intervalo_spawn
 
         # Reiniciar todos los valores del juego a sus estados iniciales
         self.entity_manager.vaciar_todo(avance_nivel=avance_nivel)
@@ -186,7 +200,7 @@ class Juego:
         # Detenemos la música
         self.audio_manager.detener_toda_la_musica()
         # Aseguramos que suene la música del nivel
-        self.audio_manager.reproducir_musica(definicion_nivel(self.nivel).musica)
+        self.audio_manager.reproducir_musica(self._definicion().musica)
 
     # --- Contrato "reglas" que consume CollisionManager -------------------
     def al_eliminar_enemigo(self, enemigo):
@@ -205,11 +219,17 @@ class Juego:
 
         self.puntuacion += enemigo.valor_puntuacion * self.nivel
 
-        # Jefe derrotado -> transición diferida (la ejecuta Juego.actualizar)
         if isinstance(enemigo, Jefe):
-            self.jefe_derrotado = True
             self.jefe = None
-            self.pendiente_reinicio = True
+            if self.modo == settings.MODO_SIN_FIN:
+                # Sin fin: no hay cierre de nivel, la partida sigue con la oleada
+                # siguiente (se llevan las balas del jefe, como en la campaña).
+                self.entity_manager.balas_enemigo.empty()
+                self._avanzar_oleada()
+            else:
+                # Campaña: transición diferida (la ejecuta Juego.actualizar)
+                self.jefe_derrotado = True
+                self.pendiente_reinicio = True
 
     def _spawnear_item(self, tipo, posicion):
         img = self.rm.get_image_scaled(tipo, Item.TAMANO_ESTANDAR)
@@ -293,9 +313,11 @@ class Juego:
     def _gestionar_generacion_enemigos(self):
         """Maneja el timing para spawnear enemigos mediante el WaveManager."""
         ahora = self.tiempo_juego
+        if self.modo == settings.MODO_SIN_FIN and self._oleada_agotada(ahora):
+            self._avanzar_oleada()
         if ahora > self.tiempo_proximo_enemigo:
             nuevo = self.wave_manager.spawn_enemigo(
-                ahora - self.inicio_juego, ahora, self.jugador, self.nivel
+                ahora - self.inicio_juego, ahora, self.jugador, self.nivel, self._definicion()
             )
             if nuevo:
                 self.entity_manager.agregar_enemigo(nuevo)
@@ -304,6 +326,24 @@ class Juego:
                     self.jefe = nuevo
 
             self.tiempo_proximo_enemigo = ahora + random.randint(self.MIN_TIEMPO_GENERACION, self.MAX_TIEMPO_GENERACION)
+
+    def _oleada_agotada(self, ahora):
+        """Sin fin: una oleada normal acaba por tiempo; la de jefe, al caer este
+        (ver `al_eliminar_enemigo`)."""
+        return (not sin_fin.es_oleada_de_jefe(self.nivel)
+                and ahora - self.inicio_juego >= sin_fin.OLEADA_MS)
+
+    def _avanzar_oleada(self):
+        """Sin fin: pasa a la oleada siguiente sin tocar nada de lo que hay en
+        pantalla (enemigos, balas, mejoras): solo cambia la definición."""
+        self.nivel += 1
+        self.inicio_juego = self.tiempo_juego
+        definicion = self._definicion()
+        self.MIN_TIEMPO_GENERACION, self.MAX_TIEMPO_GENERACION = definicion.intervalo_spawn
+        self.wave_manager.jefe_generado = False
+        self.wave_manager.tiempo_inicio_espera_jefe = 0
+        # Tras una oleada de jefe vuelve la música normal (idempotente si ya suena).
+        self.audio_manager.reproducir_musica(definicion.musica)
 
     def juego_terminado(self):
         """Muestra el mensaje de "Game Over" y las opciones de "Reintentar" y "Salir"."""

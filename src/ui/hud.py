@@ -46,6 +46,11 @@ class UIManager:
         txt_puntos = self.fuente_media.render(f"{self.juego.puntuacion:06d}", True, color)
         pantalla.blit(txt_puntos, (self.juego.pantalla_ancho - txt_puntos.get_width() - 20, 40))
 
+        # Sin fin: oleada en curso, bajo la puntuación
+        if self.juego.modo == settings.MODO_SIN_FIN:
+            txt_oleada = self.fuente_pequena.render(t("hud.oleada", n=self.juego.nivel), True, color)
+            pantalla.blit(txt_oleada, (self.juego.pantalla_ancho - txt_oleada.get_width() - 20, 70))
+
         # Vidas arriba a la izquierda
         txt_vidas = self.fuente_pequena.render(t("hud.vidas", n=self.juego.jugador.vidas), True, color)
         pantalla.blit(txt_vidas, (20, 20))

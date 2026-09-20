@@ -5,9 +5,11 @@ from src.core import paths
 
 
 class SistemaClasificacion:
-    def __init__(self, ruta_archivo=None):
+    def __init__(self, ruta_archivo=None, nombre_archivo="puntuaciones.json"):
+        """`nombre_archivo` distingue los rankings de cada modo (campaña / sin fin)
+        dentro de la carpeta de guardado; `ruta_archivo` lo salta del todo (tests)."""
         self.ruta_archivo = ruta_archivo or os.path.join(
-            paths.dir_datos_usuario(), "data", "saves", "puntuaciones.json"
+            paths.dir_datos_usuario(), "data", "saves", nombre_archivo
         )
         self._asegurar_directorio()
         self.puntuaciones = self.cargar_puntuaciones()

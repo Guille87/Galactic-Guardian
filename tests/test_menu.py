@@ -266,7 +266,7 @@ def test_cambiar_de_idioma_es_inmediato_y_rehace_los_botones_del_menu(menu):
     menu._abrir_opciones()
     _click(menu, _boton_idioma(menu, "en"))
     assert i18n.idioma_actual() == "en"
-    assert menu.btn_jugar.texto == "Play"
+    assert menu.btn_jugar.texto == "Campaign"
     assert menu.btn_salir.texto == "Quit"
     assert menu.btn_actualizar.texto == "Update"
 
@@ -313,11 +313,11 @@ def test_guardar_persiste_el_idioma(menu, monkeypatch, tmp_path):
 
 def test_menu_persistente_rehace_sus_botones_si_el_idioma_cambio_fuera(menu):
     """Cambio de idioma desde la pausa de una partida (otro MenuManager)."""
-    assert menu.btn_jugar.texto == "Jugar"
+    assert menu.btn_jugar.texto == "Campaña"
     i18n.establecer_idioma("en")
     menu._menu_principal = lambda: setattr(menu, "ejecutando", False)   # una sola pasada del bucle
     menu.ejecutar()
-    assert menu.btn_jugar.texto == "Play"
+    assert menu.btn_jugar.texto == "Campaign"
 
 
 def test_opciones_del_menu_persistente_siguen_el_idioma_cambiado_fuera(menu):
@@ -447,7 +447,7 @@ def test_volver_descarta_el_idioma(menu):
     _click(menu, menu.btn_volver)
 
     assert i18n.idioma_actual() == "es"
-    assert menu.btn_jugar.texto == "Jugar"                  # los botones del menú vuelven a español
+    assert menu.btn_jugar.texto == "Campaña"                  # los botones del menú vuelven a español
     menu._abrir_opciones()
     assert "Idioma" in {b.text for b in menu._botones_pestana}
     assert _boton_idioma(menu, "es").is_selected
@@ -458,7 +458,7 @@ def test_guardar_confirma_el_idioma_en_la_sesion(menu, monkeypatch, tmp_path):
     menu._abrir_opciones()
     _click(menu, _boton_idioma(menu, "en"))
     _click(menu, menu.btn_guardar)
-    assert i18n.idioma_actual() == "en" and menu.btn_jugar.texto == "Play"
+    assert i18n.idioma_actual() == "en" and menu.btn_jugar.texto == "Campaign"
 
 
 def test_rehacer_la_ui_al_cambiar_de_idioma_no_pierde_lo_que_habia_al_entrar(menu):
@@ -838,3 +838,95 @@ def test_ejecutar_reinicia_su_estado(menu):
     menu._menu_principal = lambda: setattr(menu, "ejecutando", False)
     menu.ejecutar()
     assert menu.estado == "PRINCIPAL"
+
+
+# --- Modo sin fin: botón y ranking -------------------------------------------
+
+@pytest.fixture
+def menu_con_rankings(rm, audio, scoreboard, tmp_path):
+    from src.ui.scoreboard import SistemaClasificacion
+
+    sin_fin = SistemaClasificacion(ruta_archivo=str(tmp_path / "sin_fin.json"))
+    return MenuManager(pygame.display.get_surface(), rm, audio, scoreboard, sin_fin)
+
+
+def _clic_menu(menu, pos):
+    pygame.event.clear()
+    pygame.event.post(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=pos))
+
+
+def test_el_boton_sin_fin_lanza_ese_modo(menu):
+    _clic_menu(menu, menu.btn_sin_fin.rect.center)
+    menu._menu_principal()
+    assert menu.ejecutando is False and menu.resultado == "JUGAR_SIN_FIN"
+
+
+def test_el_boton_de_campana_sigue_lanzando_la_campana(menu):
+    _clic_menu(menu, menu.btn_jugar.rect.center)
+    menu._menu_principal()
+    assert menu.ejecutando is False and menu.resultado == "JUGAR"
+
+
+def test_los_botones_del_menu_caben_en_orden_y_sin_solaparse(menu):
+    botones = [menu.btn_jugar, menu.btn_sin_fin, menu.btn_opciones, menu.btn_puntos, menu.btn_salir]
+    for arriba, abajo in zip(botones, botones[1:]):
+        assert arriba.rect.bottom < abajo.rect.top
+    assert botones[-1].rect.bottom < settings.ALTO - 40
+
+
+def _filas_dibujadas(menu, monkeypatch):
+    """Ejecuta un frame de Puntuaciones y devuelve las filas de texto dibujadas."""
+    filas = []
+    monkeypatch.setattr(menu, "_dibujar_fila_puntuaciones", lambda textos, *a, **k: filas.append(tuple(textos)))
+    menu._menu_puntuaciones()
+    return filas
+
+
+def test_puntuaciones_arranca_en_la_campana_y_la_pestana_cambia_de_ranking(menu_con_rankings, monkeypatch):
+    menu = menu_con_rankings
+    menu.clasificacion.agregar_puntuacion("Ana", 100, nivel=2)
+    menu.clasificacion_sin_fin.agregar_puntuacion("Beto", 900, nivel=7)
+
+    _clic_menu(menu, menu.btn_puntos.rect.center)
+    menu._menu_principal()
+    assert menu.estado == "PUNTUACIONES"
+
+    filas = _filas_dibujadas(menu, monkeypatch)          # 1er frame: dibuja y fija los rects de las pestañas
+    assert ("1", "Ana", "100", "2") in filas and filas[0][3] == "Nivel"
+
+    _clic_menu(menu, menu._pestanas_puntuaciones[settings.MODO_SIN_FIN].center)
+    filas = _filas_dibujadas(menu, monkeypatch)
+    assert menu.estado == "PUNTUACIONES"                 # pulsar una pestaña no vuelve al menú
+    assert ("1", "Beto", "900", "7") in filas and filas[0][3] == "Oleada"
+    assert all("Ana" not in fila for fila in filas)      # los rankings no se mezclan
+
+
+def test_puntuaciones_un_clic_fuera_de_las_pestanas_vuelve_al_menu(menu_con_rankings, monkeypatch):
+    menu = menu_con_rankings
+    menu.estado = "PUNTUACIONES"
+    _filas_dibujadas(menu, monkeypatch)
+    _clic_menu(menu, (300, 700))
+    menu._menu_puntuaciones()
+    assert menu.estado == "PRINCIPAL"
+
+
+def test_puntuaciones_siempre_se_abre_en_la_campana(menu_con_rankings):
+    menu = menu_con_rankings
+    menu._modo_puntuaciones = settings.MODO_SIN_FIN
+    _clic_menu(menu, menu.btn_puntos.rect.center)
+    menu._menu_principal()
+    assert menu._modo_puntuaciones == settings.MODO_CAMPANA
+
+
+def test_puntuaciones_sin_ranking_de_sin_fin_no_rompe(menu, monkeypatch):
+    """La pausa crea un `MenuManager` sin el ranking del sin fin: no debe fallar."""
+    menu._modo_puntuaciones = settings.MODO_SIN_FIN
+    menu.estado = "PUNTUACIONES"
+    assert _filas_dibujadas(menu, monkeypatch) == []
+
+
+def test_pestanas_de_puntuaciones_en_ingles(menu_con_rankings):
+    i18n.establecer_idioma("en")
+    menu = menu_con_rankings
+    menu.estado = "PUNTUACIONES"
+    menu._menu_puntuaciones()                            # no debe lanzar excepción
