@@ -31,6 +31,9 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
   pausa reasignable (WASD + Espacio + P por defecto); flechas y Esc fijas,
   aviso si dos acciones chocan, botón de restaurar por defecto. Persistido en
   `config.ini`. Ver `[0.3.0]`.
+- **Verificación del instalador** — la actualización desde el juego comprueba el
+  SHA-256 del instalador (campo `digest` de la API de Releases de GitHub, sin
+  tocar `build.yml`) antes de ejecutarlo. Ver `[Unreleased]` → próxima versión.
 - **Oleadas y niveles como datos** — cada nivel se define en una tabla
   (`src/core/niveles.py`); `WaveManager` solo la lee. Añadir contenido es
   "editar una tabla". Ver `[Unreleased]` → próxima versión.
@@ -40,31 +43,25 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 Primero lo que no depende de assets; el contenido nuevo va al final porque
 espera a que llegue el arte.
 
-### 1 · Checksum del instalador
-- `SHA256SUMS` en la Release y verificación antes de ejecutar el instalador
-  descargado por la actualización desde el juego. Va primero porque es barato,
-  cierra un hueco de seguridad (el juego ejecuta lo que descarga) y toca
-  `build.yml` y `updates.py`, que ya conocemos.
-
-### 2 · Localización (i18n)
+### 1 · Localización (i18n)
 - Preparar el código para inglés/español (que el texto no quede cableado a
   pelo) aunque la traducción al inglés se haga más adelante. Va pronto porque
   cada pantalla o función nueva añade texto y migrarlo cuesta más cuanto más
   crece.
 
-### 3 · Modo sin fin (arcade)
+### 2 · Modo sin fin (arcade)
 - Ahora que hay campaña con final, recuperar el bucle infinito de antes como
   modo aparte, con su propio ranking. Es lo que más rejugabilidad da con lo que
   ya hay. Los niveles como datos (`niveles.py`) facilitan definir su curva.
 
-### 4 · Screen shake y hit-stop
+### 3 · Screen shake y hit-stop
 - Al impactar/morir. Baratos, sin assets y muy visibles en la sensación de golpe.
 
-### 5 · Multiplicador de puntuación / combo
+### 4 · Multiplicador de puntuación / combo
 - Sube mientras no recibes daño, se reinicia al primer golpe. Mejor tras el modo
   sin fin, para que el ranking tenga sentido con él.
 
-### 6 · Contenido nuevo (según lleguen los assets)
+### 5 · Contenido nuevo (según lleguen los assets)
 - **Enemigos nuevos** — asset a la espera de que consigas un set de un mismo
   autor (arte consistente).
 - **Patrones de disparo reutilizables** (abanico, dirigido, ráfaga…) para

@@ -9,6 +9,7 @@ respuesta rara) se traga en silencio y el juego sigue igual. El resultado se
 cachea en la carpeta de datos de usuario para no consultar en cada arranque.
 """
 
+import hashlib
 import json
 import os
 import subprocess
@@ -78,13 +79,38 @@ def _guardar_cache(datos):
         pass
 
 
-def _url_instalador(cuerpo):
-    """URL del asset del instalador (`*-setup.exe`) de la Release, si existe."""
+def _asset_instalador(cuerpo):
+    """Asset del instalador (`*-setup.exe`) de la Release, si existe."""
     for asset in cuerpo.get("assets", []):
         nombre = asset.get("name", "")
         if nombre.endswith(".exe") and "setup" in nombre.lower():
-            return asset.get("browser_download_url")
+            return asset
     return None
+
+
+def _url_instalador(cuerpo):
+    asset = _asset_instalador(cuerpo)
+    return asset.get("browser_download_url") if asset else None
+
+
+def _sha256_instalador(cuerpo):
+    """SHA-256 (hex, minúsculas) del instalador según GitHub, o None.
+
+    La API de Releases devuelve `"digest": "sha256:<hex>"` por asset, calculado
+    por GitHub al subirlo. Sin él (o con otro algoritmo) no se puede verificar y
+    no se instala solo (ver `MenuManager._pulsar_actualizar`).
+    """
+    asset = _asset_instalador(cuerpo)
+    digest = (asset.get("digest") if asset else None) or ""
+    algoritmo, _, valor = digest.partition(":")
+    valor = valor.strip().lower()
+    if algoritmo.lower() != "sha256" or len(valor) != 64:
+        return None
+    try:
+        int(valor, 16)
+    except ValueError:
+        return None
+    return valor
 
 
 def _consultar_api():
@@ -98,6 +124,7 @@ def _consultar_api():
         "tag": cuerpo.get("tag_name", ""),
         "url": cuerpo.get("html_url") or _RELEASES_WEB,
         "instalador_url": _url_instalador(cuerpo),
+        "instalador_sha256": _sha256_instalador(cuerpo),
         "ts": time.time(),
     }
     _guardar_cache(datos)
@@ -135,6 +162,7 @@ class ComprobadorActualizaciones:
                 "version": datos["tag"].lstrip("vV"),
                 "url": datos.get("url", _RELEASES_WEB),
                 "instalador_url": datos.get("instalador_url"),
+                "instalador_sha256": datos.get("instalador_sha256"),
             }
         else:
             self.resultado = False
@@ -143,11 +171,14 @@ class ComprobadorActualizaciones:
 class DescargaActualizacion:
     """Descarga el instalador en un hilo y expone el progreso.
 
-    Estados: `progreso` 0..1, `terminada` (con `ruta`) o `error`.
+    Estados: `progreso` 0..1, `terminada` (con `ruta`) o `error`. Si el SHA-256
+    de lo descargado no coincide con `sha256_esperado`, el archivo se borra y
+    cuenta como error: nunca se llega a lanzar un instalador sin verificar.
     """
 
-    def __init__(self, url):
+    def __init__(self, url, sha256_esperado):
         self.url = url
+        self.sha256_esperado = sha256_esperado.lower()
         self.progreso = 0.0
         self.terminada = False
         self.error = False
@@ -173,17 +204,22 @@ class DescargaActualizacion:
                     open(destino, "wb") as f:
                 total = int(r.headers.get("Content-Length", 0) or 0)
                 leido = 0
+                hash_ = hashlib.sha256()
                 while True:
                     trozo = r.read(65536)
                     if not trozo:
                         break
                     f.write(trozo)
+                    hash_.update(trozo)
                     leido += len(trozo)
                     if total:
                         self.progreso = min(1.0, leido / total)
 
             if leido == 0 or (total and leido < total):
                 raise OSError("descarga incompleta")
+            if hash_.hexdigest() != self.sha256_esperado:
+                os.remove(destino)
+                raise OSError("el SHA-256 del instalador no coincide")
             self.ruta = destino
             self.progreso = 1.0
             self.terminada = True
