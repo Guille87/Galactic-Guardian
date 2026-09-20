@@ -7,6 +7,11 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-20
+
+Llega el modo sin fin, con su propio ranking. Sin cambios incompatibles con
+partidas, configuración ni puntuaciones anteriores.
+
 ### Added
 
 - **Modo sin fin.** Nuevo botón **Sin fin** en el menú principal (el de siempre
@@ -324,7 +329,8 @@ puesta a punto del repositorio (licencia, tests, integración continua, document
   los grupos tipados y `groupcollide`).
 - `__init__.py` vacío en la raíz del repositorio.
 
-[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.1.4...v0.2.0
