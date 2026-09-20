@@ -56,7 +56,7 @@ TEMBLOR_JEFE = 1.0          # el jefe cae
 COMBO_UMBRALES = (10, 25, 50, 90)
 
 # --- Progresión entre partidas (ver src/core/progresion.py y mejoras.py) ---
-MONEDAS_PUNTOS = 100   # 1 moneda por cada tantos puntos de la partida
+MONEDAS_PUNTOS = 70    # 1 moneda por cada tantos puntos de la partida (ver tools/balance.py)
 
 # --- Curación (sin ítems que la den) ---
 SIN_FIN_CURACION_OLEADA = 0.4   # fracción de la salud máxima que se recupera al cambiar de oleada
@@ -66,6 +66,7 @@ VOLUMEN_PASO = 0.1  # cuánto sube/baja el volumen con las flechas del slider
 
 # --- Jugador ---
 JUGADOR_INVULNERABLE_MS = 3000
+JUGADOR_REGEN_ESPERA_MS = 3000   # sin recibir daño durante tanto, la regeneración empieza a curar
 CONTACTO_COOLDOWN_MS = 2000  # daño por contacto cuerpo a cuerpo (por enemigo)
 
 # --- Balance de daño (números reales) ---

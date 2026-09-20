@@ -76,13 +76,13 @@ def test_la_zona_de_nodos_no_invade_las_cabeceras_ni_los_botones(menu):
 def test_pulsar_un_nodo_lo_compra_y_descuenta(menu, progresion):
     progresion.ingresar(150)
     _clic_nodo(menu, "ataque_1")
-    assert progresion.compradas == {"ataque_1"} and progresion.monedas == 50
+    assert progresion.compradas == {"ataque_1"} and progresion.monedas == 150 - mejoras.POR_ID["ataque_1"].coste
 
 
 def test_sin_saldo_avisa_y_no_compra(menu, progresion):
-    progresion.ingresar(50)
+    progresion.ingresar(mejoras.POR_ID["ataque_1"].coste - 1)
     _clic_nodo(menu, "ataque_1")
-    assert not progresion.compradas and progresion.monedas == 50
+    assert not progresion.compradas and progresion.monedas == mejoras.POR_ID["ataque_1"].coste - 1
     assert menu._aviso_mejoras[0] == "No tienes monedas suficientes"
 
 
@@ -107,7 +107,8 @@ def test_restablecer_devuelve_las_monedas_y_avisa(menu, progresion):
     _clic_nodo(menu, "defensa_1")
     _clic(menu, menu.btn_restablecer_mejoras.rect.center)
     assert progresion.monedas == 500 and not progresion.compradas
-    assert menu._aviso_mejoras[0] == "Compras deshechas: +200 monedas"
+    gastado = mejoras.POR_ID["ataque_1"].coste + mejoras.POR_ID["defensa_1"].coste
+    assert menu._aviso_mejoras[0] == f"Compras deshechas: +{gastado} monedas"
 
 
 def test_restablecer_sin_compras_avisa_que_no_hay_nada(menu):
@@ -186,7 +187,7 @@ def test_sin_progresion_el_menu_usa_una_en_memoria(rm, audio, scoreboard):
 
 def test_menu_y_partida_comparten_la_misma_cuenta(menu, audio, scoreboard, rm, progresion):
     juego = Juego(pygame.display.get_surface(), audio, scoreboard, rm, progresion=progresion)
-    juego.puntuacion = 700
+    juego.puntuacion = 7 * settings.MONEDAS_PUNTOS
     juego.volver_al_menu()
     assert menu.progresion.monedas == 7
 
@@ -197,7 +198,7 @@ def test_game_over_y_victoria_incluyen_las_monedas(juego, monkeypatch):
     lineas = []
     monkeypatch.setattr(juego.render_manager, "_dibujar_estadisticas",
                         lambda l, y, color=(255, 255, 255): lineas.append(list(l)))
-    juego.puntuacion = 900
+    juego.puntuacion = 9 * settings.MONEDAS_PUNTOS
     juego._cobrar_monedas()
     juego.estado_game_over = True
     juego.dibujar()
@@ -240,8 +241,9 @@ def test_el_icono_se_dibuja_en_la_esquina_superior_derecha_solo_si_la_mejora_lo_
     menu._abrir_mejoras()
     menu._menu_mejoras()
 
-    con_icono = [id_ for id_, m in __import__("src.core.mejoras", fromlist=["POR_ID"]).POR_ID.items() if m.icono]
-    assert len(llamadas) == len(con_icono)                      # ni uno más ni uno menos
+    visibles = [m for m in mejoras.MEJORAS
+                if m.icono and menu._rect_pantalla(m.id).colliderect(modulo._MEJ_AREA)]     # los demás están fuera de la zona
+    assert visibles and len(llamadas) == len(visibles)          # ni uno más ni uno menos
     rect = menu._rect_pantalla("ataque_1")
     centro = (rect.right - 8 - modulo._MEJ_ICONO // 2, rect.y + 4 + modulo._MEJ_ICONO // 2)
     assert menu.pantalla.get_at(centro)[:3] == (255, 0, 255)

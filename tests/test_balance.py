@@ -49,8 +49,8 @@ def test_la_nave_con_todo_el_arbol_del_modelo_es_la_del_juego(rm):
     n = nave_de(ids)
     j = Jugador(rm.get_image_scaled("jugador", Jugador.CONFIG["tamano"]), 600, 800, mejoras.calcular_bonus(ids))
     assert (n.salud, n.vidas, n.danio, n.velocidad) == (j.salud_maxima, j.vidas, j.danio, j.velocidad)
-    assert n.disparos_s == pytest.approx(1000 / j.cadencia_disparo)
-    assert n.balas == {"simple": 1, "doble": 2, "triple": 3}[j.tipo_disparo]
+    assert n.disparos_s == pytest.approx(j.disparos_s) and n.balas == j.balas_por_disparo
+    assert n.regen_s == j.regen_s and n.salud == j.salud_maxima
 
 
 def test_los_atributos_de_clase_de_los_enemigos_son_los_que_usan_las_instancias(rm, jugador):

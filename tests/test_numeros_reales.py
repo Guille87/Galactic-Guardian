@@ -44,10 +44,9 @@ def test_la_nave_y_su_bala_en_numeros_reales():
     assert (c["salud_max"], c["danio_base"], c["danio_max"]) == (5 * X, 1 * X, 3 * X)
 
 
-def test_las_mejoras_de_salud_y_dano_llevan_los_valores_de_antes_por_diez():
-    assert mejoras.POR_ID["ataque_1"].efecto == {"danio_extra": 1 * X}
-    assert mejoras.POR_ID["defensa_1"].efecto == {"salud_extra": 1 * X}
-    assert mejoras.POR_ID["defensa_3"].efecto == {"salud_extra": 1 * X}
+def test_las_mejoras_de_salud_y_dano_estan_en_numeros_reales():
+    assert mejoras.POR_ID["ataque_1"].efecto == {"danio_extra": 5}
+    assert mejoras.POR_ID["defensa_1"].efecto == {"salud_extra": 15}
 
 
 # --- Vida de enemigos y jefe -------------------------------------------------

@@ -257,6 +257,7 @@ class Juego:
             if not self.jugador.invulnerable:   # invulnerable: el impacto no cuenta
                 self.effect_manager.agregar_temblor(settings.TEMBLOR_GOLPE)
                 self.combo.romper()
+                self.jugador.marcar_golpe(self.tiempo_juego)     # reinicia la espera de la regeneración
         else:
             self.combo.romper()
             self.effect_manager.crear_explosion(self.jugador.rect.center)

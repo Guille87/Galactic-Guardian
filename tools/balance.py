@@ -41,7 +41,6 @@ from src.entities.enemies import EnemigoTipo2, EnemigoTipo3  # noqa: E402
 from src.entities.player import Jugador  # noqa: E402
 
 ALTO_PANTALLA = settings.ALTO
-BALAS_POR_TIPO = {"simple": 1, "doble": 2, "triple": 3}
 NIVELES_CAMPANA = settings.NIVEL_MAX
 MAX_PARTIDAS = 400          # tope de la simulación de progresión
 
@@ -88,16 +87,16 @@ class Nave:
 def nave_de(ids):
     """La nave que sale de comprar las mejoras `ids` (igual que `Jugador.reiniciar`)."""
     c, b = Jugador.CONFIG, mejoras.calcular_bonus(ids)
-    cadencia = max(c["cadencia_max"], c["cadencia_base"] - b.cadencia_menos_ms)
     return Nave(
         salud=c["salud_max"] + b.salud_extra,
         vidas=c["vidas_init"] + b.vidas_extra,
         danio=min(c["danio_max"], c["danio_base"] + b.danio_extra),
-        balas=BALAS_POR_TIPO[b.disparo_inicial],
-        disparos_s=1000 / cadencia,
+        balas=min(c["balas_max"], c["balas_base"] + b.balas_extra),
+        disparos_s=min(c["disparos_max"], c["disparos_base"] + b.disparos_extra),
         velocidad=min(c["vel_max"], c["vel_base"] + b.velocidad_extra),
         invulnerable_ms=settings.JUGADOR_INVULNERABLE_MS + b.invulnerable_extra_ms,
         monedas_pct=b.monedas_pct,
+        regen_s=b.regen_s,
     )
 
 
