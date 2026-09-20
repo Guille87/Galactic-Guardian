@@ -15,12 +15,36 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
   muertes cuesta, con builds del árbol de referencia y tres perfiles de jugador;
   simula una partida y la progresión entre partidas para calcular cuántas
   hacen falta para completar la campaña. Está validado contra el juego real.
-  Incluye también `tools/propuesta.py`, una propuesta de reequilibrio (nave base,
-  árbol ampliado, tablas por nivel y economía) expresada como datos y evaluable
-  con la misma herramienta.
+  Con ella se diseñó el reequilibrio de abajo, y `tests/test_diseno_balance.py`
+  guarda sus objetivos como pruebas (la primera partida nunca gana, el nivel 1 se
+  supera sin mejoras, con el árbol entero se gana, la campaña lleva unas 20
+  partidas a un jugador medio).
+- **Regeneración** (rama Defensa): recuperas salud poco a poco cuando pasan 3
+  segundos sin recibir daño.
+- **Disparo triple**, además del doble, y más **disparos por segundo** y **velocidad**
+  desde el árbol.
+- La pantalla **Mejoras** se **desplaza** (rueda del ratón, barra lateral o teclas)
+  para que quepan los 17 nodos del árbol.
 
 ### Changed
 
+- **Reequilibrio de la dificultad y la progresión.** Todo el poder viene ahora
+  del árbol de mejoras y la campaña está pensada para llevar unas 20 partidas:
+  - **La nave base** empieza con velocidad 5 (antes 4), 4 disparos por segundo
+    (antes ~2,9) y 1 bala; el tope de velocidad se queda en 6 y el de cadencia
+    sube a 8 disparos por segundo.
+  - **Árbol de 17 mejoras** (Ataque 6, Defensa 6, Utilidad 5) con nuevos costes
+    y efectos; la cadencia y la velocidad se leen en el juego como
+    "+1 disparo por segundo" y "+10 % de velocidad" en vez de milisegundos.
+  - **Dificultad por tablas de nivel** (`src/core/escalado.py`): vida de los
+    enemigos, vida del jefe y daño enemigo por nivel; el primer nivel hace un 40 %
+    menos de daño, así que se supera sin mejoras. Los enemigos aparecen más
+    despacio (900–1100 ms en el nivel 1, 500–700 en el 5).
+  - **Monedas:** 1 por cada 70 puntos (antes 100).
+  - **Sin fin:** la vida sigue creciendo por oleada con el mismo paso que entre
+    los dos últimos niveles, y el ritmo de aparición sigue el de la campaña.
+  - Quien tuviera mejoras compradas del árbol anterior **recupera todo lo gastado**
+    al cargar la partida guardada y empieza con el árbol vacío.
 - **Salud y daño en números reales.** La nave tiene ahora **50 de salud** (antes 5
   puntos), su bala hace **10** de daño (antes 1), las balas enemigas **10**, el
   cañón pesado del jefe **20** y el choque con un enemigo **10**; los enemigos
@@ -31,15 +55,11 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 - **La salud bajo la nave es ahora una barra** (con una marca cada 10 de salud, así
   se ve cuántos impactos normales aguanta) en vez de puntitos, y se alarga si
   tienes más salud máxima.
-- Las mejoras del árbol muestran los números reales: **Daño I** da +10 de daño y
-  **Blindaje I y II**, +10 de salud máxima cada una.
 - **Sin ítems de curación, la salud vuelve por otros caminos.** En el sin fin,
   cada oleada nueva recupera el 40 % de la salud máxima y derrotar a un jefe la
   deja completa; en la campaña sigue curándose del todo al pasar de nivel.
-- La tercera mejora de **Utilidad** ya no es "Suerte" (que subía la probabilidad
-  de ítems) sino **Botín II**: otro +25 % de monedas. Es provisional hasta que se
-  amplíe el árbol. Quien ya la tuviera comprada la conserva.
-- **Botín** pasa a llamarse **Botín I**.
+- La mejora "Suerte" (que subía la probabilidad de ítems) desaparece con los
+  ítems; el árbol nuevo tiene **Botín I** y **Botín II** (+25 % de monedas cada una).
 - Los nodos del árbol de **Mejoras** llevan ahora el icono de los antiguos ítems
   (daño, cadencia, reparación y velocidad) en la esquina, atenuado mientras la
   mejora está bloqueada; las que no tienen un icono a juego, solo texto.

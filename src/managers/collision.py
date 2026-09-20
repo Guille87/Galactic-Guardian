@@ -70,7 +70,7 @@ class CollisionManager:
         for enemigo in pygame.sprite.spritecollide(self.jugador, self.em.enemigos, False):
             ultimo = self.enemigos_golpeados.get(enemigo, 0)
             if ahora - ultimo >= settings.CONTACTO_COOLDOWN_MS:
-                self.jugador.recibir_danio(settings.DANIO_CONTACTO)
+                self.jugador.recibir_danio(enemigo.danio_escalado(settings.DANIO_CONTACTO))
                 self.audio.reproducir_efecto("golpe")
                 self.enemigos_golpeados[enemigo] = ahora
                 self.reglas.manejar_impacto_jugador()

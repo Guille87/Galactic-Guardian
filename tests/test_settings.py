@@ -18,12 +18,6 @@ def test_balance_de_danio_positivo():
         assert getattr(settings, nombre) >= 1
 
 
-def test_dificultad_lineal_no_exponencial():
-    # factores razonables (< 1 por nivel: la salud no se dispara)
-    assert 0 < settings.DIFICULTAD_FACTOR_ENEMIGO < 1
-    assert 0 < settings.DIFICULTAD_FACTOR_JEFE < 1
-
-
 def test_radios_de_hitbox():
     for nombre in ("RADIO_JUGADOR", "RADIO_ENEMIGO", "RADIO_JEFE",
                    "RADIO_BALA_JUGADOR", "RADIO_BALA_ENEMIGO"):

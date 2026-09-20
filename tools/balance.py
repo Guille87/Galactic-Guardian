@@ -36,7 +36,7 @@ RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if RAIZ not in sys.path:
     sys.path.insert(0, RAIZ)
 
-from src.core import mejoras, niveles, settings  # noqa: E402
+from src.core import escalado, mejoras, niveles, settings  # noqa: E402
 from src.entities.enemies import EnemigoTipo2, EnemigoTipo3  # noqa: E402
 from src.entities.player import Jugador  # noqa: E402
 
@@ -102,9 +102,8 @@ def nave_de(ids):
 
 # ----------------------------------------------------------------------------- modelo
 def vida_enemigo(clase, nivel):
-    """Vida de un enemigo (o del jefe) en un nivel: la misma fórmula que `EnemigoBase`."""
-    paso = settings.SALUD_PASO_NIVEL
-    return max(paso, round(clase.SALUD_BASE / paso * (1 + clase.FACTOR_NIVEL * (nivel - 1))) * paso)
+    """Vida de un enemigo (o del jefe) en un nivel: la misma que le da el juego."""
+    return clase.vida_en_nivel(nivel)
 
 
 @dataclass(frozen=True)
@@ -114,7 +113,7 @@ class Modelo:
     nombre: str = "actual"
     definicion: Callable = niveles.definicion_nivel        # nivel -> DefinicionNivel
     vida: Callable = vida_enemigo                          # (clase, nivel) -> vida
-    danio_x: Callable = lambda nivel: 1.0                  # multiplicador del daño enemigo por nivel
+    danio_x: Callable = escalado.danio_x                   # nivel -> multiplicador del daño enemigo
     arbol: tuple = field(default_factory=lambda: mejoras.MEJORAS)
     nave: Callable = nave_de                               # ids de mejoras -> Nave
     monedas_puntos: int = settings.MONEDAS_PUNTOS          # puntos que valen una moneda

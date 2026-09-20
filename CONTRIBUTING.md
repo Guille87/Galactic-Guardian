@@ -58,8 +58,10 @@ Gracias por tu interés. El proyecto es pequeño; estas son las convenciones.
 El patrón completo está en [CLAUDE.md](CLAUDE.md). En resumen:
 
 - **Enemigo**: una clase en `src/entities/enemies.py` que herede de `EnemigoBase`.
-  Sobrescribe `FACTOR_NIVEL` si escala distinto, e implementa
-  `disparo_enemigo(ahora, rm, nombre_bala)` si dispara. Ponle `RECURSO` (el
+  Dale su `SALUD_BASE` (la vida en el nivel 1; `src/core/escalado.py` la
+  multiplica por nivel) e implementa
+  `disparo_enemigo(ahora, rm, nombre_bala)` si dispara (usa
+  `self.danio_escalado(...)` para el daño de la bala). Ponle `RECURSO` (el
   nombre lógico de su sprite), añade ese sprite a `config.RECURSOS` y
   colócalo en las `Fase` de los niveles que quieras en `src/core/niveles.py`.
 - **Ítem**: añade el efecto a `Item.EFECTOS` (`src/entities/items.py`), el tipo a

@@ -3,14 +3,13 @@ import random
 
 import pygame
 
-from src.core import settings
+from src.core import escalado, settings
 from .bullet_enemy import BalaEnemigo
 from .base.movimiento import MovimientoSubpixel
 
 
 class EnemigoBase(pygame.sprite.Sprite, MovimientoSubpixel):
     TAMANO_ESTANDAR = (48, 48)
-    FACTOR_NIVEL = settings.DIFICULTAD_FACTOR_ENEMIGO
 
     # Datos de cada tipo, como atributos de clase para poder leerlos sin crear un
     # enemigo (p. ej. `tools/balance.py`). Las subclases los sobrescriben.
@@ -19,7 +18,7 @@ class EnemigoBase(pygame.sprite.Sprite, MovimientoSubpixel):
     VEL_Y = (2, 4)           # rango de velocidad de caída (px/frame-a-60fps)
     CADENCIA = None          # ms entre disparos (None = no dispara)
 
-    def __init__(self, imagen_surface, x, y, pantalla_ancho, nivel, salud_base):
+    def __init__(self, imagen_surface, x, y, pantalla_ancho, nivel):
         super().__init__()
         self.image = imagen_surface
         self.rect = self.image.get_rect(x=x, y=y)
@@ -28,14 +27,22 @@ class EnemigoBase(pygame.sprite.Sprite, MovimientoSubpixel):
         self.valor_puntuacion = self.VALOR
         self._init_subpixel()
 
-        # Escalado de salud lineal por nivel: base * (1 + FACTOR * (nivel - 1)), redondeado
-        # a múltiplos de `SALUD_PASO_NIVEL` (ver settings).
-        paso = settings.SALUD_PASO_NIVEL
-        self.salud_maxima = max(paso, round(salud_base / paso * (1 + self.FACTOR_NIVEL * (nivel - 1))) * paso)
+        # Vida y daño por nivel: tablas de `escalado.py`.
+        self.salud_maxima = self.vida_en_nivel(nivel)
         self.salud = self.salud_maxima
+        self.danio_x = escalado.danio_x(nivel)
 
         self.velocidad_x = random.uniform(-2, 2)
         self.velocidad_y = random.uniform(*self.VEL_Y)
+
+    @classmethod
+    def vida_en_nivel(cls, nivel):
+        """Vida de este tipo de enemigo en `nivel` (sin crear uno: la usa `tools/balance.py`)."""
+        return max(1, round(cls.SALUD_BASE * escalado.vida_x(nivel)))
+
+    def danio_escalado(self, base):
+        """`base` de daño ajustado a la dificultad del nivel de este enemigo (nunca menos de 1)."""
+        return max(1, round(base * self.danio_x))
 
     def movimiento_enemigo(self, dt):
         """Lógica de rebote lateral y descenso (independiente de FPS)."""
@@ -90,7 +97,7 @@ class EnemigoTipo1(EnemigoBase):
     SALUD_BASE = 10
 
     def __init__(self, imagen, x, y, pantalla_ancho, nivel):
-        super().__init__(imagen, x, y, pantalla_ancho, nivel, salud_base=self.SALUD_BASE)
+        super().__init__(imagen, x, y, pantalla_ancho, nivel)
         # Atributos específicos del tipo de enemigo 1
         self.velocidad_x = random.uniform(-3, 3)
 
@@ -102,7 +109,7 @@ class EnemigoTipo2(EnemigoBase):
     CADENCIA = 3000
 
     def __init__(self, imagen, x, y, pantalla_ancho, nivel, jugador):
-        super().__init__(imagen, x, y, pantalla_ancho, nivel, salud_base=self.SALUD_BASE)
+        super().__init__(imagen, x, y, pantalla_ancho, nivel)
         # Atributos específicos del tipo de enemigo 2
         self.jugador = jugador  # Guarda la referencia al jugador
         self.tiempo_ultimo_ataque = 0  # Inicializa el tiempo del último ataque
@@ -112,7 +119,7 @@ class EnemigoTipo2(EnemigoBase):
         if ahora - self.tiempo_ultimo_ataque > self.cadencia:
             self.tiempo_ultimo_ataque = ahora
             return self._crear_proyectil_hacia_jugador(
-                rm, nombre_bala, settings.DANIO_BALA_TIPO2, settings.VEL_BALA_TIPO2, self.jugador)
+                rm, nombre_bala, self.danio_escalado(settings.DANIO_BALA_TIPO2), settings.VEL_BALA_TIPO2, self.jugador)
         return None
 
 
@@ -125,7 +132,7 @@ class EnemigoTipo3(EnemigoBase):
     VEL_Y = (3, 6)
 
     def __init__(self, imagen, x, y, pantalla_ancho, nivel, jugador):
-        super().__init__(imagen, x, y, pantalla_ancho, nivel, salud_base=self.SALUD_BASE)
+        super().__init__(imagen, x, y, pantalla_ancho, nivel)
         # Atributos específicos del tipo de enemigo 3
         self.jugador = jugador
         # (se vuelve a sortear: quitar esta llamada cambiaría la secuencia de números aleatorios)
@@ -137,7 +144,7 @@ class EnemigoTipo3(EnemigoBase):
         if ahora - self.tiempo_ultimo_ataque > self.cadencia:
             self.tiempo_ultimo_ataque = ahora
             return self._crear_proyectil_hacia_jugador(
-                rm, nombre_bala, settings.DANIO_BALA_TIPO3, settings.VEL_BALA_TIPO3, self.jugador)
+                rm, nombre_bala, self.danio_escalado(settings.DANIO_BALA_TIPO3), settings.VEL_BALA_TIPO3, self.jugador)
         return None
 
 
@@ -145,14 +152,17 @@ class EnemigoTipo3(EnemigoBase):
 class Jefe(EnemigoBase):
     RECURSO = "jefe1"
     TAMANO_JEFE = (200, 200)
-    FACTOR_NIVEL = settings.DIFICULTAD_FACTOR_JEFE
-    SALUD_BASE = 1000
+    SALUD_BASE = escalado.VIDA_JEFE[0]
     VALOR = 1000
     CADENCIA_NORMAL = 1500   # ms entre disparos pesados
     CADENCIA_RAPIDA = 250    # ms entre disparos rápidos
 
+    @classmethod
+    def vida_en_nivel(cls, nivel):
+        return escalado.vida_jefe(nivel)
+
     def __init__(self, imagen_surface, x, y, pantalla_ancho, pantalla_alto, nivel, jugador):
-        super().__init__(imagen_surface, x, y, pantalla_ancho, nivel, salud_base=self.SALUD_BASE)
+        super().__init__(imagen_surface, x, y, pantalla_ancho, nivel)
         # Atributos específicos del jefe
         self.pantalla_alto = pantalla_alto
         self.jugador = jugador
@@ -183,7 +193,7 @@ class Jefe(EnemigoBase):
         if ahora - self.ultimo_disparo_normal > self.CADENCIA_NORMAL:
             self.ultimo_disparo_normal = ahora
             return self._crear_proyectil_hacia_jugador(
-                rm, nombre_bala, settings.DANIO_JEFE_NORMAL, settings.VEL_JEFE_NORMAL, self.jugador)
+                rm, nombre_bala, self.danio_escalado(settings.DANIO_JEFE_NORMAL), settings.VEL_JEFE_NORMAL, self.jugador)
         else:
             return None
 
@@ -191,7 +201,7 @@ class Jefe(EnemigoBase):
         if ahora - self.ultimo_disparo_rapido > self.CADENCIA_RAPIDA:
             self.ultimo_disparo_rapido = ahora
             return self._crear_proyectil_hacia_jugador(
-                rm, nombre_bala, settings.DANIO_JEFE_RAPIDA, settings.VEL_JEFE_RAPIDA, self.jugador)
+                rm, nombre_bala, self.danio_escalado(settings.DANIO_JEFE_RAPIDA), settings.VEL_JEFE_RAPIDA, self.jugador)
         else:
             return None
 

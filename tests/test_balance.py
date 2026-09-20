@@ -101,8 +101,9 @@ def test_un_jugador_peor_recibe_mas_dano():
 
 def test_el_multiplicador_de_dano_enemigo_por_nivel_escala_todo_el_dano():
     nave = nave_de([])
+    uno = replace(MODELO_ACTUAL, danio_x=lambda n: 1.0)
     doble = replace(MODELO_ACTUAL, danio_x=lambda n: 2.0)
-    assert analizar_nivel(nave, 2, MEDIO, doble).danio == pytest.approx(analizar_nivel(nave, 2, MEDIO).danio * 2)
+    assert analizar_nivel(nave, 2, MEDIO, doble).danio == pytest.approx(analizar_nivel(nave, 2, MEDIO, uno).danio * 2)
 
 
 def test_una_propuesta_puede_cambiar_la_vida_de_los_enemigos():
@@ -147,7 +148,9 @@ def test_dps_necesario_crece_con_el_nivel_y_cumple_su_objetivo():
     assert requisitos[0] < requisitos[1]
     x = requisitos[0]
     fuerte = replace(nave, danio=x / (nave.balas * nave.disparos_s))
-    assert analizar_nivel(fuerte, 1, MEDIO).muertes(fuerte) == pytest.approx(3.0, abs=0.05)
+    # (el modelo tiene saltos —p. ej. un disparo más antes de morir el enemigo—, así que se queda
+    # justo al lado del objetivo, nunca por encima)
+    assert 2.5 < analizar_nivel(fuerte, 1, MEDIO).muertes(fuerte) <= 3.0 + 1e-6
 
 
 def test_dps_necesario_dice_imposible_cuando_ni_con_dps_infinito_se_aguanta():

@@ -2,7 +2,7 @@
 import pygame
 import pytest
 
-from src.core import settings
+from src.core import escalado, settings
 from src.entities.bullet_enemy import BalaEnemigo
 from src.entities.enemies import EnemigoBase, EnemigoTipo1, EnemigoTipo2, Jefe
 
@@ -19,23 +19,20 @@ def img_jefe(rm):
     return rm.get_image_scaled("jefe1", Jefe.TAMANO_JEFE)
 
 
-# --- Escalado de salud (lineal, no exponencial) ---
+# --- Escalado de salud (tablas por nivel: ver `test_escalado.py`) ---
 
 @pytest.mark.parametrize("nivel", [1, 2, 3, 4, 5])
-def test_salud_enemigo_lineal(img_enemigo, nivel):
-    e = EnemigoTipo1(img_enemigo, 100, 100, 600, nivel)     # salud_base = 10 (1 "punto" de los de antes)
-    paso = settings.SALUD_PASO_NIVEL
-    esperado = max(1, round(1 + settings.DIFICULTAD_FACTOR_ENEMIGO * (nivel - 1))) * paso
-    assert e.salud_maxima == esperado == e.salud
-    # nunca exponencial: el nivel 5 no debe ser >= 2**4 veces la salud base
-    assert e.salud_maxima < 16 * paso
+def test_salud_enemigo_sigue_la_tabla(img_enemigo, nivel):
+    e = EnemigoTipo1(img_enemigo, 100, 100, 600, nivel)
+    assert e.salud_maxima == e.salud == round(EnemigoTipo1.SALUD_BASE * escalado.VIDA_X[nivel - 1])
+    assert e.salud_maxima < 16 * EnemigoTipo1.SALUD_BASE       # nunca exponencial
 
 
 def test_salud_jefe_crece_pero_no_se_dispara(img_jefe, jugador):
-    saludes = [Jefe(img_jefe, 0, 0, 600, 800, n, jugador).salud_maxima for n in (1, 2, 3, 4)]
-    assert saludes[0] == 1000
+    saludes = [Jefe(img_jefe, 0, 0, 600, 800, n, jugador).salud_maxima for n in (1, 2, 3, 4, 5)]
+    assert saludes == list(escalado.VIDA_JEFE)
     assert saludes == sorted(saludes)          # crece
-    assert saludes[3] < 4000                   # y no explota (con x2^n sería 8000)
+    assert saludes[-1] < 8 * saludes[0]        # y no explota
 
 
 def test_take_damage(img_enemigo):

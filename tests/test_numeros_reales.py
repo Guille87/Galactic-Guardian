@@ -1,10 +1,7 @@
-"""Salud y daño en números reales: equivalencia con los "puntos" de antes (todo x10).
+"""Salud y daño en números reales (la nave 50 de salud y 10 de daño; balas enemigas de 10, jefe de 20).
 
-Estos tests fijan que el paso a números reales no cambió el juego: cada valor es
-el antiguo por 10 y, sobre todo, los golpes que hacen falta para matar a cada
-enemigo, o que aguanta la nave, son los mismos de antes. Cuando el reequilibrio
-sustituya el escalado por tablas por nivel, se retirarán los que comparan con la
-fórmula antigua.
+El daño que llega a la nave en cada nivel es el de `settings` multiplicado por
+`escalado.danio_x(nivel)`: esa parte se prueba en `test_escalado.py`.
 """
 import math
 
@@ -15,33 +12,17 @@ from src.entities.bullet import Bala
 from src.entities.enemies import EnemigoBase, EnemigoTipo1, EnemigoTipo2, EnemigoTipo3, Jefe
 from src.entities.player import Jugador
 
-# Los valores de antes, en "puntos"
-ANTES = {
-    "DANIO_CONTACTO": 1, "DANIO_BALA_TIPO2": 1, "DANIO_BALA_TIPO3": 1,
-    "DANIO_JEFE_NORMAL": 2, "DANIO_JEFE_RAPIDA": 1,
-}
-X = 10
-
-
-def _pips_antes(base, factor, nivel):
-    """Vida de un enemigo tal como se calculaba en puntos."""
-    return max(1, round(base * (1 + factor * (nivel - 1))))
-
-
 # --- Constantes --------------------------------------------------------------
 
-@pytest.mark.parametrize("nombre, antes", ANTES.items())
-def test_cada_dano_es_el_de_antes_por_diez(nombre, antes):
-    assert getattr(settings, nombre) == antes * X
-
-
-def test_el_enemigo_pierde_al_chocar_lo_que_perdia_antes():
-    assert settings.DANIO_EMBESTIDA == 1 * X
+def test_los_danios_en_numeros_reales():
+    assert (settings.DANIO_CONTACTO, settings.DANIO_EMBESTIDA) == (10, 10)
+    assert (settings.DANIO_BALA_TIPO2, settings.DANIO_BALA_TIPO3) == (10, 10)
+    assert (settings.DANIO_JEFE_NORMAL, settings.DANIO_JEFE_RAPIDA) == (20, 10)
 
 
 def test_la_nave_y_su_bala_en_numeros_reales():
     c = Jugador.CONFIG
-    assert (c["salud_max"], c["danio_base"], c["danio_max"]) == (5 * X, 1 * X, 3 * X)
+    assert (c["salud_max"], c["danio_base"], c["danio_max"]) == (50, 10, 30)
 
 
 def test_las_mejoras_de_salud_y_dano_estan_en_numeros_reales():
@@ -49,7 +30,7 @@ def test_las_mejoras_de_salud_y_dano_estan_en_numeros_reales():
     assert mejoras.POR_ID["defensa_1"].efecto == {"salud_extra": 15}
 
 
-# --- Vida de enemigos y jefe -------------------------------------------------
+# --- Daño que hace y aguanta cada cosa ---------------------------------------
 
 @pytest.fixture
 def imgs(rm):
@@ -66,58 +47,25 @@ def _crear(clase, imgs, nivel, jugador):
     return clase(img, 0, 0, 600, nivel, jugador)
 
 
-@pytest.mark.parametrize("nivel", range(1, 6))
-@pytest.mark.parametrize("clase, base, factor", [
-    (EnemigoTipo1, 1, settings.DIFICULTAD_FACTOR_ENEMIGO),
-    (EnemigoTipo2, 2, settings.DIFICULTAD_FACTOR_ENEMIGO),
-    (EnemigoTipo3, 3, settings.DIFICULTAD_FACTOR_ENEMIGO),
-    (Jefe, 100, settings.DIFICULTAD_FACTOR_JEFE),
-])
-def test_la_vida_por_nivel_es_la_de_antes_por_diez(imgs, jugador, clase, base, factor, nivel):
-    e = _crear(clase, imgs, nivel, jugador)
-    assert e.salud_maxima == e.salud == _pips_antes(base, factor, nivel) * X
+def test_los_impactos_que_aguanta_la_nave_base():
+    """50 de salud: 5 golpes de 10, 3 disparos pesados del jefe, 5 golpes de choque."""
+    salud = Jugador.CONFIG["salud_max"]
+    assert math.ceil(salud / settings.DANIO_BALA_TIPO2) == 5
+    assert math.ceil(salud / settings.DANIO_JEFE_NORMAL) == 3
+    assert math.ceil(salud / settings.DANIO_CONTACTO) == 5
 
 
-@pytest.mark.parametrize("nivel", range(1, 6))
-@pytest.mark.parametrize("clase, base, factor", [
-    (EnemigoTipo1, 1, settings.DIFICULTAD_FACTOR_ENEMIGO),
-    (EnemigoTipo2, 2, settings.DIFICULTAD_FACTOR_ENEMIGO),
-    (EnemigoTipo3, 3, settings.DIFICULTAD_FACTOR_ENEMIGO),
-    (Jefe, 100, settings.DIFICULTAD_FACTOR_JEFE),
-])
-def test_los_disparos_para_matar_a_cada_enemigo_son_los_de_antes(imgs, jugador, clase, base, factor, nivel):
-    """Lo que de verdad importa: con la bala de partida, mismos golpes que antes."""
-    e = _crear(clase, imgs, nivel, jugador)
-    golpes_ahora = math.ceil(e.salud_maxima / Jugador.CONFIG["danio_base"])
-    assert golpes_ahora == _pips_antes(base, factor, nivel)                # antes: 1 punto por disparo
-
-
-def test_se_conserva_el_redondeo_heredado_del_nivel_4(imgs, jugador):
-    """1 x (1 + 0,5 x 3) = 2,5 puntos: antes redondeaba a 2 (20 ahora), no a 25."""
-    assert _crear(EnemigoTipo1, imgs, 4, jugador).salud_maxima == 20
-    assert _crear(EnemigoTipo1, imgs, 2, jugador).salud_maxima == 20        # 1,5 puntos -> 2 (no 15)
-
-
-# --- Cuánto aguanta la nave --------------------------------------------------
-
-@pytest.mark.parametrize("nombre", ANTES)
-def test_los_impactos_que_aguanta_la_nave_son_los_de_antes(nombre):
-    """Con 5 puntos de salud y golpes de 1 o 2, morías en 5 o 3 golpes."""
-    antes = math.ceil(5 / ANTES[nombre])
-    ahora = math.ceil(Jugador.CONFIG["salud_max"] / getattr(settings, nombre))
-    assert ahora == antes
-
-
-def test_los_disparos_enemigos_llevan_su_dano(rm, jugador, imgs):
+def test_los_disparos_enemigos_llevan_su_dano_a_plena_dificultad(rm, jugador, imgs):
+    """En el último nivel el multiplicador de daño es 1: la bala hace lo que dice `settings`."""
     img, _ = imgs
     for clase, esperado in ((EnemigoTipo2, settings.DANIO_BALA_TIPO2), (EnemigoTipo3, settings.DANIO_BALA_TIPO3)):
-        e = clase(img, 300, 100, 600, 1, jugador)
+        e = clase(img, 300, 100, 600, settings.NIVEL_MAX, jugador)
         bala = e.disparo_enemigo(10_000, rm, "bala_enemigo")
         assert bala.danio == esperado == 10
 
 
-def test_los_disparos_del_jefe_llevan_su_dano(rm, jugador, imgs):
-    jefe = _crear(Jefe, imgs, 1, jugador)
+def test_los_disparos_del_jefe_llevan_su_dano_a_plena_dificultad(rm, jugador, imgs):
+    jefe = _crear(Jefe, imgs, settings.NIVEL_MAX, jugador)
     assert jefe.disparo_jefe(10_000, rm, "bala_enemigo2").danio == 20
     assert jefe.disparo_rapido(10_000, rm, "bala_enemigo").danio == 10
 
@@ -129,19 +77,19 @@ def test_la_bala_de_la_nave_hace_el_dano_de_la_nave(rm, jugador):
 
 # --- En la partida -----------------------------------------------------------
 
-def test_un_impacto_de_bala_enemiga_quita_diez_de_salud(juego, rm, jugador):
+def test_un_impacto_de_bala_enemiga_quita_su_dano(juego, rm, jugador):
     from src.entities.bullet_enemy import BalaEnemigo
     img = rm.get_image_rotated("bala_enemigo", BalaEnemigo.TAMANO, 0)
     bala = BalaEnemigo(img, *juego.jugador.rect.center, 0, 1, settings.DANIO_BALA_TIPO2, 4)
     juego.entity_manager.agregar_bala_enemigo(bala)
     antes = juego.jugador.salud
     juego.collision_manager.actualizar(juego.tiempo_juego)
-    assert juego.jugador.salud == antes - 10
+    assert juego.jugador.salud == antes - settings.DANIO_BALA_TIPO2
 
 
-def test_el_choque_quita_diez_a_la_nave_y_diez_al_enemigo(juego, rm):
+def test_el_choque_quita_a_la_nave_lo_del_nivel_y_diez_al_enemigo(juego, rm):
     img = rm.get_image_scaled("enemigo1", EnemigoBase.TAMANO_ESTANDAR)
-    e = EnemigoTipo1(img, 0, 0, 600, 1)
+    e = EnemigoTipo1(img, 0, 0, 600, settings.NIVEL_MAX)          # a plena dificultad
     e.salud = e.salud_maxima = 100
     e.rect.center = juego.jugador.rect.center
     juego.entity_manager.agregar_enemigo(e)
@@ -150,8 +98,7 @@ def test_el_choque_quita_diez_a_la_nave_y_diez_al_enemigo(juego, rm):
     assert e.salud == 100 - settings.DANIO_EMBESTIDA
 
 
-def test_el_disparo_pesado_del_jefe_mata_en_tres_impactos_como_antes(juego):
-    """Antes: 5 de salud, 2 por disparo pesado = 3 disparos para caer. Ahora igual."""
+def test_el_disparo_pesado_del_jefe_mata_en_tres_impactos(juego):
     golpes = 0
     while juego.jugador.salud > 0:
         juego.jugador.recibir_danio(settings.DANIO_JEFE_NORMAL)

@@ -86,14 +86,7 @@ VEL_BALA_TIPO3 = 7
 VEL_JEFE_NORMAL = 7
 VEL_JEFE_RAPIDA = 4
 
-# --- Escalado de salud por nivel (lineal, no exponencial) ---
-# salud = salud_base * (1 + FACTOR * (nivel - 1)), redondeada a múltiplos de
-# `SALUD_PASO_NIVEL`. Ese redondeo es herencia de cuando la salud eran "puntos"
-# (así el juego no cambió al pasar a números reales) y desaparece cuando la
-# dificultad pase a tablas por nivel.
-SALUD_PASO_NIVEL = 10
-DIFICULTAD_FACTOR_ENEMIGO = 0.5
-DIFICULTAD_FACTOR_JEFE = 0.6
+# (La vida y el daño de los enemigos por nivel están en `escalado.py`.)
 
 # --- Hitboxes circulares (radio en px). Sprites: jugador 50, enemigo 48,
 #     jefe 200, bala jugador 18, bala enemiga 24. ---

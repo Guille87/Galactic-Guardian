@@ -1,16 +1,22 @@
-"""tools/propuesta.py: la propuesta de reequilibrio cumple los criterios de diseño acordados.
+"""Objetivos de diseño del reequilibrio, medidos con `tools/balance.py` sobre el juego real.
 
 Cada test es un objetivo (no un detalle de implementación): si al retocar un número
-deja de cumplirse, hay que decidir si el objetivo cambia o el número se corrige.
+(`escalado.py`, `niveles.py`, `mejoras.py`, `Jugador.CONFIG`, `settings.MONEDAS_PUNTOS`) deja de
+cumplirse, hay que decidir si el objetivo cambia o el número se corrige. El modelo depende de
+los supuestos de `Perfil` (adivinados, no medidos): son un mapa, no un veredicto.
 """
+from dataclasses import fields
+
 import pytest
 
+from src.core import escalado, mejoras, settings
+from src.core.mejoras import Bonus
 from src.entities.enemies import EnemigoTipo1, EnemigoTipo2, EnemigoTipo3, Jefe
-from tools import propuesta as P
+from src.entities.player import Jugador
+from tools.balance import MODELO_ACTUAL as M
 from tools.balance import PERFILES, analizar_nivel, build_al, jugar, orden_de_compra, progresion
 
-M = P.MODELO_PROPUESTO
-CAMPANA = 5
+CAMPANA = settings.NIVEL_MAX
 
 
 def _nave(fraccion):
@@ -25,50 +31,43 @@ def test_la_nave_base_es_la_acordada():
 
 
 def test_la_velocidad_base_sube_a_5_y_su_tope_no_cambia():
-    assert P.BASE["velocidad"] == 5.0 and P.TOPES["velocidad"] == 6.0
+    assert Jugador.CONFIG["vel_base"] == 5 and Jugador.CONFIG["vel_max"] == 6
 
 
 def test_la_cadencia_base_sube_y_el_tope_es_un_numero_limpio():
-    assert P.BASE["disparos_s"] == 4.0 > 1000 / 350
-    assert P.TOPES["disparos_s"] == 8.0                       # 125 ms; antes 6,7 (150 ms)
+    assert Jugador.CONFIG["disparos_base"] == 4.0 > 1000 / 350
+    assert Jugador.CONFIG["disparos_max"] == 8.0                       # 125 ms; antes 6,7 (150 ms)
 
 
 # --- El árbol -----------------------------------------------------------------------------
 
 def test_el_arbol_son_tres_ramas_encadenadas_con_costes_crecientes():
-    for rama in ("ataque", "defensa", "utilidad"):
-        cadena = [n for n in P.ARBOL if n.rama == rama]
+    for rama in mejoras.RAMAS:
+        cadena = mejoras.de_la_rama(rama)
         assert len(cadena) >= 5 and cadena[0].requiere is None
         assert [n.requiere for n in cadena[1:]] == [n.id for n in cadena[:-1]]
         assert [n.coste for n in cadena] == sorted(n.coste for n in cadena)
 
 
 def test_el_arbol_da_2_y_3_balas_mas_dano_y_regeneracion():
-    efectos = {c for n in P.ARBOL for c in n.efecto}
-    assert {"danio", "balas", "disparos_s", "regen_s", "salud", "vidas", "velocidad", "monedas_pct"} <= efectos
+    efectos = {c for n in mejoras.MEJORAS for c in n.efecto}
+    assert {"danio_extra", "balas_extra", "disparos_extra", "regen_s", "salud_extra", "vidas_extra",
+            "velocidad_extra", "monedas_pct"} <= efectos
     assert _nave(1.0).balas == 3 and _nave(1.0).regen_s > 0
 
 
 def test_ninguna_mejora_supera_los_topes():
-    n = _nave(1.0)
-    assert n.danio <= P.TOPES["danio"] and n.disparos_s <= P.TOPES["disparos_s"]
-    assert n.balas <= P.TOPES["balas"] and n.velocidad <= P.TOPES["velocidad"]
+    n, c = _nave(1.0), Jugador.CONFIG
+    assert n.danio <= c["danio_max"] and n.disparos_s <= c["disparos_max"]
+    assert n.balas <= c["balas_max"] and n.velocidad <= c["vel_max"]
 
 
-def test_los_efectos_usan_campos_de_la_nave():
-    from dataclasses import fields
-    from tools.balance import Nave
-    campos = {f.name for f in fields(Nave)}
-    assert all(set(n.efecto) <= campos for n in P.ARBOL)
+def test_los_efectos_usan_campos_del_bonus():
+    campos = {f.name for f in fields(Bonus)}
+    assert all(set(n.efecto) <= campos for n in mejoras.MEJORAS)
 
 
 # --- Las tablas por nivel --------------------------------------------------------------------
-
-def test_las_tablas_crecen_con_el_nivel():
-    assert list(P.VIDA_X) == sorted(P.VIDA_X) and list(P.VIDA_JEFE) == sorted(P.VIDA_JEFE)
-    assert list(P.DANIO_X) == sorted(P.DANIO_X)
-    assert all(len(t) == CAMPANA for t in (P.VIDA_X, P.VIDA_JEFE, P.DANIO_X, P.INTERVALOS))
-
 
 def test_la_densidad_de_enemigos_nunca_hace_imposible_un_nivel():
     """Con el intervalo antiguo del nivel 5 (200 ms) ni el DPS infinito bastaba."""
@@ -82,6 +81,12 @@ def test_las_vidas_de_enemigos_son_enteros_positivos():
     for n in range(1, CAMPANA + 1):
         for clase in (EnemigoTipo1, EnemigoTipo2, EnemigoTipo3, Jefe):
             assert isinstance(M.vida(clase, n), int) and M.vida(clase, n) > 0
+
+
+def test_los_niveles_altos_aparecen_enemigos_mas_deprisa_sin_pasarse():
+    intervalos = [M.definicion(n).intervalo_spawn for n in range(1, CAMPANA + 1)]
+    assert [i[0] for i in intervalos] == sorted((i[0] for i in intervalos), reverse=True)
+    assert intervalos[-1][0] >= 500                                    # nunca más de ~1,7 enemigos por segundo
 
 
 # --- Los objetivos de dificultad y de progresión -------------------------------------------------
@@ -126,14 +131,10 @@ def test_la_primera_mejora_llega_en_las_primeras_partidas_y_no_hay_llanuras_larg
 
 def test_una_partida_media_da_para_la_primera_mejora_pronto():
     monedas = jugar(_nave(0), PERFILES["medio"], M).monedas
-    assert monedas >= min(n.coste for n in P.ARBOL) * 0.8
+    assert monedas >= min(n.coste for n in M.arbol) * 0.8
 
 
-# --- El informe -----------------------------------------------------------------------------------
-
-def test_el_informe_de_la_propuesta_se_imprime(capsys):
-    P.main(["--perfil", "todos", "--builds", "0,100"])
-    salida = capsys.readouterr().out
-    for texto in ("NAVE BASE Y ÁRBOL (propuesta)", "PARTIDA ESPERADA", "PODER QUE EXIGE", "PROGRESIÓN",
-                  "Calendario de compras"):
-        assert texto in salida, texto
+def test_el_modelo_usa_las_tablas_del_juego():
+    """Lo que evalúa la herramienta es lo que hay en el juego, no una copia."""
+    assert M.danio_x(3) == escalado.DANIO_X[2] and M.vida(Jefe, 4) == escalado.VIDA_JEFE[3]
+    assert M.monedas_puntos == settings.MONEDAS_PUNTOS

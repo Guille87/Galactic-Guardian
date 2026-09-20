@@ -81,7 +81,7 @@ probado por separado:
    enemiga 10, jefe pesado 20, vida de enemigos ×10). La salud pasa a **barra**
    y las barras de estadísticas se ajustan al máximo alcanzable. Con pruebas de
    equivalencia (tests y simulación) para demostrar que no cambia nada.
-3. **Reequilibrio completo** (empezado: la **herramienta de balance** ya está, `tools/balance.py`, y una **propuesta de números** en `tools/propuesta.py`, pendiente de que el autor la revise):
+3. **Reequilibrio completo** (implementado en la rama, pendiente de probar a mano: nave base, árbol de 17 mejoras desplazable, tablas por nivel en `escalado.py`, regeneración y economía; falta el daño flotante):
    - Base nueva: velocidad **5** (tope 6, igual), **4 disparos/s** (antes 2,9;
      tope 8 en lugar del 6,7 actual, que salía de 1000 ÷ 150 ms), daño 10, salud 50.
    - Hasta **2 y 3 balas** por disparo y más daño desde el árbol.
