@@ -7,6 +7,12 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-20
+
+Se puede desactivar el temblor de pantalla y se arregla un halo que se quedaba
+puesto al pasar de nivel. Sin cambios incompatibles con partidas, configuración
+ni puntuaciones anteriores.
+
 ### Added
 
 - **Opción para desactivar el temblor de pantalla**, en una pestaña nueva de
@@ -364,7 +370,8 @@ puesta a punto del repositorio (licencia, tests, integración continua, document
   los grupos tipados y `groupcollide`).
 - `__init__.py` vacío en la raíz del repositorio.
 
-[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.3.0...v0.4.0
