@@ -44,6 +44,9 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 - **Screen shake** — la pantalla tiembla (solo el mundo, no el HUD) al recibir un
   impacto, perder una vida y derrotar al jefe. Modelo de "trauma" con
   constantes en `settings.py`. Ver `[0.6.0]`.
+- **Opción para desactivar el temblor** — pestaña **Pantalla** en Opciones con un
+  interruptor del screen shake (accesibilidad), guardado en `config.ini`. Ver
+  `[Unreleased]` → próxima versión.
 - **Oleadas y niveles como datos** — cada nivel se define en una tabla
   (`src/core/niveles.py`); `WaveManager` solo la lee. Añadir contenido es
   "editar una tabla". Ver `[0.4.0]`.
@@ -53,17 +56,11 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 Primero lo que no depende de assets; el contenido nuevo va al final porque
 espera a que llegue el arte.
 
-### 1 · Hit-stop y opción de efectos de pantalla
-- **Hit-stop**: congelar un instante el juego al morir un jefe o perder una vida.
-  Barato, sin assets y muy visible en la sensación de golpe.
-- **Opción "Efectos de pantalla"** en Opciones que apague tanto el hit-stop como
-  el temblor (accesibilidad). Va con el hit-stop para tocar Opciones una sola vez.
-
-### 2 · Multiplicador de puntuación / combo
+### 1 · Multiplicador de puntuación / combo
 - Sube mientras no recibes daño, se reinicia al primer golpe. Ahora que el modo
   sin fin tiene ranking propio, es donde más sentido tiene.
 
-### 3 · Contenido nuevo (según lleguen los assets)
+### 2 · Contenido nuevo (según lleguen los assets)
 - **Enemigos nuevos** — asset a la espera de que consigas un set de un mismo
   autor (arte consistente).
 - **Patrones de disparo reutilizables** (abanico, dirigido, ráfaga…) para
@@ -128,6 +125,10 @@ espera a que llegue el arte.
   cadencia o más tipos de bala no cambian eso. Volver a mirarlo solo si aparecen
   miles de balas simultáneas o lentitud medida con un profiler; entonces las
   palancas serían colisiones más baratas o dibujar menos, no el pooling.
+- **Hit-stop** (congelar la partida unos milisegundos al perder una vida o
+  derrotar al jefe) — implementado y descartado tras probarlo: no convenció al
+  autor, y el screen shake solo ya da el peso al golpe que se buscaba. Se probó
+  con 150 ms al perder una vida y 250 ms con el jefe.
 - **Menú de opciones — vídeo** (ventana 1×/2×/pantalla completa/automático,
   `pygame.SCALED`) — implementado y descartado tras probarlo: la experiencia
   con varios tamaños de ventana no convenció al autor. El juego se queda fijo

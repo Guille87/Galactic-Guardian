@@ -183,8 +183,9 @@ class Juego:
         # El avance de nivel conserva el jugador: hay que resetear sus timers
         # para que no queden "en el pasado" respecto al reloj recién puesto a 0.
         self.jugador.ultimo_disparo = 0
-        self.jugador.tiempo_invulnerable = 0
-        self.jugador.invulnerable = False
+        # Ojo: el avance de nivel conserva los efectos en vuelo, y el halo de
+        # invulnerabilidad es uno: hay que retirarlo con ella, no solo apagar el flag.
+        self.jugador.terminar_invulnerabilidad()
         self.pausado = False
         self.estado_game_over = False
         self.estado_nivel_completado = False

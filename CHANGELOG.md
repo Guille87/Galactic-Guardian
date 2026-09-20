@@ -7,6 +7,22 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+
+- **Opción para desactivar el temblor de pantalla**, en una pestaña nueva de
+  Opciones, **Pantalla**. Como el resto de Opciones, se aplica al instante,
+  **Volver** lo descarta y **Guardar** lo confirma (`[PANTALLA]` en `config.ini`;
+  activado por defecto).
+
+### Fixed
+
+- **Campaña: el halo de invulnerabilidad se quedaba en pantalla al pasar de
+  nivel.** Si derrotabas al jefe mientras aún tenías el escudo de reaparición
+  (los 3 s tras perder una vida), la nave llegaba al nivel siguiente con el halo
+  blanco puesto y no se iba nunca, como si fuera invencible. La nave sí recibía
+  daño (era solo el halo), pero parecía lo contrario. Ahora el halo se retira
+  siempre a la vez que la invulnerabilidad.
+
 ## [0.6.0] - 2026-09-20
 
 La pantalla tiembla al recibir golpes y se arregla la salud al avanzar de nivel.

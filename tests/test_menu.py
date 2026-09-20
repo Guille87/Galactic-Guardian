@@ -277,7 +277,7 @@ def test_cambiar_de_idioma_rehace_la_ui_de_opciones(menu):
     textos = {e.text for e in menu.ui_manager.get_root_container().elements
               if isinstance(e, pygame_gui.elements.UILabel)}
     assert {"Music", "Effects"} <= textos
-    assert {"Audio", "Language", "Controls"} == {b.text for b in menu._botones_pestana}
+    assert {"Audio", "Language", "Controls", "Display"} == {b.text for b in menu._botones_pestana}
     assert menu.btn_guardar.text == "Save"
     assert "Fire" in _boton_control(menu, "disparar").text
     assert _boton_idioma(menu, "en").is_selected and not _boton_idioma(menu, "es").is_selected
@@ -336,7 +336,7 @@ def test_opciones_del_menu_persistente_siguen_el_idioma_cambiado_fuera(menu):
     textos = {e.text for e in menu.ui_manager.get_root_container().elements
               if isinstance(e, pygame_gui.elements.UILabel)}
     assert {"Música", "Efectos"} <= textos
-    assert {"Audio", "Idioma", "Controles"} == {b.text for b in menu._botones_pestana}
+    assert {"Audio", "Idioma", "Controles", "Pantalla"} == {b.text for b in menu._botones_pestana}
     assert _boton_idioma(menu, "es").is_selected and not _boton_idioma(menu, "en").is_selected
 
     _click(menu, _boton_idioma(menu, "en"))                 # ahora sí responde a ambos
@@ -526,9 +526,9 @@ def _visibles(menu, nombre):
     return estados.pop()
 
 
-def test_hay_tres_pestanas_en_orden_y_se_entra_por_la_primera(menu):
+def test_hay_cuatro_pestanas_en_orden_y_se_entra_por_la_primera(menu):
     menu._abrir_opciones()
-    assert list(menu._botones_pestana.values()) == ["controles", "idioma", "audio"]
+    assert list(menu._botones_pestana.values()) == ["controles", "idioma", "audio", "pantalla"]
     assert menu._pestana == "controles"
     assert _visibles(menu, "controles")
     assert not _visibles(menu, "idioma") and not _visibles(menu, "audio")
@@ -930,3 +930,100 @@ def test_pestanas_de_puntuaciones_en_ingles(menu_con_rankings):
     menu = menu_con_rankings
     menu.estado = "PUNTUACIONES"
     menu._menu_puntuaciones()                            # no debe lanzar excepción
+
+
+# --- Pestaña Pantalla: interruptor del temblor de pantalla --------------------
+
+def _boton_temblor(menu):
+    _ir_a_pestana(menu, "pantalla")
+    return menu.btn_temblor
+
+
+def test_pestana_pantalla_muestra_el_interruptor_activado_por_defecto(menu):
+    menu._abrir_opciones()
+    boton = _boton_temblor(menu)
+    assert boton.text == "Temblor de pantalla: Sí" and boton.is_selected
+
+
+def test_pulsar_el_interruptor_apaga_y_enciende_al_instante(menu):
+    from src.core import preferencias
+
+    menu._abrir_opciones()
+    _click(menu, _boton_temblor(menu))
+    assert preferencias.temblor_activado() is False
+    assert menu.btn_temblor.text == "Temblor de pantalla: No" and not menu.btn_temblor.is_selected
+    _click(menu, menu.btn_temblor)
+    assert preferencias.temblor_activado() is True
+
+
+def test_volver_descarta_el_cambio_del_temblor(menu):
+    from src.core import preferencias
+
+    menu._abrir_opciones()
+    _click(menu, _boton_temblor(menu))
+    assert preferencias.temblor_activado() is False
+    _click(menu, menu.btn_volver)
+    assert preferencias.temblor_activado() is True
+
+
+def test_guardar_confirma_el_temblor_en_la_sesion_y_en_disco(menu, monkeypatch, tmp_path):
+    from src.core import config, preferencias
+
+    ruta = str(tmp_path / "cfg.ini")
+    monkeypatch.setattr("src.core.config.CONFIG_FILE", ruta)
+    menu._abrir_opciones()
+    _click(menu, _boton_temblor(menu))
+    _click(menu, menu.btn_guardar)
+    assert preferencias.temblor_activado() is False
+    assert config.cargar_temblor(ruta=ruta) is False
+
+
+def test_guardar_sin_tocar_el_temblor_conserva_lo_que_habia(menu, monkeypatch, tmp_path):
+    """Guardar escribe el estado actual aunque no se haya tocado esa pestaña."""
+    from src.core import config, preferencias
+
+    ruta = str(tmp_path / "cfg.ini")
+    monkeypatch.setattr("src.core.config.CONFIG_FILE", ruta)
+    preferencias.establecer_temblor(False)
+    menu._abrir_opciones()
+    _click(menu, menu.btn_guardar)
+    assert config.cargar_temblor(ruta=ruta) is False
+
+
+def test_el_interruptor_se_descarta_junto_al_resto_de_cambios(menu, audio):
+    from src.core import preferencias
+
+    menu._abrir_opciones()
+    menu._fijar_volumen("musica", 0.9)
+    _click(menu, _boton_temblor(menu))
+    _click(menu, menu.btn_volver)
+    assert audio.vol_musica != 0.9 and preferencias.temblor_activado() is True
+
+
+def test_otro_menu_ve_el_cambio_del_temblor_hecho_desde_la_pausa(menu, rm, audio, scoreboard):
+    """El menú persistente muestra el estado real, no el de cuando se creó."""
+    from src.core import preferencias
+
+    pausa = MenuManager(menu.pantalla, rm, audio, scoreboard)
+    pausa._abrir_opciones()
+    _click(pausa, _boton_temblor(pausa))
+    _click(pausa, pausa.btn_guardar)                  # confirmado: el estado vivo es "No"
+    assert preferencias.temblor_activado() is False
+
+    menu._abrir_opciones()
+    assert _boton_temblor(menu).text == "Temblor de pantalla: No"
+
+
+def test_el_texto_del_interruptor_sigue_el_idioma(menu):
+    menu._abrir_opciones()
+    _click(menu, _boton_idioma(menu, "en"))
+    assert _boton_temblor(menu).text == "Screen shake: Yes"
+
+
+def test_las_cuatro_pestanas_caben_en_pantalla_sin_solaparse(menu):
+    menu._abrir_opciones()
+    rects = sorted((b.relative_rect for b in menu._botones_pestana), key=lambda r: r.x)
+    assert len(rects) == 4
+    for izq, der in zip(rects, rects[1:]):
+        assert izq.right < der.left
+    assert rects[0].left >= 0 and rects[-1].right <= settings.ANCHO

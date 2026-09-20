@@ -39,6 +39,17 @@ def _idioma_espanol():
     i18n.establecer_idioma("es")
 
 
+@pytest.fixture(autouse=True)
+def _temblor_activado():
+    """Las preferencias son estado de módulo: cada test parte (y termina) con el
+    temblor de pantalla en su valor por defecto (activado)."""
+    from src.core import preferencias
+
+    preferencias.establecer_temblor(True)
+    yield
+    preferencias.establecer_temblor(True)
+
+
 @pytest.fixture(scope="session")
 def rm():
     """ResourceManager (singleton) con todos los recursos del juego cargados."""

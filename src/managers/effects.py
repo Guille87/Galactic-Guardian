@@ -1,3 +1,4 @@
+from src.core import preferencias
 from src.visual.flash import Destello
 from src.visual.flash_constant import DestelloConstante
 from src.visual.explosions import Explosion
@@ -32,9 +33,16 @@ class EffectManager:
             explosion = Explosion(posicion, self.explosion_frames)
             self.entity_manager.efectos.add(explosion)
 
+    # El temblor se puede apagar desde Opciones (`preferencias.temblor_activado()`),
+    # también a mitad de uno.
     def agregar_temblor(self, cantidad):
         """Suma trauma al temblor de pantalla (ver `settings.TEMBLOR_*`)."""
-        self.temblor.agregar(cantidad)
+        if preferencias.temblor_activado():
+            self.temblor.agregar(cantidad)
+
+    def desplazamiento_temblor(self):
+        """`(dx, dy)` del temblor para este frame; `(0, 0)` si está apagado."""
+        return self.temblor.desplazamiento() if preferencias.temblor_activado() else (0, 0)
 
     def crear_destello_recibir_danio(self):
         """Crea el destello rojo efímero sobre el jugador."""

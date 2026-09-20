@@ -2,7 +2,7 @@
 import pygame
 import pytest
 
-from src.core import settings
+from src.core import preferencias, settings
 from src.entities.enemies import EnemigoBase, EnemigoTipo1, Jefe
 from src.visual.screen_shake import Temblor
 
@@ -183,3 +183,51 @@ def test_muchos_frames_con_temblor_sin_crash(juego):
             juego.effect_manager.agregar_temblor(0.9)
         juego.actualizar(DT60)
         juego.dibujar()
+
+
+# --- La opción de Opciones que lo apaga -------------------------------------
+
+def test_con_el_temblor_apagado_no_se_acumula_trauma(juego):
+    preferencias.establecer_temblor(False)
+    juego.effect_manager.agregar_temblor(1.0)
+    assert juego.effect_manager.temblor.trauma == 0
+
+
+def test_apagar_el_temblor_a_mitad_de_uno_lo_corta(juego):
+    juego.effect_manager.agregar_temblor(1.0)
+    preferencias.establecer_temblor(False)
+    assert juego.effect_manager.desplazamiento_temblor() == (0, 0)
+
+
+def test_con_el_temblor_apagado_los_disparadores_no_hacen_nada(juego, rm):
+    preferencias.establecer_temblor(False)
+    juego.jugador.salud = 0
+    juego.manejar_impacto_jugador()
+    jefe = Jefe(rm.get_image_scaled("jefe1", Jefe.TAMANO_JEFE), 200, 200, 600, 800, 1, juego.jugador)
+    juego.al_eliminar_enemigo(jefe)
+    assert juego.effect_manager.temblor.trauma == 0
+
+
+def test_con_el_temblor_apagado_no_se_desplaza_el_dibujado(juego, monkeypatch):
+    _pintar_fondo_reconocible(juego, monkeypatch)
+    monkeypatch.setattr(juego.effect_manager.temblor, "desplazamiento", lambda: (7, 0))
+    juego.effect_manager.temblor.trauma = 1.0
+
+    preferencias.establecer_temblor(False)
+    juego.dibujar()
+    assert juego.pantalla.get_at((300, 700))[:3] == (300 % 250, 40, 40)      # sin desplazar
+
+    preferencias.establecer_temblor(True)
+    juego.dibujar()
+    assert juego.pantalla.get_at((300, 700))[:3] == (293 % 250, 40, 40)      # con desplazamiento
+
+
+def test_los_elementos_de_la_pestana_pantalla_se_ocultan_en_las_demas(rm, audio, scoreboard):
+    from src.ui.menu import MenuManager
+
+    menu = MenuManager(pygame.display.get_surface(), rm, audio, scoreboard)
+    menu._abrir_opciones()
+    menu._mostrar_pestana("controles")
+    assert not menu.btn_temblor.visible
+    menu._mostrar_pestana("pantalla")
+    assert menu.btn_temblor.visible

@@ -377,3 +377,71 @@ def test_reintentar_tras_game_over_restaura_la_salud(juego):
     _herido(juego)
     juego.reiniciar_juego()
     assert juego.jugador.salud == juego.jugador.salud_maxima
+
+
+# --- El halo de invulnerabilidad no sobrevive al cambio de nivel -------------
+
+def _halos(juego):
+    from src.visual.flash_constant import DestelloConstante
+    return [s for s in juego.entity_manager.efectos if isinstance(s, DestelloConstante)]
+
+
+def _matar_al_jefe_y_continuar(juego, rm):
+    from src.entities.enemies import Jefe
+
+    jefe = juego.jefe = Jefe(rm.get_image_scaled("jefe1", Jefe.TAMANO_JEFE), 200, 200, 600, 800, 1, juego.jugador)
+    juego.al_eliminar_enemigo(jefe)
+    for _ in range(1200):
+        juego.actualizar(1 / 60)
+        if juego.estado_nivel_completado:
+            break
+    assert juego.estado_nivel_completado
+    juego.reiniciar_juego()                                   # "Continuar"
+
+
+def test_matar_al_jefe_con_el_escudo_de_reaparicion_no_deja_el_halo_para_siempre(juego, rm):
+    """Regresión: perder una vida (escudo de 3 s) y matar al jefe antes de que
+    acabe dejaba el halo en pantalla en el nivel siguiente, indefinidamente."""
+    juego.jugador.salud = 0
+    juego.manejar_impacto_jugador()
+    assert juego.jugador.invulnerable and len(_halos(juego)) == 1
+
+    _matar_al_jefe_y_continuar(juego, rm)
+
+    assert juego.nivel == 2
+    assert juego.jugador.invulnerable is False
+    assert juego.jugador.destello_constante is None
+    assert _halos(juego) == []
+    for _ in range(600):                                      # y no reaparece con el tiempo
+        juego.actualizar(1 / 60)
+    assert _halos(juego) == []
+
+
+def test_tras_ese_cambio_de_nivel_la_nave_recibe_daño_y_un_escudo_nuevo_funciona(juego, rm):
+    juego.jugador.salud = 0
+    juego.manejar_impacto_jugador()
+    _matar_al_jefe_y_continuar(juego, rm)
+
+    assert juego.jugador.recibir_danio(1) is True             # vulnerable de verdad
+
+    juego.jugador.salud = 0                                   # y una vida perdida da su escudo (con halo nuevo)
+    juego.manejar_impacto_jugador()
+    assert juego.jugador.invulnerable and len(_halos(juego)) == 1
+    for _ in range(int(settings.JUGADOR_INVULNERABLE_MS / 1000 * settings.FPS) + 5):
+        juego.actualizar(1 / 60)
+    assert juego.jugador.invulnerable is False and _halos(juego) == []
+
+
+def test_terminar_la_invulnerabilidad_retira_el_halo(juego):
+    juego.jugador.invulnerable = True
+    juego.effect_manager.crear_destello_invulnerabilidad()
+    assert _halos(juego)
+    juego.jugador.terminar_invulnerabilidad()
+    assert juego.jugador.invulnerable is False and _halos(juego) == []
+
+
+def test_reiniciar_desde_cero_tampoco_deja_halo(juego):
+    juego.jugador.invulnerable = True
+    juego.effect_manager.crear_destello_invulnerabilidad()
+    juego.reiniciar_juego()
+    assert _halos(juego) == [] and juego.jugador.destello_constante is None
