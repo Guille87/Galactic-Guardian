@@ -106,6 +106,14 @@ El proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/): `MAJO
 para cambios incompatibles, `MINOR` para funcionalidad nueva compatible, `PATCH`
 para correcciones.
 
+**No se publica una versión por cada PR.** Cada PR añade su entrada a *Unreleased*
+del CHANGELOG y no toca la versión; una release se publica cuando hay un
+conjunto de cambios con sentido, con varias entradas y un motivo para que alguien
+quiera actualizar (una función grande terminada, o varias cosas que juntas
+cambian cómo se juega). Las correcciones urgentes sí pueden salir solas, como
+versión `PATCH`. Los cambios que ya están en `main` se prueban ejecutando desde
+el código, sin esperar a una release.
+
 1. Sube `version` en `pyproject.toml` **y** `__version__` en `src/core/version.py`
    (un test comprueba que coinciden).
 2. En [`CHANGELOG.md`](CHANGELOG.md), mueve las entradas de *Unreleased* a una

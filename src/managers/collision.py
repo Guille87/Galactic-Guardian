@@ -74,7 +74,7 @@ class CollisionManager:
                 self.audio.reproducir_efecto("golpe")
                 self.enemigos_golpeados[enemigo] = ahora
                 self.reglas.manejar_impacto_jugador()
-                enemigo.salud -= 1
+                enemigo.salud -= settings.DANIO_EMBESTIDA
 
             if enemigo.salud <= 0:
                 self._eliminar_enemigo(enemigo)

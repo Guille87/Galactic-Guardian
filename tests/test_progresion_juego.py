@@ -32,7 +32,7 @@ def _enemigo(rm):
 
 def test_sin_mejoras_la_nave_arranca_como_siempre(juego):
     j = juego.jugador
-    assert (j.vidas, j.salud_maxima, j.velocidad, j.danio, j.cadencia_disparo, j.tipo_disparo) == (3, 5, 4, 1, 350, "simple")
+    assert (j.vidas, j.salud_maxima, j.velocidad, j.danio, j.cadencia_disparo, j.tipo_disparo) == (3, 50, 4, 10, 350, "simple")
 
 
 def test_las_mejoras_suben_los_valores_de_arranque(rm, audio, scoreboard, progresion):
@@ -40,8 +40,8 @@ def test_las_mejoras_suben_los_valores_de_arranque(rm, audio, scoreboard, progre
              "defensa_1", "defensa_2", "defensa_3", "utilidad_1")
     j = _juego(rm, audio, scoreboard, progresion).jugador
     assert j.vidas == 4
-    assert j.salud_maxima == 7 and j.salud == 7
-    assert j.danio == 2 and j.cadencia_disparo == 250 and j.tipo_disparo == "doble"
+    assert j.salud_maxima == 70 and j.salud == 70
+    assert j.danio == 20 and j.cadencia_disparo == 250 and j.tipo_disparo == "doble"
     assert j.velocidad == pytest.approx(4.5)
 
 
@@ -57,18 +57,18 @@ def test_los_bonus_se_mantienen_al_reiniciar_la_partida_y_al_elegir_nivel(rm, au
     _comprar(progresion, "defensa_1", "defensa_2", "ataque_1")
     juego = _juego(rm, audio, scoreboard, progresion)
     for reinicio in (lambda: juego.reiniciar_juego(), lambda: juego.reiniciar_juego(nivel_forzado=2)):
-        juego.jugador.salud_maxima = 5
+        juego.jugador.salud_maxima = 50
         juego.jugador.vidas = 1
-        juego.jugador.danio = 1
+        juego.jugador.danio = 10
         reinicio()
-        assert (juego.jugador.vidas, juego.jugador.salud_maxima, juego.jugador.danio) == (4, 6, 2)
+        assert (juego.jugador.vidas, juego.jugador.salud_maxima, juego.jugador.danio) == (4, 60, 20)
 
 
-def test_el_bonus_de_salud_se_ve_en_los_puntos_bajo_la_nave(rm, audio, scoreboard, progresion):
+def test_el_bonus_de_salud_se_ve_en_la_barra_bajo_la_nave(rm, audio, scoreboard, progresion):
     _comprar(progresion, "defensa_1", "defensa_2", "defensa_3")
     juego = _juego(rm, audio, scoreboard, progresion)
-    juego.dibujar()                                  # no debe fallar con 7 puntos de salud
-    assert juego.jugador.salud_maxima == 7
+    juego.dibujar()                                  # no debe fallar con 70 de salud
+    assert juego.jugador.salud_maxima == 70
 
 
 def test_la_progresion_es_opcional(rm, audio, scoreboard):
@@ -244,4 +244,4 @@ def test_un_ciclo_completo_ganar_gastar_y_notar_el_efecto(rm, audio, scoreboard,
     assert progresion.comprar("defensa_1") == "ok"
 
     b = _juego(rm, audio, scoreboard, progresion)               # el menú crea un Juego nuevo
-    assert b.jugador.salud_maxima == 6 and progresion.monedas == 50
+    assert b.jugador.salud_maxima == 60 and progresion.monedas == 50

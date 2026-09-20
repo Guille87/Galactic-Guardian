@@ -10,11 +10,12 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
     # Constantes de clase para configuración (Mantenible)
     CONFIG = {
         "tamano": (50, 50),
-        "salud_max": 5,
+        "salud_max": 50,
         "vidas_init": 3,
         "vel_max": 6,
         "cadencia_max": 150,
-        "danio_max": 3
+        "danio_base": 10,          # daño de tu bala al empezar
+        "danio_max": 30
     }
 
     destello_constante = None   # halo de invulnerabilidad en pantalla (lo crea `EffectManager`)
@@ -51,7 +52,7 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
         self.salud_maxima = self.CONFIG["salud_max"] + b.salud_extra
         self.salud = self.salud_maxima
         self.velocidad = min(self.CONFIG["vel_max"], 4 + b.velocidad_extra)
-        self.danio = min(self.CONFIG["danio_max"], 1 + b.danio_extra)
+        self.danio = min(self.CONFIG["danio_max"], self.CONFIG["danio_base"] + b.danio_extra)
 
         # 3. Sistema de Armas
         self.cadencia_disparo = max(self.CONFIG["cadencia_max"], 350 - b.cadencia_menos_ms)

@@ -4,12 +4,12 @@ from src.entities.bullet import Bala
 from src.entities.enemies import EnemigoBase, EnemigoTipo1, Jefe
 
 
-def _bala_jugador(rm, danio=1):
+def _bala_jugador(rm, danio=10):
     img = rm.get_image_rotated("bala_jugador1", Bala.TAMANO, Bala.ANGULO)
     return Bala(img, 0, 0, danio)
 
 
-def _enemigo(rm, salud=1, nivel=1):
+def _enemigo(rm, salud=10, nivel=1):
     img = rm.get_image_scaled("enemigo1", EnemigoBase.TAMANO_ESTANDAR)
     e = EnemigoTipo1(img, 300, 300, 600, nivel)
     e.salud = e.salud_maxima = salud
@@ -18,7 +18,7 @@ def _enemigo(rm, salud=1, nivel=1):
 
 def test_bala_jugador_mata_enemigo(juego, rm):
     em = juego.entity_manager
-    e = _enemigo(rm, salud=1)
+    e = _enemigo(rm, salud=10)
     b = _bala_jugador(rm)
     em.agregar_enemigo(e)
     em.agregar_bala_jugador(b)
@@ -35,7 +35,7 @@ def test_bala_jugador_mata_enemigo(juego, rm):
 
 def test_doble_bala_mismo_enemigo_no_puntua_doble(juego, rm):
     em = juego.entity_manager
-    e = _enemigo(rm, salud=1)
+    e = _enemigo(rm, salud=10)
     em.agregar_enemigo(e)
     for _ in range(3):
         b = _bala_jugador(rm)
@@ -104,7 +104,7 @@ def test_collision_manager_no_toca_juego_usa_el_contrato_reglas(juego, rm):
     cm = CollisionManager(em, juego.jugador, juego.effect_manager,
                           juego.audio_manager, juego.enemigos_golpeados, reglas)
 
-    e = _enemigo(rm, salud=1)
+    e = _enemigo(rm, salud=10)
     b = _bala_jugador(rm)
     b.rect.center = e.rect.center
     em.agregar_enemigo(e)

@@ -68,13 +68,16 @@ VOLUMEN_PASO = 0.1  # cuánto sube/baja el volumen con las flechas del slider
 JUGADOR_INVULNERABLE_MS = 3000
 CONTACTO_COOLDOWN_MS = 2000  # daño por contacto cuerpo a cuerpo (por enemigo)
 
-# --- Balance de daño (en "pips" de una barra de 5) ---
-# Escala legible: disparo normal = 1, cañón pesado del jefe = 2, contacto = 1.
-DANIO_CONTACTO = 1
-DANIO_BALA_TIPO2 = 1
-DANIO_BALA_TIPO3 = 1
-DANIO_JEFE_NORMAL = 2
-DANIO_JEFE_RAPIDA = 1
+# --- Balance de daño (números reales) ---
+# Salud y daño son números reales, no "puntos": la nave tiene 50 de salud (ver
+# `Jugador.CONFIG`), su bala hace 10, la del enemigo normal 10 y el cañón pesado
+# del jefe 20. (Antes eran 5, 1, 1 y 2: esto es lo mismo multiplicado por 10.)
+DANIO_CONTACTO = 10           # lo que pierdes al chocar con un enemigo
+DANIO_EMBESTIDA = 10          # lo que pierde el enemigo en ese choque
+DANIO_BALA_TIPO2 = 10
+DANIO_BALA_TIPO3 = 10
+DANIO_JEFE_NORMAL = 20
+DANIO_JEFE_RAPIDA = 10
 
 # Velocidad de las balas enemigas (px/frame-a-60fps)
 VEL_BALA_TIPO2 = 4
@@ -83,7 +86,11 @@ VEL_JEFE_NORMAL = 7
 VEL_JEFE_RAPIDA = 4
 
 # --- Escalado de salud por nivel (lineal, no exponencial) ---
-# salud = salud_base * (1 + FACTOR * (nivel - 1))
+# salud = salud_base * (1 + FACTOR * (nivel - 1)), redondeada a múltiplos de
+# `SALUD_PASO_NIVEL`. Ese redondeo es herencia de cuando la salud eran "puntos"
+# (así el juego no cambió al pasar a números reales) y desaparece cuando la
+# dificultad pase a tablas por nivel.
+SALUD_PASO_NIVEL = 10
 DIFICULTAD_FACTOR_ENEMIGO = 0.5
 DIFICULTAD_FACTOR_JEFE = 0.6
 

@@ -9,6 +9,18 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ### Changed
 
+- **Salud y daño en números reales.** La nave tiene ahora **50 de salud** (antes 5
+  puntos), su bala hace **10** de daño (antes 1), las balas enemigas **10**, el
+  cañón pesado del jefe **20** y el choque con un enemigo **10**; los enemigos
+  pasan a 10, 20 y 30 de vida y el jefe a 1000 (más lo que suben por nivel). Es
+  lo de antes multiplicado por 10, **el juego se comporta igual**: se comprobó
+  con partidas deterministas idénticas fotograma a fotograma antes y después. Es
+  el paso previo al reequilibrio, que ya podrá usar valores intermedios.
+- **La salud bajo la nave es ahora una barra** (con una marca cada 10 de salud, así
+  se ve cuántos impactos normales aguanta) en vez de puntitos, y se alarga si
+  tienes más salud máxima.
+- Las mejoras del árbol muestran los números reales: **Daño I** da +10 de daño y
+  **Blindaje I y II**, +10 de salud máxima cada una.
 - **Sin ítems de curación, la salud vuelve por otros caminos.** En el sin fin,
   cada oleada nueva recupera el 40 % de la salud máxima y derrotar a un jefe la
   deja completa; en la campaña sigue curándose del todo al pasar de nivel.
