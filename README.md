@@ -14,6 +14,7 @@ jefe de cada nivel.
 - **Oleadas por fases:** la dificultad y los tipos de enemigo cambian según avanza el nivel, hasta que aparece el jefe.
 - **Dos modos:** una **campaña** de niveles con jefe final y un modo **sin fin** de oleadas cada vez más duras (con un jefe cada 5), cada uno con su propia tabla de puntuaciones.
 - **Mejoras de nave:** daño, cadencia de disparo (hasta triple), velocidad y curación, con probabilidad de aparición según lo que necesites.
+- **Combo de puntuación:** cada baja seguida sin que te den sube el multiplicador hasta ×5; el primer golpe lo rompe.
 - **Tabla de puntuaciones** local, con entrada de nombre al conseguir un top 10.
 
 ## Cómo jugar

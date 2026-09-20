@@ -51,6 +51,10 @@ TEMBLOR_GOLPE = 0.5         # la nave recibe un impacto
 TEMBLOR_MUERTE = 0.85       # la nave pierde una vida
 TEMBLOR_JEFE = 1.0          # el jefe cae
 
+# --- Combo de puntuación (ver src/core/combo.py) ---
+# Bajas seguidas sin recibir daño para llegar a ×2, ×3, ×4 y ×5 (el último es el tope).
+COMBO_UMBRALES = (10, 25, 50, 90)
+
 # --- Menú de opciones ---
 VOLUMEN_PASO = 0.1  # cuánto sube/baja el volumen con las flechas del slider
 

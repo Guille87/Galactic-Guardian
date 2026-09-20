@@ -6,6 +6,7 @@ import pygame.freetype
 
 from src.core import settings
 from src.core import sin_fin
+from src.core.combo import Combo
 from src.core.niveles import definicion_nivel
 from src.core.version import __version__
 from src.entities.enemies import Jefe
@@ -38,6 +39,7 @@ class Juego:
 
         # 2. Estado de la Partida
         self.puntuacion = 0
+        self.combo = Combo()   # bajas seguidas sin daño -> multiplicador de puntuación
         self.nivel = 1   # nivel de la campaña, o nº de oleada en el modo sin fin
         self.pausado = False
         self.estado_game_over = False
@@ -154,12 +156,13 @@ class Juego:
             self.jefe_derrotado = False
             self.jugador.reiniciar(self.pantalla_ancho, self.pantalla_alto)
             self.puntuacion = 0
+            self.combo.romper()
         elif self.jefe_derrotado:
             self.nivel += 1
             self.jefe_derrotado = False
             # La transición ya movió a la nave fuera de la pantalla: el nivel
             # nuevo empieza con ella en su sitio de siempre (mejoras y vidas
-            # intactas) y con la barra de salud llena.
+            # intactas, y el combo sigue) y con la barra de salud llena.
             self.jugador.recentrar(self.pantalla_ancho, self.pantalla_alto)
             self.jugador.curar(self.jugador.salud_maxima)
         else:
@@ -167,6 +170,7 @@ class Juego:
             # para que los managers puedan conservar su referencia.
             self.jugador.reiniciar(self.pantalla_ancho, self.pantalla_alto)
             self.puntuacion = 0
+            self.combo.romper()
             if self.modo == settings.MODO_SIN_FIN:
                 self.nivel = 1   # la campaña reintenta el nivel; el sin fin vuelve a la oleada 1
 
@@ -221,7 +225,8 @@ class Juego:
             self._spawnear_item(tipo_item, enemigo.rect.center)
             self.enemigos_eliminados = 0
 
-        self.puntuacion += enemigo.valor_puntuacion * self.nivel
+        self.combo.sumar_baja()   # antes de puntuar: la baja que sube de escalón ya cuenta con él
+        self.puntuacion += enemigo.valor_puntuacion * self.nivel * self.combo.multiplicador
 
         if isinstance(enemigo, Jefe):
             self.jefe = None
@@ -248,7 +253,9 @@ class Juego:
             self.effect_manager.crear_destello_recibir_danio()
             if not self.jugador.invulnerable:   # invulnerable: el impacto no cuenta
                 self.effect_manager.agregar_temblor(settings.TEMBLOR_GOLPE)
+                self.combo.romper()
         else:
+            self.combo.romper()
             self.effect_manager.crear_explosion(self.jugador.rect.center)
             self.effect_manager.agregar_temblor(settings.TEMBLOR_MUERTE)
             self._procesar_muerte_jugador()
