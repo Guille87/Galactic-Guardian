@@ -4,15 +4,16 @@
 
 | Name                                  |    Stmts |     Miss |   Cover |   Missing |
 |-------------------------------------- | -------: | -------: | ------: | --------: |
-| main.py                               |       77 |       56 |     27% |40-71, 75-132 |
+| main.py                               |       78 |       57 |     27% |41-72, 76-134 |
 | src/core/audio.py                     |       40 |        0 |    100% |           |
-| src/core/config.py                    |       50 |        2 |     96% |     88-89 |
+| src/core/config.py                    |       60 |        2 |     97% |     91-92 |
 | src/core/controles.py                 |       10 |        0 |    100% |           |
-| src/core/engine.py                    |      305 |       25 |     92% |284-285, 358-363, 452-455, 486, 494-519 |
+| src/core/engine.py                    |      304 |       25 |     92% |285-286, 359-364, 453-456, 487, 495-520 |
 | src/core/i18n.py                      |       57 |       16 |     72% |44-51, 56-63 |
 | src/core/input.py                     |      135 |       38 |     72% |61-62, 101-108, 128-143, 184-207 |
 | src/core/niveles.py                   |       13 |        0 |    100% |           |
 | src/core/paths.py                     |       23 |        3 |     87% |32, 44, 46 |
+| src/core/preferencias.py              |        5 |        0 |    100% |           |
 | src/core/resources.py                 |       58 |        4 |     93% |78, 84, 94, 97 |
 | src/core/settings.py                  |       41 |        0 |    100% |           |
 | src/core/sin\_fin.py                  |       30 |        0 |    100% |           |
@@ -24,22 +25,22 @@
 | src/entities/bullet\_enemy.py         |       11 |        0 |    100% |           |
 | src/entities/enemies.py               |      134 |        3 |     98% |74, 207, 215 |
 | src/entities/items.py                 |       20 |        0 |    100% |           |
-| src/entities/player.py                |      110 |        2 |     98% |  111, 119 |
+| src/entities/player.py                |      112 |        2 |     98% |  111, 119 |
 | src/managers/collision.py             |       53 |        0 |    100% |           |
-| src/managers/effects.py               |       35 |        0 |    100% |           |
+| src/managers/effects.py               |       39 |        0 |    100% |           |
 | src/managers/entities.py              |       60 |        1 |     98% |        85 |
 | src/managers/render.py                |      149 |        1 |     99% |       239 |
 | src/managers/waves.py                 |       48 |        0 |    100% |           |
 | src/ui/components/button.py           |       40 |        6 |     85% |     34-39 |
 | src/ui/hud.py                         |      111 |       13 |     88% |91, 164-182 |
-| src/ui/menu.py                        |      454 |       24 |     95% |159-162, 172-173, 189, 271, 495, 535, 561, 668-684, 726-727 |
+| src/ui/menu.py                        |      469 |       24 |     95% |159-162, 172-173, 189, 272, 522, 562, 588, 700-716, 758-759 |
 | src/ui/scoreboard.py                  |       45 |        2 |     96% |     58-59 |
 | src/visual/background.py              |       22 |        1 |     95% |        30 |
 | src/visual/explosions.py              |       20 |        0 |    100% |           |
 | src/visual/flash.py                   |       22 |        0 |    100% |           |
 | src/visual/flash\_constant.py         |       11 |        0 |    100% |           |
 | src/visual/screen\_shake.py           |       21 |        0 |    100% |           |
-| **TOTAL**                             | **2393** |  **217** | **91%** |           |
+| **TOTAL**                             | **2429** |  **218** | **91%** |           |
 
 
 ## Setup coverage badge
