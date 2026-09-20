@@ -16,6 +16,8 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
         "danio_max": 3
     }
 
+    destello_constante = None   # halo de invulnerabilidad en pantalla (lo crea `EffectManager`)
+
     def __init__(self, imagen, pantalla_ancho, pantalla_alto):
         super().__init__()
         # Recibimos la Surface ya escalada y cacheada por el ResourceManager
@@ -52,9 +54,7 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
         self.tipo_disparo = "simple"  # simple, doble, triple
 
         # 4. Estado Físico
-        self.invulnerable = False
-        self.tiempo_invulnerable = 0
-        self.destello_constante = None
+        self.terminar_invulnerabilidad()
         self.radius = settings.RADIO_JUGADOR
 
         # 5. Acumuladores de movimiento sub-pixel
@@ -187,10 +187,18 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
         `tiempo_juego` es el reloj de juego en ms (se congela en pausa).
         """
         if self.invulnerable and tiempo_juego > self.tiempo_invulnerable:
-            self.invulnerable = False
-            if self.destello_constante:
-                self.destello_constante.kill()
-                self.destello_constante = None
+            self.terminar_invulnerabilidad()
+
+    def terminar_invulnerabilidad(self):
+        """Quita la invulnerabilidad **y** su halo. Siempre juntas: si el flag se
+        apaga sin retirar el sprite, `update` ya no lo retira nunca (solo mira el
+        halo mientras `invulnerable`) y el halo se queda en pantalla para siempre
+        aunque la nave sea vulnerable."""
+        self.invulnerable = False
+        self.tiempo_invulnerable = 0
+        if self.destello_constante:
+            self.destello_constante.kill()
+            self.destello_constante = None
 
     def obtener_cadencia_visual(self):
         """

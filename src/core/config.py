@@ -49,7 +49,7 @@ EXPLOSIONES = {f"explosion_{i}": f"imagenes/explosion/Explosion1_{i}.png" for i 
 # --- LÓGICA DE PERSISTENCIA (OPCIONES DE USUARIO) ---
 
 def guardar_configuracion(volumen_musica, volumen_efectos, mapa_controles=None, idioma=None,
-                          efectos_pantalla=None, ruta=None):
+                          temblor=None, ruta=None):
     config = configparser.ConfigParser()
     config['VOLUMEN'] = {
         'musica': str(volumen_musica),
@@ -61,8 +61,8 @@ def guardar_configuracion(volumen_musica, volumen_efectos, mapa_controles=None, 
         }
     if idioma is not None:
         config['IDIOMA'] = {'codigo': idioma}
-    if efectos_pantalla is not None:
-        config['PANTALLA'] = {'efectos': 'si' if efectos_pantalla else 'no'}
+    if temblor is not None:
+        config['PANTALLA'] = {'temblor': 'si' if temblor else 'no'}
     with open(ruta or CONFIG_FILE, 'w') as configfile:
         config.write(configfile)
 
@@ -93,13 +93,13 @@ def cargar_idioma(ruta=None):
     return codigo if codigo in i18n.IDIOMAS else None
 
 
-def cargar_efectos_pantalla(ruta=None):
-    """True si los efectos de pantalla (temblor, hit-stop) están activados: lo
-    están por defecto (sin config, sin la sección o con un valor que no es "no")."""
+def cargar_temblor(ruta=None):
+    """True si el temblor de pantalla está activado: lo
+    está por defecto (sin config, sin la sección o con un valor que no es "no")."""
     config = configparser.ConfigParser()
     try:
         config.read(ruta or CONFIG_FILE)
-        valor = config.get('PANTALLA', 'efectos', fallback='si')
+        valor = config.get('PANTALLA', 'temblor', fallback='si')
     except configparser.Error:
         return True
     return valor.strip().lower() != 'no'

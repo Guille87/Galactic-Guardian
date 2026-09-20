@@ -44,9 +44,9 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 - **Screen shake** — la pantalla tiembla (solo el mundo, no el HUD) al recibir un
   impacto, perder una vida y derrotar al jefe. Modelo de "trauma" con
   constantes en `settings.py`. Ver `[0.6.0]`.
-- **Hit-stop y "Efectos de pantalla"** — congelado breve al perder una vida y al
-  derrotar al jefe, y una pestaña **Pantalla** en Opciones con un interruptor que
-  apaga a la vez el hit-stop y el temblor. Ver `[Unreleased]` → próxima versión.
+- **Opción para desactivar el temblor** — pestaña **Pantalla** en Opciones con un
+  interruptor del screen shake (accesibilidad), guardado en `config.ini`. Ver
+  `[Unreleased]` → próxima versión.
 - **Oleadas y niveles como datos** — cada nivel se define en una tabla
   (`src/core/niveles.py`); `WaveManager` solo la lee. Añadir contenido es
   "editar una tabla". Ver `[0.4.0]`.
@@ -125,6 +125,10 @@ espera a que llegue el arte.
   cadencia o más tipos de bala no cambian eso. Volver a mirarlo solo si aparecen
   miles de balas simultáneas o lentitud medida con un profiler; entonces las
   palancas serían colisiones más baratas o dibujar menos, no el pooling.
+- **Hit-stop** (congelar la partida unos milisegundos al perder una vida o
+  derrotar al jefe) — implementado y descartado tras probarlo: no convenció al
+  autor, y el screen shake solo ya da el peso al golpe que se buscaba. Se probó
+  con 150 ms al perder una vida y 250 ms con el jefe.
 - **Menú de opciones — vídeo** (ventana 1×/2×/pantalla completa/automático,
   `pygame.SCALED`) — implementado y descartado tras probarlo: la experiencia
   con varios tamaños de ventana no convenció al autor. El juego se queda fijo

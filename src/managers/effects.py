@@ -2,7 +2,6 @@ from src.core import preferencias
 from src.visual.flash import Destello
 from src.visual.flash_constant import DestelloConstante
 from src.visual.explosions import Explosion
-from src.visual.hit_stop import HitStop
 from src.visual.screen_shake import Temblor
 
 
@@ -16,7 +15,6 @@ class EffectManager:
         # Pre-cargamos y escalamos la secuencia de animación una sola vez
         self.explosion_frames = self._preparar_frames_explosion()
         self.temblor = Temblor()   # lo avanza `Juego.actualizar` y lo aplica `RenderManager`
-        self.hit_stop = HitStop()  # lo gasta `Juego.actualizar`, que no simula mientras está activo
 
     def _preparar_frames_explosion(self):
         """Prepara y cachea los frames de la explosión escalados."""
@@ -35,26 +33,16 @@ class EffectManager:
             explosion = Explosion(posicion, self.explosion_frames)
             self.entity_manager.efectos.add(explosion)
 
-    # Temblor y hit-stop son "efectos de pantalla": se apagan juntos desde
-    # Opciones (`preferencias.efectos_pantalla()`), también a mitad de uno.
+    # El temblor se puede apagar desde Opciones (`preferencias.temblor_activado()`),
+    # también a mitad de uno.
     def agregar_temblor(self, cantidad):
         """Suma trauma al temblor de pantalla (ver `settings.TEMBLOR_*`)."""
-        if preferencias.efectos_pantalla():
+        if preferencias.temblor_activado():
             self.temblor.agregar(cantidad)
 
     def desplazamiento_temblor(self):
-        """`(dx, dy)` del temblor para este frame; `(0, 0)` si los efectos están apagados."""
-        return self.temblor.desplazamiento() if preferencias.efectos_pantalla() else (0, 0)
-
-    def agregar_hit_stop(self, ms):
-        """Pide un congelado breve de la partida (ver `settings.HIT_STOP_*`)."""
-        if preferencias.efectos_pantalla():
-            self.hit_stop.agregar(ms)
-
-    @property
-    def congelado(self):
-        """True mientras la partida está detenida por un hit-stop."""
-        return self.hit_stop.activo and preferencias.efectos_pantalla()
+        """`(dx, dy)` del temblor para este frame; `(0, 0)` si está apagado."""
+        return self.temblor.desplazamiento() if preferencias.temblor_activado() else (0, 0)
 
     def crear_destello_recibir_danio(self):
         """Crea el destello rojo efímero sobre el jugador."""

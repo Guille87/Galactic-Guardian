@@ -87,22 +87,22 @@ def test_guardar_sin_idioma_no_escribe_esa_seccion(tmp_path):
     assert config.cargar_idioma(ruta=ruta) is None
 
 
-def test_efectos_pantalla_roundtrip(tmp_path):
+def test_temblor_roundtrip(tmp_path):
     ruta = str(tmp_path / "cfg.ini")
-    config.guardar_configuracion(0.3, 0.7, efectos_pantalla=False, ruta=ruta)
-    assert config.cargar_efectos_pantalla(ruta=ruta) is False
-    config.guardar_configuracion(0.3, 0.7, efectos_pantalla=True, ruta=ruta)
-    assert config.cargar_efectos_pantalla(ruta=ruta) is True
+    config.guardar_configuracion(0.3, 0.7, temblor=False, ruta=ruta)
+    assert config.cargar_temblor(ruta=ruta) is False
+    config.guardar_configuracion(0.3, 0.7, temblor=True, ruta=ruta)
+    assert config.cargar_temblor(ruta=ruta) is True
 
 
-def test_efectos_pantalla_por_defecto_activados(tmp_path):
+def test_temblor_por_defecto_activados(tmp_path):
     """Sin config, sin la sección o con un valor raro: activados."""
-    assert config.cargar_efectos_pantalla(ruta=str(tmp_path / "no_existe.ini")) is True
+    assert config.cargar_temblor(ruta=str(tmp_path / "no_existe.ini")) is True
     ruta = tmp_path / "raro.ini"
     ruta.write_text("[PANTALLA]\nefectos = quiza\n")
-    assert config.cargar_efectos_pantalla(ruta=str(ruta)) is True
+    assert config.cargar_temblor(ruta=str(ruta)) is True
     ruta.write_text("esto no es un ini valido [[[")
-    assert config.cargar_efectos_pantalla(ruta=str(ruta)) is True
+    assert config.cargar_temblor(ruta=str(ruta)) is True
 
 
 def test_guardar_sin_efectos_no_escribe_esa_seccion(tmp_path):

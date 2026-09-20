@@ -43,11 +43,7 @@ def test_derrota_del_jefe_sube_de_nivel(juego, rm):
 
     juego.collision_manager.actualizar(juego.tiempo_juego)
     nivel0 = juego.nivel
-    assert juego.effect_manager.congelado        # el jefe cae con un hit-stop: primero se congela...
-    for _ in range(60):
-        juego.actualizar(DT60)                   # ...y al acabar arranca la transición de cierre de nivel
-        if juego.transicion_activa:
-            break
+    juego.actualizar(DT60)                       # arranca la transición de cierre de nivel
     assert juego.nivel == nivel0                 # el nivel no sube solo...
     assert juego.transicion_activa is True        # ...la nave sube y desaparece sola...
 

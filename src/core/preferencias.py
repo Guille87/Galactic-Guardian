@@ -5,14 +5,14 @@ Opciones lo cambia al instante (vista previa) y solo "Guardar" lo escribe en
 disco. No lee ni escribe la configuración por sí mismo.
 """
 
-_efectos_pantalla = True
+_temblor = True
 
 
-def efectos_pantalla():
-    """True si están activados los efectos de pantalla (temblor y hit-stop)."""
-    return _efectos_pantalla
+def temblor_activado():
+    """True si el temblor de pantalla está activado."""
+    return _temblor
 
 
-def establecer_efectos_pantalla(activos):
-    global _efectos_pantalla
-    _efectos_pantalla = bool(activos)
+def establecer_temblor(activos):
+    global _temblor
+    _temblor = bool(activos)

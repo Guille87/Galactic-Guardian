@@ -40,14 +40,14 @@ def _idioma_espanol():
 
 
 @pytest.fixture(autouse=True)
-def _efectos_de_pantalla_activados():
-    """Las preferencias son estado de módulo: cada test parte (y termina) con los
-    efectos de pantalla en su valor por defecto (activados)."""
+def _temblor_activado():
+    """Las preferencias son estado de módulo: cada test parte (y termina) con el
+    temblor de pantalla en su valor por defecto (activado)."""
     from src.core import preferencias
 
-    preferencias.establecer_efectos_pantalla(True)
+    preferencias.establecer_temblor(True)
     yield
-    preferencias.establecer_efectos_pantalla(True)
+    preferencias.establecer_temblor(True)
 
 
 @pytest.fixture(scope="session")
