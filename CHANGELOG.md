@@ -7,6 +7,11 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-09-20
+
+Llega la progresión entre partidas: monedas y un árbol de mejoras permanentes.
+Sin cambios incompatibles con partidas ni configuración anteriores.
+
 ### Added
 
 - **Progresión entre partidas.** Ganas **monedas** jugando (1 por cada 100 puntos,
@@ -27,16 +32,6 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
     aparta a `.corrupto` y se empieza de cero.
   - Costes, efectos y ritmo de monedas son de primera pasada (`mejoras.py`,
     `settings.MONEDAS_PUNTOS`).
-
-### Changed
-
-- **Menú principal con seis botones**: entra **Mejoras** (título y botones siguen
-  centrados como un bloque; el aviso de nueva versión, debajo).
-- Las pantallas de Game Over y de victoria muestran también la puntuación y las
-  monedas ganadas.
-
-### Added
-
 - **Hojas de sprites.** Una animación puede ser ahora una sola imagen con todos
   sus fotogramas en una rejilla (`config.HOJAS`, `ResourceManager.load_spritesheet`
   y `get_frames`), en vez de un archivo por fotograma. Pensado para los assets
@@ -44,6 +39,10 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ### Changed
 
+- **Menú principal con seis botones**: entra **Mejoras** (título y botones siguen
+  centrados como un bloque; el aviso de nueva versión, debajo).
+- Las pantallas de Game Over y de victoria muestran también la puntuación y las
+  monedas ganadas.
 - La explosión se carga desde una hoja (`explosion.png`, 4×3 celdas) en lugar de
   11 archivos sueltos: se ve exactamente igual (comprobado píxel a píxel) y ocupa
   menos.
@@ -435,7 +434,8 @@ puesta a punto del repositorio (licencia, tests, integración continua, document
   los grupos tipados y `groupcollide`).
 - `__init__.py` vacío en la raíz del repositorio.
 
-[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.5.0...v0.6.0
