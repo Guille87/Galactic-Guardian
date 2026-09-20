@@ -46,7 +46,7 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
   constantes en `settings.py`. Ver `[0.6.0]`.
 - **Opción para desactivar el temblor** — pestaña **Pantalla** en Opciones con un
   interruptor del screen shake (accesibilidad), guardado en `config.ini`. Ver
-  `[Unreleased]` → próxima versión.
+  `[0.7.0]`.
 - **Oleadas y niveles como datos** — cada nivel se define en una tabla
   (`src/core/niveles.py`); `WaveManager` solo la lee. Añadir contenido es
   "editar una tabla". Ver `[0.4.0]`.
