@@ -26,7 +26,7 @@ ESPERA_JEFE_MS = 3000      # margen entre el cambio de música y la aparición d
 
 INTERVALO_INICIAL = (900, 1100)   # (mín, máx) ms entre apariciones en la oleada 1 (como el nivel 1)
 INTERVALO_PASO_MS = 100           # cuánto baja cada oleada, en cada extremo
-INTERVALO_MIN = (500, 700)        # suelo: el ritmo del último nivel de la campaña
+INTERVALO_MIN = (400, 600)        # suelo: el ritmo del último nivel de la campaña
 
 
 def es_oleada_de_jefe(oleada):

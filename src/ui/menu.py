@@ -5,7 +5,7 @@ import webbrowser
 import pygame
 import pygame_gui
 
-from src.core import config, controles, i18n, mejoras, preferencias, settings, updates
+from src.core import config, controles, i18n, mejoras, paths, preferencias, settings, updates
 from src.core.progresion import BLOQUEADA, COMPRADA, DISPONIBLE, SIN_SALDO, Progresion
 from src.core.i18n import t
 from src.core.version import __version__
@@ -33,6 +33,7 @@ _MEJ_AREA = pygame.Rect(0, 210, 600, 456)   # zona visible de los nodos
 _MEJ_ALTO = 98
 _MEJ_PASO = 112                 # de un nodo al siguiente (alto + hueco para el conector)
 _MEJ_PASO_RUEDA = 56            # píxeles que desplaza un "clic" de la rueda o una flecha
+MONEDAS_DEPURACION = 1000      # lo que da la tecla F2 de depuración en Mejoras
 _MEJ_UMBRAL_ARRASTRE = 6          # píxeles que hay que mover el ratón pulsado para que deje de ser un clic
 _MEJ_BARRA_X = 590              # barra de desplazamiento (a la derecha de la tercera columna)
 _MEJ_BARRA_ANCHO = 6
@@ -844,7 +845,9 @@ class MenuManager:
         if event.type == pygame.MOUSEWHEEL:
             self._desplazar_mejoras(-event.y * _MEJ_PASO_RUEDA)
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP:
+            if event.key == pygame.K_F2 and paths.es_desarrollo():      # depuración: monedas gratis
+                self.progresion.ingresar(MONEDAS_DEPURACION)
+            elif event.key == pygame.K_UP:
                 self._desplazar_mejoras(-_MEJ_PASO_RUEDA)
             elif event.key == pygame.K_DOWN:
                 self._desplazar_mejoras(_MEJ_PASO_RUEDA)
@@ -1027,6 +1030,10 @@ class MenuManager:
                 self.pantalla.blit(aviso, aviso.get_rect(center=(300, 675)))
             else:
                 self._aviso_mejoras = None
+
+        if paths.es_desarrollo():
+            depuracion = self.font_mini.render(f"DEBUG  F2: +{MONEDAS_DEPURACION} monedas", True, (255, 90, 90))
+            self.pantalla.blit(depuracion, (10, 10))
 
         self.btn_restablecer_mejoras.dibujar(self.pantalla, self.font_estandar)
         self.btn_volver_mejoras.dibujar(self.pantalla, self.font_estandar)

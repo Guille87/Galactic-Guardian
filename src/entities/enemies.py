@@ -15,7 +15,7 @@ class EnemigoBase(pygame.sprite.Sprite, MovimientoSubpixel):
     # enemigo (p. ej. `tools/balance.py`). Las subclases los sobrescriben.
     SALUD_BASE = 10          # vida en el nivel 1
     VALOR = 1                # puntos que da (antes de multiplicar por nivel y combo)
-    VEL_Y = (2, 4)           # rango de velocidad de caída (px/frame-a-60fps)
+    VEL_Y = (2, 3)           # rango de velocidad de caída (px/frame-a-60fps)
     CADENCIA = None          # ms entre disparos (None = no dispara)
 
     def __init__(self, imagen_surface, x, y, pantalla_ancho, nivel):
@@ -107,6 +107,7 @@ class EnemigoTipo2(EnemigoBase):
     SALUD_BASE = 20
     VALOR = 2
     CADENCIA = 3000
+    VEL_Y = (2.5, 3.5)
 
     def __init__(self, imagen, x, y, pantalla_ancho, nivel, jugador):
         super().__init__(imagen, x, y, pantalla_ancho, nivel)
@@ -129,7 +130,7 @@ class EnemigoTipo3(EnemigoBase):
     SALUD_BASE = 30
     VALOR = 3
     CADENCIA = 1500
-    VEL_Y = (3, 6)
+    VEL_Y = (3.5, 5.5)
 
     def __init__(self, imagen, x, y, pantalla_ancho, nivel, jugador):
         super().__init__(imagen, x, y, pantalla_ancho, nivel)

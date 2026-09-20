@@ -26,6 +26,12 @@ def _congelado():
     return getattr(sys, "frozen", False)
 
 
+def es_desarrollo():
+    """True al ejecutar desde el código fuente (o con `GG_DEPURACION` definida): activa las
+    ayudas de depuración, que nunca deben estar en el juego empaquetado."""
+    return not _congelado() or bool(os.environ.get("GG_DEPURACION"))
+
+
 def _raiz_recursos():
     if _congelado():
         # onefile: carpeta temporal de extracción; onedir: carpeta del ejecutable.

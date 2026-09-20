@@ -523,3 +523,42 @@ def test_abrir_la_pantalla_cancela_un_arrastre_a_medias(menu_largo):
     menu_largo._arrastre_mejoras = [(0, 0), 0, True]
     menu_largo._abrir_mejoras()
     assert menu_largo._arrastre_mejoras is None
+
+
+# --- Monedas de depuración (F2) --------------------------------------------------
+
+def _tecla(menu, tecla):
+    pygame.event.clear()
+    pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=tecla))
+    menu._menu_mejoras()
+
+
+def test_f2_da_monedas_al_ejecutar_desde_el_codigo(menu, progresion):
+    from src.ui.menu import MONEDAS_DEPURACION
+    antes = progresion.monedas
+    _tecla(menu, pygame.K_F2)
+    _tecla(menu, pygame.K_F2)
+    assert progresion.monedas == antes + 2 * MONEDAS_DEPURACION
+
+
+def test_f2_no_hace_nada_en_el_juego_empaquetado(menu, progresion, monkeypatch):
+    monkeypatch.setattr("sys.frozen", True, raising=False)
+    monkeypatch.delenv("GG_DEPURACION", raising=False)
+    antes = progresion.monedas
+    _tecla(menu, pygame.K_F2)
+    assert progresion.monedas == antes
+
+
+def test_la_variable_gg_depuracion_lo_activa_tambien_en_el_empaquetado(menu, progresion, monkeypatch):
+    monkeypatch.setattr("sys.frozen", True, raising=False)
+    monkeypatch.setenv("GG_DEPURACION", "1")
+    _tecla(menu, pygame.K_F2)
+    assert progresion.monedas > 0
+
+
+def test_el_aviso_de_depuracion_solo_se_dibuja_en_desarrollo(menu, monkeypatch):
+    frases = _textos_dibujados(menu, monkeypatch)
+    assert any("DEBUG" in f for f in frases)
+    monkeypatch.setattr("sys.frozen", True, raising=False)
+    monkeypatch.delenv("GG_DEPURACION", raising=False)
+    assert not any("DEBUG" in f for f in _textos_dibujados(menu, monkeypatch))

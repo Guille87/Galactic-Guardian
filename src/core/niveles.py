@@ -51,17 +51,17 @@ NIVELES = (
     # Nivel 3
     DefinicionNivel(
         fases=(Fase(0, (T1,)), Fase(15200, (T1, T2)), Fase(28880, (T1, T2, T3))),
-        tiempo_jefe_ms=39520, espera_jefe_ms=5000, intervalo_spawn=(700, 900),
+        tiempo_jefe_ms=39520, espera_jefe_ms=5000, intervalo_spawn=(600, 800),
     ),
     # Nivel 4
     DefinicionNivel(
         fases=(Fase(0, (T1,)), Fase(12800, (T1, T2)), Fase(24320, (T1, T2, T3))),
-        tiempo_jefe_ms=33280, espera_jefe_ms=5000, intervalo_spawn=(600, 800),
+        tiempo_jefe_ms=33280, espera_jefe_ms=5000, intervalo_spawn=(500, 700),
     ),
     # Nivel 5
     DefinicionNivel(
         fases=(Fase(0, (T1,)), Fase(12000, (T1, T2)), Fase(22800, (T1, T2, T3))),
-        tiempo_jefe_ms=31200, espera_jefe_ms=5000, intervalo_spawn=(500, 700),
+        tiempo_jefe_ms=31200, espera_jefe_ms=5000, intervalo_spawn=(400, 600),
     ),
 )
 

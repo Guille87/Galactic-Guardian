@@ -9,6 +9,8 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ### Added
 
+- **Monedas de depuración:** en la pantalla Mejoras, al ejecutar desde el código fuente,
+  F2 da 1000 monedas para probar el árbol sin jugar (no existe en el juego empaquetado).
 - **Herramienta de balance** (`tools/balance.py`, solo para desarrollo). Un modelo
   analítico de la campaña que, con los datos reales del juego, estima para cada
   nivel cuánto daño se recibe, cuánto se tarda en matar al jefe y cuántas
@@ -42,7 +44,10 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
   - **Dificultad por tablas de nivel** (`src/core/escalado.py`): vida de los
     enemigos, vida del jefe y daño enemigo por nivel; el primer nivel hace un 40 %
     menos de daño, así que se supera sin mejoras. Los enemigos aparecen más
-    despacio (900–1100 ms en el nivel 1, 500–700 en el 5).
+    despacio (900–1100 ms entre uno y otro en el nivel 1, 400–600 en el 5).
+  - **Enemigos más manejables:** el tipo 1 cae más despacio (2–3 en vez de 2–4), el 2 pasa a
+    2,5–3,5 y el 3 a 3,5–5,5 (antes 3–6); la bala del tipo 2 va más rápida (5) y la del
+    tipo 3 más lenta (6, igual que la velocidad máxima de la nave).
   - **Monedas:** 1 por cada 70 puntos (antes 100).
   - **Sin fin:** la vida sigue creciendo por oleada con el mismo paso que entre
     los dos últimos niveles, y el ritmo de aparición sigue el de la campaña.
