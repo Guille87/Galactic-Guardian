@@ -4,10 +4,10 @@
 
 | Name                                  |    Stmts |     Miss |   Cover |   Missing |
 |-------------------------------------- | -------: | -------: | ------: | --------: |
-| main.py                               |       78 |       57 |     27% |41-72, 76-134 |
+| main.py                               |       80 |       57 |     29% |46-77, 81-139 |
 | src/core/audio.py                     |       40 |        0 |    100% |           |
 | src/core/combo.py                     |       21 |        0 |    100% |           |
-| src/core/config.py                    |       60 |        2 |     97% |     91-92 |
+| src/core/config.py                    |       60 |        2 |     97% |     97-98 |
 | src/core/controles.py                 |       10 |        0 |    100% |           |
 | src/core/engine.py                    |      311 |       25 |     92% |292-293, 366-371, 460-463, 494, 502-527 |
 | src/core/i18n.py                      |       57 |       16 |     72% |44-51, 56-63 |
@@ -15,7 +15,7 @@
 | src/core/niveles.py                   |       13 |        0 |    100% |           |
 | src/core/paths.py                     |       23 |        3 |     87% |32, 44, 46 |
 | src/core/preferencias.py              |        5 |        0 |    100% |           |
-| src/core/resources.py                 |       58 |        4 |     93% |78, 84, 94, 97 |
+| src/core/resources.py                 |       81 |        4 |     95% |122, 128, 138, 141 |
 | src/core/settings.py                  |       42 |        0 |    100% |           |
 | src/core/sin\_fin.py                  |       30 |        0 |    100% |           |
 | src/core/updates.py                   |      145 |       19 |     87% |74-79, 117-131, 150-151, 159, 189-192 |
@@ -28,7 +28,7 @@
 | src/entities/items.py                 |       20 |        0 |    100% |           |
 | src/entities/player.py                |      112 |        2 |     98% |  111, 119 |
 | src/managers/collision.py             |       53 |        0 |    100% |           |
-| src/managers/effects.py               |       39 |        0 |    100% |           |
+| src/managers/effects.py               |       33 |        0 |    100% |           |
 | src/managers/entities.py              |       60 |        1 |     98% |        85 |
 | src/managers/render.py                |      149 |        1 |     99% |       239 |
 | src/managers/waves.py                 |       48 |        0 |    100% |           |
@@ -41,7 +41,7 @@
 | src/visual/flash.py                   |       22 |        0 |    100% |           |
 | src/visual/flash\_constant.py         |       11 |        0 |    100% |           |
 | src/visual/screen\_shake.py           |       21 |        0 |    100% |           |
-| **TOTAL**                             | **2480** |  **218** | **91%** |           |
+| **TOTAL**                             | **2499** |  **218** | **91%** |           |
 
 
 ## Setup coverage badge
