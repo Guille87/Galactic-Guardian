@@ -1,6 +1,7 @@
 import pygame
 
 from src.core import settings
+from src.core.i18n import t
 
 
 class UIManager:
@@ -19,9 +20,9 @@ class UIManager:
 
         # Colores consistentes
         self.COLORES_STATS = {
-            "Ataque": (255, 0, 0),
-            "Vel. Ataque": (0, 255, 0),
-            "Velocidad": (0, 0, 255)
+            "ataque": (255, 0, 0),
+            "vel_ataque": (0, 255, 0),
+            "velocidad": (0, 0, 255)
         }
 
     def dibujar_interfaz(self, pantalla):
@@ -46,7 +47,7 @@ class UIManager:
         pantalla.blit(txt_puntos, (self.juego.pantalla_ancho - txt_puntos.get_width() - 20, 40))
 
         # Vidas arriba a la izquierda
-        txt_vidas = self.fuente_pequena.render(f"VIDAS: {self.juego.jugador.vidas}", True, color)
+        txt_vidas = self.fuente_pequena.render(t("hud.vidas", n=self.juego.jugador.vidas), True, color)
         pantalla.blit(txt_vidas, (20, 20))
 
     def _dibujar_barras_atributos(self, pantalla):
@@ -58,16 +59,16 @@ class UIManager:
         # realmente movidos el último frame (para detectar asimetrías de movimiento).
         vel_real = jugador._ultimo_desplazamiento.length() if hasattr(jugador, "_ultimo_desplazamiento") else 0.0
         stats = [
-            ("Ataque", jugador.danio, jugador.danio_maximo, None),
-            ("Vel. Ataque", jugador.obtener_cadencia_visual(), jugador.obtener_cadencia_max_visual(), None),
-            ("Velocidad", jugador.velocidad, jugador.CONFIG["vel_max"], f"real {vel_real:.2f} px/frame"),
+            ("ataque", jugador.danio, jugador.danio_maximo, None),
+            ("vel_ataque", jugador.obtener_cadencia_visual(), jugador.obtener_cadencia_max_visual(), None),
+            ("velocidad", jugador.velocidad, jugador.CONFIG["vel_max"], f"real {vel_real:.2f} px/frame"),
         ]
 
         start_y = 60
-        for nombre, val, max_val, extra in stats:
+        for clave, val, max_val, extra in stats:
             self._dibujar_barra_con_etiqueta(
-                pantalla, nombre, val, max_val,
-                (20, start_y), self.COLORES_STATS[nombre], extra
+                pantalla, t(f"hud.{clave}"), val, max_val,
+                (20, start_y), self.COLORES_STATS[clave], extra
             )
             start_y += 45
 
@@ -125,7 +126,7 @@ class UIManager:
         porcentaje = max(0, jefe.salud) / jefe.salud_maxima
 
         # Nombre del Jefe con sombra para legibilidad
-        txt_nombre = self.fuente_media.render("UNIDAD DE COMBATE PESADA", True, (255, 50, 50))
+        txt_nombre = self.fuente_media.render(t("hud.jefe_nombre"), True, (255, 50, 50))
         pantalla.blit(txt_nombre, (x, y - 25))
 
         # Fondo y Salud
@@ -165,7 +166,7 @@ class UIManager:
         pygame.draw.rect(pantalla, (255, 255, 255), rect_dialogo)
 
         # 3. Texto
-        texto = self.fuente_media.render("¿Estás seguro de que deseas salir?", True, (0, 0, 0))
+        texto = self.fuente_media.render(t("hud.confirmar_salida"), True, (0, 0, 0))
         texto_rect = texto.get_rect(center=(rect_dialogo.centerx, rect_dialogo.centery - 50))
         pantalla.blit(texto, texto_rect)
 
@@ -187,8 +188,8 @@ class UIManager:
         pantalla.blit(overlay, (0, 0))
 
         # 3. Textos
-        titulo = self.fuente_media.render("¡NUEVA PUNTUACIÓN TOP!", True, (255, 215, 0))  # Dorado
-        instrucciones = self.fuente_pequena.render("Introduce tu nombre y pulsa ENTER:", True, (200, 200, 200))
+        titulo = self.fuente_media.render(t("hud.nueva_puntuacion"), True, (255, 215, 0))  # Dorado
+        instrucciones = self.fuente_pequena.render(t("hud.introduce_nombre"), True, (200, 200, 200))
         nombre_surface = self.fuente_media.render(nombre_actual + "_", True, (255, 255, 255))
 
         # Posicionamiento centrado
