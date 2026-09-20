@@ -7,6 +7,16 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+
+- **Hit-stop.** La partida se congela un instante (150 ms al perder una vida,
+  250 ms al derrotar al jefe) mientras la pantalla sigue temblando, para que el
+  golpe tenga peso. Los valores están en `settings.py` (`HIT_STOP_*`).
+- **Opción "Efectos de pantalla"** en una pestaña nueva de Opciones, **Pantalla**:
+  un único interruptor que apaga a la vez el temblor y el hit-stop (accesibilidad).
+  Como el resto de Opciones, se aplica al instante, **Volver** lo descarta y
+  **Guardar** lo confirma (`[PANTALLA]` en `config.ini`; activado por defecto).
+
 ## [0.6.0] - 2026-09-20
 
 La pantalla tiembla al recibir golpes y se arregla la salud al avanzar de nivel.

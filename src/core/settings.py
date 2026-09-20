@@ -51,6 +51,11 @@ TEMBLOR_GOLPE = 0.5         # la nave recibe un impacto
 TEMBLOR_MUERTE = 0.85       # la nave pierde una vida
 TEMBLOR_JEFE = 1.0          # el jefe cae
 
+# --- Hit-stop (ver src/visual/hit_stop.py) ---
+# Congelado breve de la partida (el temblor sigue) tras un golpe fuerte.
+HIT_STOP_MUERTE_MS = 150    # la nave pierde una vida
+HIT_STOP_JEFE_MS = 250      # el jefe cae
+
 # --- Menú de opciones ---
 VOLUMEN_PASO = 0.1  # cuánto sube/baja el volumen con las flechas del slider
 

@@ -5,14 +5,14 @@ import webbrowser
 import pygame
 import pygame_gui
 
-from src.core import config, controles, i18n, settings, updates
+from src.core import config, controles, i18n, preferencias, settings, updates
 from src.core.i18n import t
 from src.core.version import __version__
 from src.ui.components.button import Boton
 
 # Pestañas de Opciones, en el orden en que se muestran; el nombre es también el
 # sufijo de su clave de texto (`opciones.<nombre>`).
-PESTANAS = ("controles", "idioma", "audio")
+PESTANAS = ("controles", "idioma", "audio", "pantalla")
 
 # Escalón de las flechas ◄ ► (0.1). El arrastre de la barra es libre; solo se
 # redondea a 2 decimales para no guardar basura de coma flotante.
@@ -260,6 +260,7 @@ class MenuManager:
             "vol_efectos": self.am.vol_efectos,
             "idioma": i18n.idioma_actual(),
             "controles": dict(self.controles),
+            "efectos_pantalla": preferencias.efectos_pantalla(),
         }
         self._preparar_ui_opciones()
 
@@ -273,6 +274,7 @@ class MenuManager:
         self.am.actualizar_volumen_musica(self.vol_musica)
         self.am.actualizar_volumen_efectos(self.vol_efectos)
         self.controles = dict(inst["controles"])
+        preferencias.establecer_efectos_pantalla(inst["efectos_pantalla"])
         if inst["idioma"] != i18n.idioma_actual():
             i18n.establecer_idioma(inst["idioma"])
             self._crear_botones()          # la UI de Opciones se rehace sola (`_idioma_ui`)
@@ -298,6 +300,7 @@ class MenuManager:
         self.slider_efectos.set_current_value(self.vol_efectos)
         for accion in controles.ACCIONES:      # por si quedó "Pulsa una tecla…" a medias
             self._actualizar_texto_control(accion)
+        self._actualizar_boton_efectos()       # puede haberse cambiado desde otro `MenuManager`
         self._mostrar_pestana(self._pestana)   # la UI puede venir con otra pestaña a la vista
 
     def _descargando_actualizacion(self):
@@ -365,9 +368,9 @@ class MenuManager:
 
         # Pestañas: una fila de botones bajo el título (la activa queda marcada).
         self._botones_pestana = {}   # UIButton -> nombre de pestaña
-        for nombre, x in zip(PESTANAS, (50, 220, 390)):
+        for nombre, x in zip(PESTANAS, (50, 178, 306, 434)):
             boton = pygame_gui.elements.UIButton(
-                relative_rect=pygame.Rect((x, 120), (160, 44)),
+                relative_rect=pygame.Rect((x, 120), (116, 44)),
                 text=t(f"opciones.{nombre}"), manager=self.ui_manager,
             )
             self._botones_pestana[boton] = nombre
@@ -434,6 +437,20 @@ class MenuManager:
         )
         self._elementos_pestana["controles"].append(self.btn_restaurar_controles)
 
+        # --- Pantalla: interruptor único de los efectos de pantalla (temblor y
+        # hit-stop). Se aplica al instante; se guarda con "Guardar".
+        self.btn_efectos_pantalla = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((50, 220), (500, 44)), text="", manager=self.ui_manager,
+        )
+        self._elementos_pestana["pantalla"] += [
+            self.btn_efectos_pantalla,
+            pygame_gui.elements.UILabel(
+                relative_rect=pygame.Rect((50, 274), (500, 22)),
+                text=t("opciones.efectos_pantalla_ayuda"), manager=self.ui_manager,
+            ),
+        ]
+        self._actualizar_boton_efectos()
+
         # Botones comunes (siempre visibles)
         self.btn_guardar = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((50, 722), (200, 50)), text=t("comun.guardar"), manager=self.ui_manager
@@ -462,6 +479,16 @@ class MenuManager:
                 boton.select()
             else:
                 boton.unselect()
+
+    def _actualizar_boton_efectos(self):
+        """Texto y marca del interruptor según el estado actual de los efectos."""
+        activos = preferencias.efectos_pantalla()
+        estado = t("comun.si") if activos else t("comun.no")
+        self.btn_efectos_pantalla.set_text(t("opciones.efectos_pantalla", estado=estado))
+        if activos:
+            self.btn_efectos_pantalla.select()
+        else:
+            self.btn_efectos_pantalla.unselect()
 
     def _marcar_idioma_actual(self):
         for boton, codigo in self._botones_idioma.items():
@@ -606,6 +633,10 @@ class MenuManager:
             elif event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element in self._botones_idioma:
                 self._cambiar_idioma(self._botones_idioma[event.ui_element])
 
+            elif event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element == self.btn_efectos_pantalla:
+                preferencias.establecer_efectos_pantalla(not preferencias.efectos_pantalla())
+                self._actualizar_boton_efectos()
+
             elif event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element in self._acciones_por_boton:
                 self._empezar_reasignacion(self._acciones_por_boton[event.ui_element])
 
@@ -617,7 +648,8 @@ class MenuManager:
             elif event.type == pygame_gui.UI_BUTTON_PRESSED:
                 if event.ui_element == self.btn_guardar:
                     config.guardar_configuracion(self.vol_musica, self.vol_efectos, self.controles,
-                                             idioma=i18n.idioma_actual())
+                                                 idioma=i18n.idioma_actual(),
+                                                 efectos_pantalla=preferencias.efectos_pantalla())
                     self.estado = "PRINCIPAL"
                 elif event.ui_element == self.btn_volver:
                     self._deshacer_cambios()

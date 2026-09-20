@@ -63,7 +63,8 @@ class InputHandler:
 
         # Si no está pausado ni en la transición de fin de nivel y la bandera
         # está activa, dispara.
-        if not self.juego.pausado and not self.juego.transicion_activa and self.juego.disparando:
+        if (not self.juego.pausado and not self.juego.transicion_activa
+                and not self.juego.effect_manager.congelado and self.juego.disparando):
             self.juego.disparar()
 
         return True

@@ -7,8 +7,9 @@ from src.ui.menu import MenuManager
 from src.core.engine import Juego
 from src.core.audio import AudioManager
 from src.core.resources import ResourceManager
-from src.core import i18n, settings
-from src.core.config import RECURSOS, MUSICA, SONIDOS, EXPLOSIONES, DIR_ASSETS, cargar_configuracion, cargar_idioma
+from src.core import i18n, preferencias, settings
+from src.core.config import (RECURSOS, MUSICA, SONIDOS, EXPLOSIONES, DIR_ASSETS, cargar_configuracion,
+                             cargar_efectos_pantalla, cargar_idioma)
 from src.core.version import __version__
 from src.ui.scoreboard import SistemaClasificacion
 
@@ -99,6 +100,7 @@ def main():
     # la primera vez, el del sistema.
     vol_musica, vol_efectos = cargar_configuracion()
     i18n.establecer_idioma(cargar_idioma() or i18n.detectar_idioma_sistema())
+    preferencias.establecer_efectos_pantalla(cargar_efectos_pantalla())
 
     # Un único AudioManager compartido entre el menú y la partida
     audio_manager = AudioManager(resource_manager, vol_musica, vol_efectos)

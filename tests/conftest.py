@@ -39,6 +39,17 @@ def _idioma_espanol():
     i18n.establecer_idioma("es")
 
 
+@pytest.fixture(autouse=True)
+def _efectos_de_pantalla_activados():
+    """Las preferencias son estado de módulo: cada test parte (y termina) con los
+    efectos de pantalla en su valor por defecto (activados)."""
+    from src.core import preferencias
+
+    preferencias.establecer_efectos_pantalla(True)
+    yield
+    preferencias.establecer_efectos_pantalla(True)
+
+
 @pytest.fixture(scope="session")
 def rm():
     """ResourceManager (singleton) con todos los recursos del juego cargados."""

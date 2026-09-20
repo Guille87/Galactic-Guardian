@@ -176,6 +176,7 @@ class Juego:
         self.entity_manager.vaciar_todo(avance_nivel=avance_nivel)
         self.enemigos_golpeados.clear()
         self.effect_manager.temblor.reiniciar()
+        self.effect_manager.hit_stop.reiniciar()
         self.enemigos_eliminados_nivel = 0
         self.tiempo_proximo_enemigo = 0
         self.tiempo_juego = 0.0
@@ -225,6 +226,7 @@ class Juego:
         if isinstance(enemigo, Jefe):
             self.jefe = None
             self.effect_manager.agregar_temblor(settings.TEMBLOR_JEFE)
+            self.effect_manager.agregar_hit_stop(settings.HIT_STOP_JEFE_MS)
             if self.modo == settings.MODO_SIN_FIN:
                 # Sin fin: no hay cierre de nivel, la partida sigue con la oleada
                 # siguiente (se llevan las balas del jefe, como en la campaña).
@@ -250,6 +252,7 @@ class Juego:
         else:
             self.effect_manager.crear_explosion(self.jugador.rect.center)
             self.effect_manager.agregar_temblor(settings.TEMBLOR_MUERTE)
+            self.effect_manager.agregar_hit_stop(settings.HIT_STOP_MUERTE_MS)
             self._procesar_muerte_jugador()
 
     def _procesar_muerte_jugador(self):
@@ -280,6 +283,15 @@ class Juego:
 
     def actualizar(self, dt):
         """Actualiza el estado del juego. `dt` en segundos."""
+        # Hit-stop: la simulación se detiene (el reloj de juego no avanza, así que
+        # cadencias y temporizadores quedan congelados) pero el temblor sigue
+        # sacudiendo la imagen quieta. Va antes de la comprobación de muerte para
+        # que el golpe final también se note antes del Game Over.
+        if self.effect_manager.congelado:
+            self.effect_manager.hit_stop.actualizar(dt)
+            self.effect_manager.temblor.actualizar(dt)
+            return
+
         if self.jugador.vidas <= 0:
             self.juego_terminado()
             return

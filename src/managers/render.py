@@ -71,7 +71,7 @@ class RenderManager:
         Solo cuesta algo mientras hay temblor. Se vuelve a pintar una copia
         desplazada sobre la propia pantalla, sin borrarla antes: las franjas del
         borde enseñan el frame sin desplazar en vez de huecos negros."""
-        dx, dy = self.juego.effect_manager.temblor.desplazamiento()
+        dx, dy = self.juego.effect_manager.desplazamiento_temblor()
         if dx or dy:
             self.pantalla.blit(self.pantalla.copy(), (dx, dy))
 
