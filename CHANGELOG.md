@@ -7,6 +7,12 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Campaña: la salud se restablece al empezar el nivel siguiente.** Antes la
+  nave arrancaba el nivel con la barra de salud que traía del anterior (las
+  mejoras y las vidas se siguen conservando). Repetir un nivel ya la restauraba.
+
 ### Added
 
 - **Temblor de pantalla.** El mundo (fondo, enemigos, balas y nave) tiembla al

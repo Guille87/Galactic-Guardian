@@ -1,4 +1,5 @@
 """src/core/engine.py — Juego (estado de partida, pausa, transiciones)."""
+import pygame
 import pytest
 
 from src.core import settings
@@ -323,3 +324,56 @@ def test_opciones_desde_pausa_volver_descarta_las_teclas_y_guardar_las_confirma(
     monkeypatch.setattr(MenuManager, "mostrar_solo_opciones", _prueba(guardar=True))
     juego.mostrar_opciones_juego()
     assert juego.input_handler.mapa_teclas["disparar"] == pygame.K_j   # Guardar: se queda
+
+
+# --- La salud se restablece al empezar un nivel ------------------------------
+
+def _herido(juego):
+    juego.jugador.salud = 1
+    assert juego.jugador.salud < juego.jugador.salud_maxima
+
+
+def test_avanzar_de_nivel_restaura_la_salud_pero_conserva_mejoras_y_vidas(juego):
+    juego.jugador.mejorar_danio()
+    juego.jugador.vidas = 2
+    _herido(juego)
+    juego.jefe_derrotado = True
+    juego.reiniciar_juego()
+    assert juego.nivel == 2
+    assert juego.jugador.salud == juego.jugador.salud_maxima
+    assert juego.jugador.danio == 2          # las mejoras siguen ahí
+    assert juego.jugador.vidas == 2          # las vidas también: solo se cura la barra
+
+
+def test_continuar_tras_nivel_completado_restaura_la_salud(juego):
+    _herido(juego)
+    juego.estado_nivel_completado = True
+    juego.jefe_derrotado = True
+    juego.dibujar()
+    juego.input_handler._clic_nivel_completado(
+        pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=juego.boton_continuar.rect.center))
+    assert juego.nivel == 2 and juego.jugador.salud == juego.jugador.salud_maxima
+
+
+def test_elegir_el_siguiente_nivel_del_selector_restaura_la_salud(juego):
+    _herido(juego)
+    juego.jefe_derrotado = True
+    juego.mostrando_seleccion_nivel = True
+    juego.dibujar()
+    siguiente = next(b for n, b in juego.botones_seleccion_nivel if n == juego.nivel + 1)
+    juego.input_handler._clic_seleccion_nivel(
+        pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=siguiente.rect.center))
+    assert juego.nivel == 2 and juego.jugador.salud == juego.jugador.salud_maxima
+
+
+def test_repetir_un_nivel_desde_el_selector_restaura_la_salud(juego):
+    juego.nivel = 3
+    _herido(juego)
+    juego.reiniciar_juego(nivel_forzado=2)
+    assert juego.nivel == 2 and juego.jugador.salud == juego.jugador.salud_maxima
+
+
+def test_reintentar_tras_game_over_restaura_la_salud(juego):
+    _herido(juego)
+    juego.reiniciar_juego()
+    assert juego.jugador.salud == juego.jugador.salud_maxima

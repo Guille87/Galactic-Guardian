@@ -158,8 +158,10 @@ class Juego:
             self.nivel += 1
             self.jefe_derrotado = False
             # La transición ya movió a la nave fuera de la pantalla: el nivel
-            # nuevo empieza con ella en su sitio de siempre (mejoras intactas).
+            # nuevo empieza con ella en su sitio de siempre (mejoras y vidas
+            # intactas) y con la barra de salud llena.
             self.jugador.recentrar(self.pantalla_ancho, self.pantalla_alto)
+            self.jugador.curar(self.jugador.salud_maxima)
         else:
             # Partida desde cero: se restablece al jugador in situ (sin recrearlo)
             # para que los managers puedan conservar su referencia.
