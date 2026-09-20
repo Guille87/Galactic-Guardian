@@ -247,7 +247,7 @@ def _clic_actualizar(menu):
 def test_actualizar_sin_instalador_abre_el_navegador(menu, monkeypatch):
     """En desarrollo (no frozen) el botón siempre abre la web."""
     menu.actualizaciones.resultado = {
-        "version": "9.9.9", "url": "http://descarga", "instalador_url": "http://x/setup.exe",
+        "version": "9.9.9", "url": "http://descarga", "instalador_url": "http://x/setup.exe", "instalador_sha256": "a" * 64,
     }
     abierto = []
     monkeypatch.setattr("src.ui.menu.webbrowser.open", lambda u: abierto.append(u))
@@ -260,7 +260,7 @@ def test_actualizar_sin_instalador_abre_el_navegador(menu, monkeypatch):
 def test_botones_bloqueados_mientras_se_descarga_la_actualizacion(menu, monkeypatch):
     """No se puede interrumpir la descarga jugando, abriendo opciones, etc."""
     menu.actualizaciones.resultado = {
-        "version": "9.9.9", "url": "http://d", "instalador_url": "http://x/setup.exe",
+        "version": "9.9.9", "url": "http://d", "instalador_url": "http://x/setup.exe", "instalador_sha256": "a" * 64,
     }
 
     class _DescargaFalsa:
@@ -281,12 +281,12 @@ def test_botones_bloqueados_mientras_se_descarga_la_actualizacion(menu, monkeypa
 
 def test_actualizar_instalado_descarga_y_al_terminar_lanza_y_sale(menu, monkeypatch):
     menu.actualizaciones.resultado = {
-        "version": "9.9.9", "url": "http://d", "instalador_url": "http://x/setup.exe",
+        "version": "9.9.9", "url": "http://d", "instalador_url": "http://x/setup.exe", "instalador_sha256": "a" * 64,
     }
     monkeypatch.setattr("src.core.updates.puede_autoactualizar", lambda: True)
 
     class _DescargaFalsa:
-        def __init__(self, url): self.progreso = 0.5; self.terminada = False; self.error = False; self.ruta = None
+        def __init__(self, url, sha256): self.progreso = 0.5; self.terminada = False; self.error = False; self.ruta = None
         def empezar(self): pass
     monkeypatch.setattr("src.core.updates.DescargaActualizacion", _DescargaFalsa)
 
@@ -305,14 +305,31 @@ def test_actualizar_instalado_descarga_y_al_terminar_lanza_y_sale(menu, monkeypa
     assert menu.ejecutando is False and menu.resultado == "SALIR"
 
 
-def test_actualizar_error_de_descarga_ofrece_la_web(menu, monkeypatch):
+def test_actualizar_instalado_sin_hash_no_descarga_y_abre_la_web(menu, monkeypatch):
+    """Sin SHA-256 no se puede verificar el instalador: no se instala solo."""
     menu.actualizaciones.resultado = {
         "version": "9.9.9", "url": "http://d", "instalador_url": "http://x/setup.exe",
+        "instalador_sha256": None,
+    }
+    monkeypatch.setattr("src.core.updates.puede_autoactualizar", lambda: True)
+    creadas = []
+    monkeypatch.setattr("src.core.updates.DescargaActualizacion",
+                        lambda *a: creadas.append(a))
+    abierto = []
+    monkeypatch.setattr("src.ui.menu.webbrowser.open", lambda u: abierto.append(u))
+
+    _clic_actualizar(menu)
+    assert creadas == [] and abierto == ["http://d"]
+
+
+def test_actualizar_error_de_descarga_ofrece_la_web(menu, monkeypatch):
+    menu.actualizaciones.resultado = {
+        "version": "9.9.9", "url": "http://d", "instalador_url": "http://x/setup.exe", "instalador_sha256": "a" * 64,
     }
     monkeypatch.setattr("src.core.updates.puede_autoactualizar", lambda: True)
 
     class _DescargaFalsa:
-        def __init__(self, url): self.progreso = 0.0; self.terminada = False; self.error = True; self.ruta = None
+        def __init__(self, url, sha256): self.progreso = 0.0; self.terminada = False; self.error = True; self.ruta = None
         def empezar(self): pass
     monkeypatch.setattr("src.core.updates.DescargaActualizacion", _DescargaFalsa)
     abierto = []

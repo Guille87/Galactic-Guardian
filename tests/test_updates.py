@@ -1,4 +1,5 @@
 """src/core/updates.py — comprobación de nueva versión y descarga del instalador."""
+import hashlib
 import json
 import os
 import time
@@ -42,7 +43,7 @@ def cache_temporal(tmp_path, monkeypatch):
 def test_usa_la_cache_si_esta_fresca(cache_temporal, monkeypatch):
     cache_temporal.write_text(json.dumps({
         "tag": "v9.9.9", "url": "http://x", "instalador_url": "http://x/setup.exe",
-        "ts": time.time(),
+        "instalador_sha256": "a" * 64, "ts": time.time(),
     }))
     def _no_llamar():
         raise AssertionError("no debería consultar la API con caché fresca")
@@ -52,6 +53,7 @@ def test_usa_la_cache_si_esta_fresca(cache_temporal, monkeypatch):
     c._comprobar()
     assert c.resultado == {
         "version": "9.9.9", "url": "http://x", "instalador_url": "http://x/setup.exe",
+        "instalador_sha256": "a" * 64,
     }
 
 
@@ -62,6 +64,25 @@ def test_url_instalador_elige_el_asset_setup():
     ]}
     assert updates._url_instalador(cuerpo) == "s"
     assert updates._url_instalador({"assets": []}) is None
+
+
+def test_sha256_instalador_lee_el_digest_de_la_api():
+    hexa = "0123456789abcdef" * 4
+    cuerpo = {"assets": [
+        {"name": "GalacticGuardian-v1.0.0-windows.zip", "digest": "sha256:" + "b" * 64},
+        {"name": "GalacticGuardian-v1.0.0-setup.exe", "digest": "sha256:" + hexa.upper()},
+    ]}
+    assert updates._sha256_instalador(cuerpo) == hexa      # el del instalador, en minúsculas
+
+
+@pytest.mark.parametrize("digest", [None, "", "sha256:", "sha1:" + "a" * 40,
+                                    "sha256:" + "a" * 63, "sha256:" + "z" * 64])
+def test_sha256_instalador_ausente_o_invalido_es_none(digest):
+    asset = {"name": "GalacticGuardian-v1.0.0-setup.exe"}
+    if digest is not None:
+        asset["digest"] = digest
+    assert updates._sha256_instalador({"assets": [asset]}) is None
+    assert updates._sha256_instalador({"assets": []}) is None
 
 
 def test_cache_caducada_consulta_la_api(cache_temporal, monkeypatch):
@@ -109,12 +130,16 @@ class _RespuestaFalsa:
     def __exit__(self, *a): return False
 
 
+def _sha(datos):
+    return hashlib.sha256(datos).hexdigest()
+
+
 def test_descarga_ok(tmp_path, monkeypatch):
     monkeypatch.setattr(updates.tempfile, "gettempdir", lambda: str(tmp_path))
     monkeypatch.setattr(updates.urllib.request, "urlopen",
                         lambda req, timeout=0: _RespuestaFalsa(b"x" * 5000))
 
-    d = updates.DescargaActualizacion("http://x/setup.exe")
+    d = updates.DescargaActualizacion("http://x/setup.exe", _sha(b"x" * 5000))
     d._descargar()
 
     assert d.terminada and not d.error
@@ -122,12 +147,34 @@ def test_descarga_ok(tmp_path, monkeypatch):
     assert os.path.getsize(d.ruta) == 5000
 
 
+def test_descarga_con_hash_distinto_es_error_y_borra_el_archivo(tmp_path, monkeypatch):
+    """Un instalador que no es el publicado (corrupto o alterado) no se lanza."""
+    monkeypatch.setattr(updates.tempfile, "gettempdir", lambda: str(tmp_path))
+    monkeypatch.setattr(updates.urllib.request, "urlopen",
+                        lambda req, timeout=0: _RespuestaFalsa(b"malicioso" * 500))
+
+    d = updates.DescargaActualizacion("http://x/setup.exe", _sha(b"el bueno"))
+    d._descargar()
+
+    assert d.error and not d.terminada and d.ruta is None
+    assert not (tmp_path / "GalacticGuardian-update" / "GalacticGuardian-setup.exe").exists()
+
+
+def test_descarga_acepta_el_hash_en_mayusculas(tmp_path, monkeypatch):
+    monkeypatch.setattr(updates.tempfile, "gettempdir", lambda: str(tmp_path))
+    monkeypatch.setattr(updates.urllib.request, "urlopen",
+                        lambda req, timeout=0: _RespuestaFalsa(b"abc" * 100))
+    d = updates.DescargaActualizacion("http://x/setup.exe", _sha(b"abc" * 100).upper())
+    d._descargar()
+    assert d.terminada and not d.error
+
+
 def test_descarga_incompleta_es_error(tmp_path, monkeypatch):
     monkeypatch.setattr(updates.tempfile, "gettempdir", lambda: str(tmp_path))
     monkeypatch.setattr(updates.urllib.request, "urlopen",
                         lambda req, timeout=0: _RespuestaFalsa(b"x" * 10, longitud=9999))
 
-    d = updates.DescargaActualizacion("http://x/setup.exe")
+    d = updates.DescargaActualizacion("http://x/setup.exe", _sha(b"x" * 10))
     d._descargar()
     assert d.error and not d.terminada
 

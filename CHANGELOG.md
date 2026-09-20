@@ -7,6 +7,14 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Security
+
+- La actualización desde el juego **verifica el instalador** antes de ejecutarlo:
+  se compara su SHA-256 con el que publica GitHub para esa Release. Si no
+  coincide (descarga corrupta o alterada) se descarta y se ofrece abrir la web
+  de descargas; si la Release no trae hash, tampoco se instala solo. No hay
+  cambios en el proceso de publicación.
+
 ### Changed
 
 - Interno: las oleadas y los niveles pasan a ser **datos**. Cada nivel de la

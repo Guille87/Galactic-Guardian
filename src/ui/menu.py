@@ -232,10 +232,12 @@ class MenuManager:
 
     def _pulsar_actualizar(self, info):
         """Botón "Actualizar": descarga+instala si es la versión instalada y hay
-        instalador; si no (o si la descarga ya falló antes) abre la web."""
+        instalador **con hash para verificarlo**; si no (o si la descarga ya
+        falló antes, p. ej. por un hash que no coincide) abre la web."""
         if (updates.puede_autoactualizar() and info.get("instalador_url")
-                and not self._descarga_fallo):
-            self._descarga = updates.DescargaActualizacion(info["instalador_url"])
+                and info.get("instalador_sha256") and not self._descarga_fallo):
+            self._descarga = updates.DescargaActualizacion(
+                info["instalador_url"], info["instalador_sha256"])
             self._descarga.empezar()
         else:
             webbrowser.open(info["url"])
