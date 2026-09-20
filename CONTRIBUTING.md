@@ -100,6 +100,21 @@ En una Release, `build.yml` compila y sube el `.zip` y el `-setup.exe`.
 En la versión compilada, `config.ini` y las puntuaciones se guardan en
 `%APPDATA%\GalacticGuardian` (no junto al `.exe`).
 
+## Herramienta de balance
+
+`tools/balance.py` es un script de desarrollo (no forma parte del juego) que estima
+la dificultad de la campaña y la economía a partir de los datos reales del juego:
+
+```bash
+python tools/balance.py                  # informe del juego tal como está
+python tools/balance.py --perfil todos   # con los tres perfiles de jugador
+python tools/balance.py --niveles        # detalle por fase de cada nivel
+```
+
+Es un modelo analítico, no una simulación: sirve como brújula para fijar la
+curva de dificultad y el precio de las mejoras, y los números definitivos se
+afinan jugando. Si cambias vida, daño, niveles o el árbol, vuelve a correrlo.
+
 ## Publicar una versión
 
 El proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/): `MAJOR`

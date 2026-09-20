@@ -12,8 +12,10 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
         "tamano": (50, 50),
         "salud_max": 50,
         "vidas_init": 3,
+        "vel_base": 4,             # velocidad al empezar (px/frame-a-60fps)
         "vel_max": 6,
-        "cadencia_max": 150,
+        "cadencia_base": 350,      # ms entre disparos al empezar
+        "cadencia_max": 150,       # ms entre disparos como mínimo
         "danio_base": 10,          # daño de tu bala al empezar
         "danio_max": 30
     }
@@ -51,11 +53,11 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
         self.vidas = self.CONFIG["vidas_init"] + b.vidas_extra
         self.salud_maxima = self.CONFIG["salud_max"] + b.salud_extra
         self.salud = self.salud_maxima
-        self.velocidad = min(self.CONFIG["vel_max"], 4 + b.velocidad_extra)
+        self.velocidad = min(self.CONFIG["vel_max"], self.CONFIG["vel_base"] + b.velocidad_extra)
         self.danio = min(self.CONFIG["danio_max"], self.CONFIG["danio_base"] + b.danio_extra)
 
         # 3. Sistema de Armas
-        self.cadencia_disparo = max(self.CONFIG["cadencia_max"], 350 - b.cadencia_menos_ms)
+        self.cadencia_disparo = max(self.CONFIG["cadencia_max"], self.CONFIG["cadencia_base"] - b.cadencia_menos_ms)
         self.ultimo_disparo = 0
         self.tipo_disparo = b.disparo_inicial  # simple, doble, triple
 

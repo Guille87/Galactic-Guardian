@@ -7,6 +7,15 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+
+- **Herramienta de balance** (`tools/balance.py`, solo para desarrollo). Un modelo
+  analítico de la campaña que, con los datos reales del juego, estima para cada
+  nivel cuánto daño se recibe, cuánto se tarda en matar al jefe y cuántas
+  muertes cuesta, con builds del árbol de referencia y tres perfiles de jugador;
+  simula una partida y la progresión entre partidas para calcular cuántas
+  hacen falta para completar la campaña. Está validado contra el juego real.
+
 ### Changed
 
 - **Salud y daño en números reales.** La nave tiene ahora **50 de salud** (antes 5

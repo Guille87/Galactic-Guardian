@@ -81,7 +81,7 @@ probado por separado:
    enemiga 10, jefe pesado 20, vida de enemigos ×10). La salud pasa a **barra**
    y las barras de estadísticas se ajustan al máximo alcanzable. Con pruebas de
    equivalencia (tests y simulación) para demostrar que no cambia nada.
-3. **Reequilibrio completo**:
+3. **Reequilibrio completo** (empezado: la **herramienta de balance** ya está, `tools/balance.py`):
    - Base nueva: velocidad **5** (tope 6, igual), **4 disparos/s** (antes 2,9;
      tope 8 en lugar del 6,7 actual, que salía de 1000 ÷ 150 ms), daño 10, salud 50.
    - Hasta **2 y 3 balas** por disparo y más daño desde el árbol.
