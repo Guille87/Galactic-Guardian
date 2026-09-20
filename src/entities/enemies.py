@@ -111,6 +111,8 @@ class EnemigoBase(pygame.sprite.Sprite, MovimientoSubpixel):
 
 
 class EnemigoTipo1(EnemigoBase):
+    RECURSO = "enemigo1"   # nombre lógico de su sprite en config.RECURSOS
+
     def __init__(self, imagen, x, y, pantalla_ancho, nivel):
         super().__init__(imagen, x, y, pantalla_ancho, nivel, salud_base=1)
         # Atributos específicos del tipo de enemigo 1
@@ -118,6 +120,8 @@ class EnemigoTipo1(EnemigoBase):
 
 
 class EnemigoTipo2(EnemigoBase):
+    RECURSO = "enemigo2"
+
     def __init__(self, imagen, x, y, pantalla_ancho, nivel, jugador):
         super().__init__(imagen, x, y, pantalla_ancho, nivel, salud_base=2)
         # Atributos específicos del tipo de enemigo 2
@@ -136,6 +140,8 @@ class EnemigoTipo2(EnemigoBase):
 
 
 class EnemigoTipo3(EnemigoBase):
+    RECURSO = "enemigo3"
+
     def __init__(self, imagen, x, y, pantalla_ancho, nivel, jugador):
         super().__init__(imagen, x, y, pantalla_ancho, nivel, salud_base=3)
         # Atributos específicos del tipo de enemigo 3
@@ -155,6 +161,7 @@ class EnemigoTipo3(EnemigoBase):
 
 
 class Jefe(EnemigoBase):
+    RECURSO = "jefe1"
     TAMANO_JEFE = (200, 200)
     FACTOR_NIVEL = settings.DIFICULTAD_FACTOR_JEFE
 

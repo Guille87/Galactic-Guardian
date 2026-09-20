@@ -36,37 +36,7 @@ TRANSICION_ESPERA_MS = 2000         # ms de espera tras desaparecer la nave, ant
 # asomando por arriba de la pantalla.
 TRANSICION_MARGEN_SALIDA = 40
 
-# --- Generación de enemigos (ms entre spawns) ---
-GEN_MIN_INICIAL = 800
-GEN_MAX_INICIAL = 1000
-GEN_MIN_SUELO = 200          # límite inferior al subir de nivel
-GEN_DECREMENTO_NIVEL = 200   # cuánto baja el intervalo por nivel
-
-
-def gen_intervalo_para_nivel(nivel):
-    """Intervalo (min, max) en ms entre spawns para un nivel dado.
-
-    Función pura de `nivel` (antes era estado mutable que se decrementaba paso a
-    paso en cada `reiniciar_juego`): permite saltar directamente a un nivel
-    concreto -p. ej. desde el selector de nivel- sin repetir el decremento N
-    veces.
-    """
-    bajada = GEN_DECREMENTO_NIVEL * (nivel - 1)
-    return (
-        max(GEN_MIN_SUELO, GEN_MIN_INICIAL - bajada),
-        max(GEN_MIN_SUELO, GEN_MAX_INICIAL - bajada),
-    )
-
-# --- Fases de la oleada (ms desde el inicio del nivel) ---
-TIEMPO_FASE_2 = 20000
-TIEMPO_FASE_3 = 38000
-TIEMPO_JEFE = 52000
-TIEMPO_ESPERA_JEFE = 5000    # margen tras cambiar la música antes de que aparezca
-
-# Compresión de esos umbrales por nivel: en el nivel N se multiplican por
-# max(TIEMPO_ESCALA_SUELO, 1 - TIEMPO_ESCALA_NIVEL * (N - 1)).
-TIEMPO_ESCALA_NIVEL = 0.12
-TIEMPO_ESCALA_SUELO = 0.6
+# Fases, cadencia de aparición y jefe de cada nivel: ver src/core/niveles.py
 
 # --- Menú de opciones ---
 VOLUMEN_PASO = 0.1  # cuánto sube/baja el volumen con las flechas del slider

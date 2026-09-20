@@ -2,6 +2,7 @@
 import pytest
 
 from src.core import settings
+from src.core.niveles import definicion_nivel
 from src.entities.enemies import EnemigoTipo1
 
 DT60 = 1.0 / 60.0
@@ -178,7 +179,7 @@ def test_seleccionar_nivel_arranca_ese_nivel_desde_cero(juego):
     assert juego.nivel == 3
     assert juego.puntuacion == 0
     assert juego.jugador.danio == 1
-    assert (juego.MIN_TIEMPO_GENERACION, juego.MAX_TIEMPO_GENERACION) == settings.gen_intervalo_para_nivel(3)
+    assert (juego.MIN_TIEMPO_GENERACION, juego.MAX_TIEMPO_GENERACION) == definicion_nivel(3).intervalo_spawn
 
 
 def test_enemigos_eliminados_nivel_cuenta_y_se_resetea(juego, rm):
@@ -249,3 +250,31 @@ def test_opciones_desde_pausa_aplica_los_controles_reasignados(juego, monkeypatc
 
     juego.mostrar_opciones_juego()
     assert juego.input_handler.mapa_teclas["disparar"] == pygame.K_j
+
+
+def test_reiniciar_pone_la_musica_del_nivel(juego, audio, monkeypatch):
+    from src.core import niveles
+    from src.core.niveles import DefinicionNivel
+
+    base = definicion_nivel(1)
+    otra = DefinicionNivel(fases=base.fases, tiempo_jefe_ms=base.tiempo_jefe_ms,
+                           espera_jefe_ms=base.espera_jefe_ms, intervalo_spawn=base.intervalo_spawn,
+                           musica="skyfire_theme")
+    monkeypatch.setattr(niveles, "NIVELES", (base, otra) + niveles.NIVELES[2:])
+    juego.reiniciar_juego(nivel_forzado=2)
+    assert audio.pista_actual == "skyfire_theme"
+
+
+def test_el_jefe_del_nivel_aparece_a_su_hora(juego):
+    """Integración: en el nivel 3 el jefe llega según SU definición (no la del 1)."""
+    d = definicion_nivel(3)
+    juego.reiniciar_juego(nivel_forzado=3)
+    juego.jugador.vidas = 999
+    limite = d.tiempo_jefe_ms + d.espera_jefe_ms + 3000
+    for _ in range(int(limite / 1000 * 60) + 1):
+        juego.actualizar(DT60)
+        if juego.jefe is not None:
+            break
+    else:
+        pytest.fail("el jefe no apareció")
+    assert juego.tiempo_juego >= d.tiempo_jefe_ms + d.espera_jefe_ms
