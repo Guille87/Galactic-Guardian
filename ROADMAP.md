@@ -44,7 +44,7 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 - **Combo de puntuación** — racha de bajas sin recibir daño que sube el
   multiplicador de ×1 a ×5 (umbrales en `settings.py`); se rompe al primer golpe,
   se conserva entre niveles y oleadas, y el HUD lo muestra con una barra. Ver
-  `[Unreleased]` → próxima versión.
+  `[0.8.0]`.
 - **Screen shake** — la pantalla tiembla (solo el mundo, no el HUD) al recibir un
   impacto, perder una vida y derrotar al jefe. Modelo de "trauma" con
   constantes en `settings.py`. Ver `[0.6.0]`.
