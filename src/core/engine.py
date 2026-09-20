@@ -416,12 +416,21 @@ class Juego:
         self.resultado = "SALIR"
         self.ejecutando = False
 
+    def _invalidar_botones(self):
+        """Olvida los botones de los overlays: `RenderManager` los vuelve a crear
+        (con los textos del idioma actual) la próxima vez que se dibujen."""
+        for nombre in ("boton_reanudar", "boton_opciones", "boton_salir", "boton_reintentar",
+                       "boton_salir_post", "boton_continuar", "boton_elegir_nivel",
+                       "botones_seleccion_nivel", "boton_reintentar_final", "boton_menu_final"):
+            setattr(self, nombre, None)
+
     def mostrar_opciones_juego(self):
         """Abre la pantalla de opciones sobre la pausa de la partida."""
         from src.ui.menu import MenuManager
         menu = MenuManager(self.pantalla, self.rm, self.audio_manager, self.clasificacion)
 
         resultado = menu.mostrar_solo_opciones()
+        self._invalidar_botones()   # por si se cambió de idioma: sus textos están cacheados
         # Aplicación inmediata (como el volumen), sin esperar a "Guardar":
         # el objeto en memoria del menú, no una relectura de config.ini.
         self.input_handler.mapa_teclas = menu.controles

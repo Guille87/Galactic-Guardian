@@ -34,6 +34,10 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 - **Verificación del instalador** — la actualización desde el juego comprueba el
   SHA-256 del instalador (campo `digest` de la API de Releases de GitHub, sin
   tocar `build.yml`) antes de ejecutarlo. Ver `[Unreleased]` → próxima versión.
+- **Localización (i18n)** — inglés y español, catálogo por idioma en
+  `data/assets/idiomas/`, selector en Opciones con cambio al instante y
+  arranque en el idioma del sistema. Añadir otro idioma es un JSON más. Ver
+  `[Unreleased]` → próxima versión.
 - **Oleadas y niveles como datos** — cada nivel se define en una tabla
   (`src/core/niveles.py`); `WaveManager` solo la lee. Añadir contenido es
   "editar una tabla". Ver `[Unreleased]` → próxima versión.
@@ -43,25 +47,19 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 Primero lo que no depende de assets; el contenido nuevo va al final porque
 espera a que llegue el arte.
 
-### 1 · Localización (i18n)
-- Preparar el código para inglés/español (que el texto no quede cableado a
-  pelo) aunque la traducción al inglés se haga más adelante. Va pronto porque
-  cada pantalla o función nueva añade texto y migrarlo cuesta más cuanto más
-  crece.
-
-### 2 · Modo sin fin (arcade)
+### 1 · Modo sin fin (arcade)
 - Ahora que hay campaña con final, recuperar el bucle infinito de antes como
   modo aparte, con su propio ranking. Es lo que más rejugabilidad da con lo que
   ya hay. Los niveles como datos (`niveles.py`) facilitan definir su curva.
 
-### 3 · Screen shake y hit-stop
+### 2 · Screen shake y hit-stop
 - Al impactar/morir. Baratos, sin assets y muy visibles en la sensación de golpe.
 
-### 4 · Multiplicador de puntuación / combo
+### 3 · Multiplicador de puntuación / combo
 - Sube mientras no recibes daño, se reinicia al primer golpe. Mejor tras el modo
   sin fin, para que el ranking tenga sentido con él.
 
-### 5 · Contenido nuevo (según lleguen los assets)
+### 4 · Contenido nuevo (según lleguen los assets)
 - **Enemigos nuevos** — asset a la espera de que consigas un set de un mismo
   autor (arte consistente).
 - **Patrones de disparo reutilizables** (abanico, dirigido, ráfaga…) para

@@ -7,6 +7,14 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+
+- **Inglés.** El juego está traducido al inglés y hay un selector de **Idioma**
+  en Opciones (Español / English) que se aplica al instante y se guarda en
+  `config.ini`. La primera vez, el juego arranca en el idioma de Windows si es
+  inglés y en español en cualquier otro caso. Cada idioma es un JSON en
+  `data/assets/idiomas/`; ver `CONTRIBUTING.md` para añadir otros.
+
 ### Security
 
 - La actualización desde el juego **verifica el instalador** antes de ejecutarlo:

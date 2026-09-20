@@ -3,7 +3,7 @@ import os
 
 import pygame
 
-from src.core import controles, paths
+from src.core import controles, i18n, paths
 
 # --- RUTAS Y RECURSOS (CONSTANTES) ---
 DIR_ASSETS = paths.recurso('data', 'assets')          # solo lectura (empaquetado)
@@ -48,7 +48,7 @@ EXPLOSIONES = {f"explosion_{i}": f"imagenes/explosion/Explosion1_{i}.png" for i 
 
 # --- LÓGICA DE PERSISTENCIA (OPCIONES DE USUARIO) ---
 
-def guardar_configuracion(volumen_musica, volumen_efectos, mapa_controles=None, ruta=None):
+def guardar_configuracion(volumen_musica, volumen_efectos, mapa_controles=None, idioma=None, ruta=None):
     config = configparser.ConfigParser()
     config['VOLUMEN'] = {
         'musica': str(volumen_musica),
@@ -58,6 +58,8 @@ def guardar_configuracion(volumen_musica, volumen_efectos, mapa_controles=None, 
         config['CONTROLES'] = {
             accion: pygame.key.name(codigo) for accion, codigo in mapa_controles.items()
         }
+    if idioma is not None:
+        config['IDIOMA'] = {'codigo': idioma}
     with open(ruta or CONFIG_FILE, 'w') as configfile:
         config.write(configfile)
 
@@ -74,6 +76,18 @@ def cargar_configuracion(ruta=None):
         volumen_musica, volumen_efectos = 0.5, 0.5
 
     return volumen_musica, volumen_efectos
+
+
+def cargar_idioma(ruta=None):
+    """Idioma guardado, o None si no hay (primer arranque) o no es uno de los
+    disponibles: quien llama decide entonces con `i18n.detectar_idioma_sistema()`."""
+    config = configparser.ConfigParser()
+    try:
+        config.read(ruta or CONFIG_FILE)
+        codigo = config.get('IDIOMA', 'codigo', fallback=None)
+    except configparser.Error:
+        return None
+    return codigo if codigo in i18n.IDIOMAS else None
 
 
 def cargar_controles(ruta=None):

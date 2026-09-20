@@ -3,7 +3,7 @@ import pygame
 import pygame_gui
 import pytest
 
-from src.core import settings
+from src.core import i18n, settings
 from src.ui.menu import MenuManager, _clamp_volumen, _paso_volumen
 
 
@@ -228,6 +228,74 @@ def test_guardar_persiste_el_mapa_de_controles(menu, monkeypatch, tmp_path):
 
     from src.core import config
     assert config.cargar_controles(ruta=ruta)["disparar"] == pygame.K_j
+
+
+def _boton_idioma(menu, codigo):
+    return next(b for b, c in menu._botones_idioma.items() if c == codigo)
+
+
+def test_hay_un_boton_por_idioma_y_el_actual_esta_marcado(menu):
+    menu._abrir_opciones()
+    assert set(menu._botones_idioma.values()) == set(i18n.IDIOMAS)
+    assert _boton_idioma(menu, "es").is_selected
+    assert not _boton_idioma(menu, "en").is_selected
+
+
+def test_cambiar_de_idioma_es_inmediato_y_rehace_los_botones_del_menu(menu):
+    menu._abrir_opciones()
+    _click(menu, _boton_idioma(menu, "en"))
+    assert i18n.idioma_actual() == "en"
+    assert menu.btn_jugar.texto == "Play"
+    assert menu.btn_salir.texto == "Quit"
+    assert menu.btn_actualizar.texto == "Update"
+
+
+def test_cambiar_de_idioma_rehace_la_ui_de_opciones(menu):
+    menu._abrir_opciones()
+    _click(menu, _boton_idioma(menu, "en"))
+    textos = {e.text for e in menu.ui_manager.get_root_container().elements
+              if isinstance(e, pygame_gui.elements.UILabel)}
+    assert {"Music", "Effects", "Language", "Controls"} <= textos
+    assert menu.btn_guardar.text == "Save"
+    assert "Fire" in menu._botones_controles["disparar"].text
+    assert _boton_idioma(menu, "en").is_selected and not _boton_idioma(menu, "es").is_selected
+
+
+def test_cambiar_de_idioma_conserva_los_volumenes_y_las_teclas(menu):
+    menu._abrir_opciones()
+    _mover_slider(menu, menu.slider_musica, 0.7)
+    menu.controles["disparar"] = pygame.K_j
+    _click(menu, _boton_idioma(menu, "en"))
+    assert menu.vol_musica == pytest.approx(0.7)
+    assert menu.slider_musica.get_current_value() == pytest.approx(0.7)
+    assert menu.controles["disparar"] == pygame.K_j
+
+
+def test_volver_a_pulsar_el_idioma_actual_no_hace_nada(menu):
+    menu._abrir_opciones()
+    ui = menu.ui_manager
+    _click(menu, _boton_idioma(menu, "es"))
+    assert menu.ui_manager is ui and i18n.idioma_actual() == "es"
+
+
+def test_guardar_persiste_el_idioma(menu, monkeypatch, tmp_path):
+    ruta = str(tmp_path / "cfg.ini")
+    monkeypatch.setattr("src.core.config.CONFIG_FILE", ruta)
+    menu._abrir_opciones()
+    _click(menu, _boton_idioma(menu, "en"))
+    _click(menu, menu.btn_guardar)
+
+    from src.core import config
+    assert config.cargar_idioma(ruta=ruta) == "en"
+
+
+def test_menu_persistente_rehace_sus_botones_si_el_idioma_cambio_fuera(menu):
+    """Cambio de idioma desde la pausa de una partida (otro MenuManager)."""
+    assert menu.btn_jugar.texto == "Jugar"
+    i18n.establecer_idioma("en")
+    menu._menu_principal = lambda: setattr(menu, "ejecutando", False)   # una sola pasada del bucle
+    menu.ejecutar()
+    assert menu.btn_jugar.texto == "Play"
 
 
 def test_ui_de_opciones_se_reutiliza(menu):

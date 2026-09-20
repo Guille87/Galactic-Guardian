@@ -43,6 +43,16 @@ Gracias por tu interés. El proyecto es pequeño; estas son las convenciones.
 - **Movimiento**: usa `MovimientoSubpixel._desplazar(vx, vy, dt)` para mover un
   `rect`; las velocidades se expresan en px/frame-a-60fps.
 
+## Añadir un idioma
+
+1. Copia `data/assets/idiomas/es.json` a `<codigo>.json` (p. ej. `fr.json`) y
+   traduce los valores; no cambies las claves ni los huecos `{n}`, `{version}`…
+2. Añade el código a `IDIOMAS` y su nombre en ese idioma a `NOMBRES`
+   (`src/core/i18n.py`). Aparece solo en el selector de Opciones.
+3. `pytest`: comprueba que tiene las mismas claves y los mismos huecos que el
+   español. Si el idioma usa un alfabeto que la fuente por defecto de pygame no
+   cubre, habrá que cargar otra fuente.
+
 ## Añadir un enemigo o un ítem
 
 El patrón completo está en [CLAUDE.md](CLAUDE.md). En resumen:
