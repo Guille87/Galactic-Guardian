@@ -40,7 +40,7 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 - **Modo sin fin** — oleadas de 45 s sin techo, jefe cada 5, ranking propio y
   pestañas Campaña / Sin fin en Puntuaciones. La curva es de primera pasada y
   quiere partidas de prueba para afinarla (`src/core/sin_fin.py`). Ver
-  `[Unreleased]` → próxima versión.
+  `[0.5.0]`.
 - **Oleadas y niveles como datos** — cada nivel se define en una tabla
   (`src/core/niveles.py`); `WaveManager` solo la lee. Añadir contenido es
   "editar una tabla". Ver `[Unreleased]` → próxima versión.
