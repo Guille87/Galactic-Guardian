@@ -164,3 +164,17 @@ def test_utilidad_no_sube_la_velocidad_por_encima_de_6():
 def test_utilidad_da_mas_monedas_que_el_resto_del_arbol_pide_de_menos():
     """La cola del árbol es cara: el botín de Utilidad acelera comprarla (+125 % en total)."""
     assert mejoras.calcular_bonus(m.id for m in mejoras.MEJORAS).monedas_pct == 1.25
+
+
+def test_utilidad_alterna_velocidad_y_monedas_sin_repetir_dos_seguidas():
+    """Ni dos Motores ni dos Botín juntos: la rama va alternando (Motores, Botín, Motores, ... )."""
+    tipos = []
+    for m in mejoras.de_la_rama("utilidad"):
+        if "velocidad_extra" in m.efecto:
+            tipos.append("motores")
+        elif "monedas_pct" in m.efecto:
+            tipos.append("botin")
+        else:
+            tipos.append("otro")
+    for a, b in zip(tipos, tipos[1:]):
+        assert not (a == b and a != "otro"), tipos
