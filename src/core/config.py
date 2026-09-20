@@ -44,7 +44,13 @@ SONIDOS = {
     "item_take": "sonidos/item-take.wav",
 }
 
-EXPLOSIONES = {f"explosion_{i}": f"imagenes/explosion/Explosion1_{i}.png" for i in range(1, 12)}
+# Hojas de sprites (animaciones): una imagen con los fotogramas en una rejilla
+# regular, sin márgenes, de izquierda a derecha y de arriba abajo. `cantidad`
+# es cuántos son válidos si las últimas celdas están vacías. Ver
+# `ResourceManager.load_spritesheet` / `get_frames`.
+HOJAS = {
+    "explosion": {"ruta": "imagenes/explosion/explosion.png", "columnas": 4, "filas": 3, "cantidad": 11},
+}
 
 # --- LÓGICA DE PERSISTENCIA (OPCIONES DE USUARIO) ---
 

@@ -8,7 +8,7 @@ from src.core.engine import Juego
 from src.core.audio import AudioManager
 from src.core.resources import ResourceManager
 from src.core import i18n, preferencias, settings
-from src.core.config import (RECURSOS, MUSICA, SONIDOS, EXPLOSIONES, DIR_ASSETS, cargar_configuracion,
+from src.core.config import (RECURSOS, MUSICA, SONIDOS, HOJAS, DIR_ASSETS, cargar_configuracion,
                              cargar_temblor, cargar_idioma)
 from src.core.version import __version__
 from src.ui.scoreboard import SistemaClasificacion
@@ -19,8 +19,13 @@ RANKING_SIN_FIN = "puntuaciones_sin_fin.json"
 def cargar_activos_del_juego(rm):
     """Carga imágenes y efectos en memoria; la música solo registra su ruta."""
     # Cargar Imágenes
-    for nombre, ruta in {** RECURSOS, ** EXPLOSIONES}.items():
+    for nombre, ruta in RECURSOS.items():
         rm.load_image(nombre, os.path.join(DIR_ASSETS, ruta))
+
+    # Cargar hojas de sprites (animaciones)
+    for nombre, hoja in HOJAS.items():
+        rm.load_spritesheet(nombre, os.path.join(DIR_ASSETS, hoja["ruta"]),
+                            hoja["columnas"], hoja["filas"], hoja.get("cantidad"))
 
     # Cargar Efectos de sonido
     for nombre, ruta in SONIDOS.items():

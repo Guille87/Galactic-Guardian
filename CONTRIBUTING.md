@@ -35,7 +35,7 @@ Gracias por tu interés. El proyecto es pequeño; estas son las convenciones.
   (`data/assets/idiomas/es.json`) y se piden con `t("espacio.clave", n=...)`
   (`src/core/i18n.py`). El español es el idioma de referencia.
 - **Recursos**: registra el nombre lógico y su ruta en `src/core/config.py`
-  (`RECURSOS`, `MUSICA`, `SONIDOS`, `EXPLOSIONES`); nunca escribas rutas de assets
+  (`RECURSOS`, `HOJAS`, `MUSICA`, `SONIDOS`); nunca escribas rutas de assets
   a mano en el código.
 - **Temporizadores y pausa**: cualquier lógica con cuenta atrás debe basarse en
   `dt` (frame-independiente) o desplazar su marca de tiempo en

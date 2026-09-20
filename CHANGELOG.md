@@ -7,6 +7,19 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+
+- **Hojas de sprites.** Una animación puede ser ahora una sola imagen con todos
+  sus fotogramas en una rejilla (`config.HOJAS`, `ResourceManager.load_spritesheet`
+  y `get_frames`), en vez de un archivo por fotograma. Pensado para los assets
+  nuevos, que suelen venir así.
+
+### Changed
+
+- La explosión se carga desde una hoja (`explosion.png`, 4×3 celdas) en lugar de
+  11 archivos sueltos: se ve exactamente igual (comprobado píxel a píxel) y ocupa
+  menos.
+
 ## [0.8.0] - 2026-09-20
 
 Llega el combo de puntuación y el menú principal queda centrado. Sin cambios

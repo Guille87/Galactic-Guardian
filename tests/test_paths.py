@@ -8,7 +8,7 @@ import pytest
 
 from src.core import paths
 from src.core.config import (
-    DIR_ASSETS, RECURSOS, EXPLOSIONES, SONIDOS, MUSICA,
+    DIR_ASSETS, RECURSOS, HOJAS, SONIDOS, MUSICA,
 )
 from src.core.version import __version__
 
@@ -16,7 +16,7 @@ RAIZ = Path(__file__).resolve().parent.parent
 
 
 @pytest.mark.parametrize("nombre,ruta", [
-    *RECURSOS.items(), *EXPLOSIONES.items(), *SONIDOS.items(), *MUSICA.items(),
+    *RECURSOS.items(), *((n, h["ruta"]) for n, h in HOJAS.items()), *SONIDOS.items(), *MUSICA.items(),
 ])
 def test_cada_recurso_existe_en_disco(nombre, ruta):
     """Si esto falla, al empaquetar faltaría ese archivo en el bundle."""

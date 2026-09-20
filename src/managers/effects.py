@@ -17,15 +17,8 @@ class EffectManager:
         self.temblor = Temblor()   # lo avanza `Juego.actualizar` y lo aplica `RenderManager`
 
     def _preparar_frames_explosion(self):
-        """Prepara y cachea los frames de la explosión escalados."""
-        frames = []
-        for i in range(1, 12):
-            nombre = f"explosion_{i}"
-            # Usamos la nueva función del ResourceManager para obtenerlas optimizadas
-            img = self.rm.get_image_scaled(nombre, self.TAMANO_EXPLOSION)
-            if img:
-                frames.append(img)
-        return frames
+        """Fotogramas de la explosión (hoja "explosion") ya escalados y cacheados."""
+        return self.rm.get_frames("explosion", self.TAMANO_EXPLOSION)
 
     def crear_explosion(self, posicion):
         """Crea una animación de explosión en el centro dado."""

@@ -10,6 +10,7 @@ class ResourceManager:
             cls._instance.resources = {}
             cls._instance.image_paths = {}
             cls._instance.music_data = {}
+            cls._instance.spritesheets = {}   # nombre -> lista de fotogramas (Surface)
         return cls._instance
 
     def __init__(self):
@@ -29,6 +30,30 @@ class ResourceManager:
             surface = surface.convert()
         self.resources[name] = surface
         self.image_paths[name] = path  # Guarda la ruta de la imagen asociada
+
+    def load_spritesheet(self, name, path, columnas, filas, cantidad=None):
+        """Carga una hoja de sprites y la corta en fotogramas iguales.
+
+        La hoja es una rejilla regular de `columnas` x `filas` celdas del mismo
+        tamaño, sin márgenes entre ellas; los fotogramas se numeran de izquierda a
+        derecha y de arriba abajo. `cantidad` es cuántos son válidos cuando las
+        últimas celdas de la rejilla están vacías (por defecto, todas).
+        Se recuperan con `get_frames`."""
+        hoja = pygame.image.load(path).convert_alpha()
+        ancho, alto = hoja.get_size()
+        if columnas < 1 or filas < 1 or ancho % columnas or alto % filas:
+            raise ValueError(
+                f"La hoja '{name}' ({ancho}x{alto}) no se divide en {columnas}x{filas} celdas iguales")
+        total = columnas * filas
+        cantidad = total if cantidad is None else cantidad
+        if not 1 <= cantidad <= total:
+            raise ValueError(f"La hoja '{name}' tiene {total} celdas y se piden {cantidad} fotogramas")
+
+        ancho_f, alto_f = ancho // columnas, alto // filas
+        self.spritesheets[name] = [
+            hoja.subsurface(pygame.Rect((n % columnas) * ancho_f, (n // columnas) * alto_f, ancho_f, alto_f)).copy()
+            for n in range(cantidad)
+        ]
 
     def load_sound(self, name, path):
         self.resources[name] = pygame.mixer.Sound(path)
@@ -62,6 +87,25 @@ class ResourceManager:
                 return None
 
         return self.scaled_resources[cache_key]
+
+    def get_frames(self, name, size=None):
+        """Fotogramas de una hoja cargada con `load_spritesheet`, como lista nueva.
+
+        Con `size` devuelve cada uno reescalado a ese tamaño (cacheado, como
+        `get_image_scaled`); sin él, a tamaño original."""
+        frames = self.spritesheets.get(name)
+        if frames is None:
+            print(f"ERROR: No se encontró la hoja de sprites: {name}")
+            return []
+        if size is None:
+            return list(frames)
+
+        cache_key = f"{name}_frames_{size[0]}x{size[1]}"
+        if cache_key not in self.scaled_resources:
+            self.scaled_resources[cache_key] = [
+                pygame.transform.scale(f, size).convert_alpha() for f in frames
+            ]
+        return list(self.scaled_resources[cache_key])
 
     def get_image_rotated(self, name, size, angle):
         """Devuelve la imagen escalada y rotada, cacheada por (nombre, tamaño, ángulo).
