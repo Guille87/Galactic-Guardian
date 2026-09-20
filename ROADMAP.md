@@ -37,7 +37,34 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 
 ## En curso / próximo (por orden)
 
-### 1 · Contenido nuevo (según lleguen los assets)
+Primero lo que no depende de assets; el contenido nuevo va al final porque
+espera a que llegue el arte.
+
+### 1 · Checksum del instalador
+- `SHA256SUMS` en la Release y verificación antes de ejecutar el instalador
+  descargado por la actualización desde el juego. Va primero porque es barato,
+  cierra un hueco de seguridad (el juego ejecuta lo que descarga) y toca
+  `build.yml` y `updates.py`, que ya conocemos.
+
+### 2 · Localización (i18n)
+- Preparar el código para inglés/español (que el texto no quede cableado a
+  pelo) aunque la traducción al inglés se haga más adelante. Va pronto porque
+  cada pantalla o función nueva añade texto y migrarlo cuesta más cuanto más
+  crece.
+
+### 3 · Modo sin fin (arcade)
+- Ahora que hay campaña con final, recuperar el bucle infinito de antes como
+  modo aparte, con su propio ranking. Es lo que más rejugabilidad da con lo que
+  ya hay. Los niveles como datos (`niveles.py`) facilitan definir su curva.
+
+### 4 · Screen shake y hit-stop
+- Al impactar/morir. Baratos, sin assets y muy visibles en la sensación de golpe.
+
+### 5 · Multiplicador de puntuación / combo
+- Sube mientras no recibes daño, se reinicia al primer golpe. Mejor tras el modo
+  sin fin, para que el ranking tenga sentido con él.
+
+### 6 · Contenido nuevo (según lleguen los assets)
 - **Enemigos nuevos** — asset a la espera de que consigas un set de un mismo
   autor (arte consistente).
 - **Patrones de disparo reutilizables** (abanico, dirigido, ráfaga…) para
@@ -55,20 +82,18 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 
 - **Progresión entre partidas**: moneda ganada jugando + mejoras permanentes de
   la nave y/o desbloqueables. Es lo que más ilusión le hace al autor — candidato
-  a subir de prioridad en cuanto la campaña (#1) esté lista.
+  a subir de prioridad cuando acabe la lista de "En curso / próximo" o tras el
+  modo sin fin.
 - **Guardado de partida**: no a mitad de nivel, sino "partida en curso" que se
   pueda cerrar y continuar más tarde — con autoguardado de seguridad en puntos
   concretos (cambio de nivel, por ejemplo) para no perder progreso si el juego
   crashea o se cierra sin querer.
-- **Multiplicador de puntuación / combo**: sube mientras no recibes daño, se
-  reinicia al primer golpe.
-- **Bomba de pantalla** (ver #5 — depende del asset).
+- **Bomba de pantalla** (ver "Contenido nuevo" — depende del asset).
 - **Varias naves jugables** con estadísticas distintas. Pendiente de pensar qué
   estadísticas además de daño/cadencia/velocidad tienen sentido (vida máxima,
   tamaño de hitbox = facilidad para esquivar, un disparo especial propio,
   regeneración, capacidad de ítems…) — mirar referencias de otros shoot 'em ups
   antes de diseñarlas.
-- **Screen shake y hit-stop** al impactar/morir — baratos, sin assets.
 - **Partículas de impacto** (hoy solo hay explosión al morir, no al golpear) —
   pendiente de revisar qué assets encajan.
 - **Intro / transiciones entre niveles** con narrativa ligera — el autor revisa
@@ -77,21 +102,13 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
   abajo, enemigos desde arriba) y hay que comprobar cómo queda en cada cambio.
 - **GIF del juego en el README**.
 - **Soporte de mando (Xbox)** — el autor tiene un mando para probarlo.
-- **Localización (i18n)**: preparar el código para inglés/español desde ya (que
-  el texto nuevo no quede cableado a pelo) aunque la traducción al inglés se
-  haga más adelante.
-- **`Modo sin fin (arcade)`**: ahora que hay campaña con final, recuperar el
-  bucle infinito de antes como modo aparte, con su propio ranking.
 - **Mini-jefes / Boss Rush**: encadenar solo jefes. No prioritario; depende de
   cuántos jefes acabe teniendo la campaña.
 - **Logros** — no ahora, posible más adelante.
-- **Checksum del instalador** (`SHA256SUMS` en la Release + verificación antes
-  de ejecutar el instalador descargado). Barato, cuando se vuelva a tocar
-  `build.yml`.
 - **Builds de Linux/macOS** en `build.yml` — hoy no se pueden probar; se
   retoma si hace falta.
 - **Publicación en itch.io** — la hace el autor; candidato natural: cuando la
-  campaña (#1) y algo del contenido nuevo (#5) estén listos, para enseñar algo
+  campaña y algo del contenido nuevo estén listos, para enseñar algo
   más que el juego base.
 - **Ranking online** — necesita un sitio donde guardar las puntuaciones
   (servidor/base de datos). El juego tiene que seguir siendo 100 % gratis de
