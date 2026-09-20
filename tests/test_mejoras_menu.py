@@ -211,3 +211,38 @@ def test_sin_progresion_las_pantallas_finales_no_hablan_de_monedas(rm, audio, sc
     j.estado_game_over = True
     j.dibujar()
     assert lineas and not any("Monedas" in x for l in lineas for x in l)
+
+
+# --- Iconos en los nodos ---------------------------------------------------------
+
+def test_los_iconos_de_las_mejoras_son_imagenes_cargadas():
+    from src.core import config, mejoras
+
+    con_icono = [m for m in mejoras.MEJORAS if m.icono]
+    assert con_icono                                            # alguna lleva
+    assert all(m.icono in config.RECURSOS for m in con_icono)
+
+
+def test_el_icono_se_dibuja_en_la_esquina_superior_derecha_solo_si_la_mejora_lo_tiene(menu, monkeypatch):
+    from src.ui import menu as modulo
+
+    llamadas = []
+    magenta = pygame.Surface((modulo._MEJ_ICONO, modulo._MEJ_ICONO))
+    magenta.fill((255, 0, 255))
+    monkeypatch.setattr(menu, "_icono_mejora", lambda nombre, atenuado: llamadas.append(nombre) or magenta)
+    menu._abrir_mejoras()
+    menu._menu_mejoras()
+
+    con_icono = [id_ for id_, m in __import__("src.core.mejoras", fromlist=["POR_ID"]).POR_ID.items() if m.icono]
+    assert len(llamadas) == len(con_icono)                      # ni uno más ni uno menos
+    rect = menu._rects_mejoras["ataque_1"]
+    centro = (rect.right - 8 - modulo._MEJ_ICONO // 2, rect.y + 4 + modulo._MEJ_ICONO // 2)
+    assert menu.pantalla.get_at(centro)[:3] == (255, 0, 255)
+
+
+def test_el_icono_atenuado_de_una_mejora_bloqueada_se_cachea_aparte(menu):
+    normal = menu._icono_mejora("curacion", False)
+    atenuado = menu._icono_mejora("curacion", True)
+    assert normal is menu._icono_mejora("curacion", False)      # caché
+    assert normal is not atenuado and atenuado.get_alpha() < 255
+    assert normal.get_size() == (28, 28)

@@ -16,6 +16,9 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
   de ítems) sino **Botín II**: otro +25 % de monedas. Es provisional hasta que se
   amplíe el árbol. Quien ya la tuviera comprada la conserva.
 - **Botín** pasa a llamarse **Botín I**.
+- Los nodos del árbol de **Mejoras** llevan ahora el icono de los antiguos ítems
+  (daño, cadencia, reparación y velocidad) en la esquina, atenuado mientras la
+  mejora está bloqueada; las que no tienen un icono a juego, solo texto.
 
 ### Removed
 

@@ -30,6 +30,7 @@ _MEJ_Y0 = 215                   # borde superior del primer nodo
 _MEJ_ALTO = 98
 _MEJ_PASO = 112                 # de un nodo al siguiente (alto + hueco para el conector)
 _MEJ_AVISO_MS = 2500            # cuánto dura un aviso de la pantalla
+_MEJ_ICONO = 28                 # lado del icono de un nodo (esquina superior derecha)
 
 
 def _rect_mejora(rama_i, orden):
@@ -103,6 +104,7 @@ class MenuManager:
         # Monedas y mejoras (pantalla "Mejoras"); sin ella, una en memoria que no toca el disco
         self.progresion = progresion if progresion is not None else Progresion(persistir=False)
         self._aviso_mejoras = None              # (texto, instante en que caduca)
+        self._iconos_mejoras = {}               # (imagen, atenuado) -> Surface del icono
         self._rects_mejoras = {                 # id de mejora -> Rect de su nodo
             m.id: _rect_mejora(i, orden)
             for i, rama in enumerate(mejoras.RAMAS) for orden, m in enumerate(mejoras.de_la_rama(rama))
@@ -808,6 +810,16 @@ class MenuManager:
                         self._avisar_mejoras(t("mejoras.aviso_bloqueada"))
                     break
 
+    def _icono_mejora(self, nombre, atenuado):
+        """Icono de un nodo (cacheado); atenuado si la mejora aún está bloqueada."""
+        clave = (nombre, atenuado)
+        if clave not in self._iconos_mejoras:
+            icono = self.rm.get_image_scaled(nombre, (_MEJ_ICONO, _MEJ_ICONO)).copy()
+            if atenuado:
+                icono.set_alpha(70)
+            self._iconos_mejoras[clave] = icono
+        return self._iconos_mejoras[clave]
+
     def _dibujar_nodo_mejora(self, mejora, rect):
         estado = self.progresion.estado(mejora.id)
         asequible = self.progresion.monedas >= mejora.coste
@@ -825,6 +837,10 @@ class MenuManager:
         pygame.draw.rect(capa, (*fondo, 215), capa.get_rect(), border_radius=8)
         self.pantalla.blit(capa, rect)
         pygame.draw.rect(self.pantalla, borde, rect, 2, border_radius=8)
+
+        if mejora.icono:
+            self.pantalla.blit(self._icono_mejora(mejora.icono, bloqueada),
+                               (rect.right - _MEJ_ICONO - 8, rect.y + 4))
 
         color_texto = (130, 130, 140) if bloqueada else (255, 255, 255)
         nombre = self.font_version.render(t(f"mejoras.{mejora.id}.nombre"), True, color_texto)
