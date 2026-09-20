@@ -1,3 +1,4 @@
+import math
 import random
 import weakref
 
@@ -13,7 +14,6 @@ from src.core.version import __version__
 from src.entities.enemies import Jefe
 from src.entities.player import Jugador
 from src.entities.bullet import Bala
-from src.entities.items import Item
 from src.visual.background import ScrollingBackground
 from src.managers.collision import CollisionManager
 from src.managers.effects import EffectManager
@@ -75,7 +75,6 @@ class Juego:
         # Control de la máquina de estados de alto nivel
         self.ejecutando = True
         self.resultado = "MENU"  # "MENU" | "SALIR"
-        self.enemigos_eliminados = 0  # contador de "piedad" para el loot
 
         # Cadencia de aparición de enemigos (viene de la definición del nivel)
         self.MIN_TIEMPO_GENERACION, self.MAX_TIEMPO_GENERACION = self._definicion().intervalo_spawn
@@ -227,15 +226,11 @@ class Juego:
         """Consecuencias de reglas al destruir un enemigo.
 
         Lo llama `CollisionManager` tras encargarse de la parte mecánica
-        (`kill`, explosión, purga del cooldown): aquí solo van puntuación, loot
-        y la transición diferida cuando cae el jefe.
+        (`kill`, explosión, purga del cooldown): aquí solo van puntuación, combo
+        y la transición diferida cuando cae el jefe. Los enemigos ya no sueltan
+        nada: el poder de la nave viene solo de las mejoras permanentes.
         """
-        self.enemigos_eliminados += 1
         self.enemigos_eliminados_nivel += 1
-        tipo_item = enemigo.die(self.jugador, self.enemigos_eliminados)
-        if tipo_item:
-            self._spawnear_item(tipo_item, enemigo.rect.center)
-            self.enemigos_eliminados = 0
 
         self.combo.sumar_baja()   # antes de puntuar: la baja que sube de escalón ya cuenta con él
         self.puntuacion += enemigo.valor_puntuacion * self.nivel * self.combo.multiplicador
@@ -247,15 +242,11 @@ class Juego:
                 # Sin fin: no hay cierre de nivel, la partida sigue con la oleada
                 # siguiente (se llevan las balas del jefe, como en la campaña).
                 self.entity_manager.balas_enemigo.empty()
-                self._avanzar_oleada()
+                self._avanzar_oleada(curar_todo=True)   # premio por el jefe: salud completa
             else:
                 # Campaña: transición diferida (la ejecuta Juego.actualizar)
                 self.jefe_derrotado = True
                 self.pendiente_reinicio = True
-
-    def _spawnear_item(self, tipo, posicion):
-        img = self.rm.get_image_scaled(tipo, Item.TAMANO_ESTANDAR)
-        self.entity_manager.items.add(Item(tipo, img, posicion[0], posicion[1]))
 
     def manejar_impacto_jugador(self):
         """Procesa el daño visual y lógico del jugador"""
@@ -362,9 +353,13 @@ class Juego:
         return (not sin_fin.es_oleada_de_jefe(self.nivel)
                 and ahora - self.inicio_juego >= sin_fin.OLEADA_MS)
 
-    def _avanzar_oleada(self):
+    def _avanzar_oleada(self, curar_todo=False):
         """Sin fin: pasa a la oleada siguiente sin tocar nada de lo que hay en
-        pantalla (enemigos, balas, mejoras): solo cambia la definición."""
+        pantalla (enemigos, balas): solo cambia la definición. Sin ítems de
+        curación, cada oleada nueva recupera una parte de la salud
+        (`SIN_FIN_CURACION_OLEADA`) y derrotar a un jefe la deja completa."""
+        salud_max = self.jugador.salud_maxima
+        self.jugador.curar(salud_max if curar_todo else math.ceil(settings.SIN_FIN_CURACION_OLEADA * salud_max))
         self.nivel += 1
         self.inicio_juego = self.tiempo_juego
         definicion = self._definicion()

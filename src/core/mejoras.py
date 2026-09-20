@@ -30,7 +30,6 @@ class Bonus:
     disparo_inicial: str = "simple"     # tipo de disparo con el que se empieza
     invulnerable_extra_ms: int = 0      # escudo de reaparición más largo
     monedas_pct: float = 0.0            # +% de monedas (0.25 = +25 %)
-    probabilidad_item: float = 0.0      # +probabilidad (0..1) de que un enemigo suelte ítem
     combo_factor: float = 1.0           # multiplica los umbrales del combo (<1 = más fácil)
 
 
@@ -57,7 +56,7 @@ MEJORAS = (
     # --- Utilidad
     Mejora("utilidad_1", "utilidad", 100, {"velocidad_extra": 0.5}),
     Mejora("utilidad_2", "utilidad", 200, {"monedas_pct": 0.25}, requiere="utilidad_1"),
-    Mejora("utilidad_3", "utilidad", 300, {"probabilidad_item": 0.05}, requiere="utilidad_2"),
+    Mejora("utilidad_3", "utilidad", 300, {"monedas_pct": 0.25}, requiere="utilidad_2"),   # provisional: Botín II
     Mejora("utilidad_4", "utilidad", 400, {"combo_factor": 0.8}, requiere="utilidad_3"),
 )
 

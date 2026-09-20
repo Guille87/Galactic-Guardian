@@ -168,21 +168,6 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
         """
         self.salud = min(self.salud_maxima, self.salud + cantidad)
 
-    def mejorar_danio(self, cantidad=1):
-        # Evolución automática del tipo de disparo
-        if self.danio < self.CONFIG["danio_max"]:
-            self.danio += cantidad
-        elif self.tipo_disparo == "simple":
-            self.tipo_disparo = "doble"
-        elif self.tipo_disparo == "doble":
-            self.tipo_disparo = "triple"
-
-    def mejorar_velocidad(self,cantidad=1):
-        self.velocidad = min(self.CONFIG["vel_max"], self.velocidad + cantidad)
-
-    def mejorar_cadencia(self, decremento):
-        self.cadencia_disparo = max(self.CONFIG["cadencia_max"], self.cadencia_disparo - decremento)
-
     def reducir_vidas(self, cantidad):
         self.vidas = max(0, self.vidas - cantidad)
 

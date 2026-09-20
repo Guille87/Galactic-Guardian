@@ -18,7 +18,6 @@ class EntityManager:
         self.balas = pygame.sprite.Group()          # balas del jugador
         self.balas_enemigo = pygame.sprite.Group()
         self.enemigos = pygame.sprite.Group()
-        self.items = pygame.sprite.Group()
         self.efectos = pygame.sprite.Group()        # explosiones y destellos
 
     # --- Altas ---
@@ -44,7 +43,6 @@ class EntityManager:
         self.balas.update(dt)
         self.balas_enemigo.update(dt)
         self._actualizar_enemigos(dt, tiempo_juego)
-        self.items.update(dt)
         self.efectos.update(dt)
         self._limpiar_entidades_fuera()
 
@@ -92,7 +90,7 @@ class EntityManager:
         proyectil desaparece de golpe al destruir al jefe y la explosión termina
         su animación.
         """
-        grupos = [self.enemigos, self.items]
+        grupos = [self.enemigos]
         if not avance_nivel:
             grupos += [self.balas, self.balas_enemigo, self.efectos]
         for grupo in grupos:

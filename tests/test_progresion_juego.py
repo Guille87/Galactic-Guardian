@@ -1,6 +1,5 @@
 """La progresión dentro de la partida: bonus de la nave, botín, combo, escudo y cobro de monedas."""
 import json
-import random
 
 import pygame
 import pytest
@@ -95,17 +94,6 @@ def test_el_escudo_normal_no_cambia_sin_la_mejora(juego):
     juego.jugador.salud = 0
     juego.manejar_impacto_jugador()
     assert juego.jugador.tiempo_invulnerable == 10_000 + settings.JUGADOR_INVULNERABLE_MS
-
-
-def test_la_mejora_de_suerte_sube_la_probabilidad_de_soltar_items(rm, monkeypatch):
-    img = rm.get_image_scaled("jugador", Jugador.CONFIG["tamano"])
-    base, con_suerte = Jugador(img, 600, 800), Jugador(img, 600, 800, Bonus(probabilidad_item=0.05))
-    con_suerte.salud = 1                                       # que "curación" también esté en el pool
-    base.salud = 1
-    monkeypatch.setattr(random, "random", lambda: 0.07)        # entre el 5 % base y el 10 % con suerte
-    enemigo = _enemigo(rm)
-    assert enemigo.generate_item(base, 0) is None
-    assert enemigo.generate_item(con_suerte, 0) is not None
 
 
 def test_el_combo_sube_mas_facil_con_la_mejora_de_maestria(rm, audio, scoreboard, progresion):

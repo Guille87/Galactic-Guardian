@@ -63,7 +63,7 @@ def test_los_efectos_numericos_se_suman():
 def test_efectos_especiales():
     b = calcular_bonus(["ataque_4", "utilidad_2", "utilidad_3", "utilidad_4", "defensa_4", "defensa_2", "utilidad_1"])
     assert b.disparo_inicial == "doble"
-    assert b.monedas_pct == pytest.approx(0.25) and b.probabilidad_item == pytest.approx(0.05)
+    assert b.monedas_pct == pytest.approx(0.5)                   # Botín I (+25 %) y Botín II (+25 %)
     assert b.combo_factor == pytest.approx(0.8)
     assert b.invulnerable_extra_ms == 2000 and b.vidas_extra == 1 and b.velocidad_extra == pytest.approx(0.5)
 

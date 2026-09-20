@@ -114,17 +114,3 @@ def test_collision_manager_no_toca_juego_usa_el_contrato_reglas(juego, rm):
 
     assert reglas.enemigos_eliminados == [e]   # la regla se delegó, no se aplicó aquí
     assert e not in em.enemigos                 # la parte mecánica sí
-
-
-def test_recoger_item(juego, rm):
-    from src.entities.items import Item
-    em = juego.entity_manager
-    img = rm.get_image_scaled("potenciador_velocidad", Item.TAMANO_ESTANDAR)
-    item = Item("potenciador_velocidad", img, *juego.jugador.rect.center)
-    em.items.add(item)
-
-    vel0 = juego.jugador.velocidad
-    juego.collision_manager.actualizar(juego.tiempo_juego)
-
-    assert item not in em.items
-    assert juego.jugador.velocidad > vel0

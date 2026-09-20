@@ -50,31 +50,6 @@ def test_reducir_vidas_no_baja_de_cero(jugador):
     assert jugador.vidas == 0
 
 
-# --- Mejoras ---
-
-def test_mejorar_danio_sube_hasta_max_y_luego_evoluciona(jugador):
-    while jugador.danio < jugador.danio_maximo:
-        jugador.mejorar_danio()
-    assert jugador.danio == jugador.danio_maximo
-    assert jugador.tipo_disparo == "simple"
-    jugador.mejorar_danio()
-    assert jugador.tipo_disparo == "doble"
-    jugador.mejorar_danio()
-    assert jugador.tipo_disparo == "triple"
-
-
-def test_mejorar_velocidad_topa_en_max(jugador):
-    for _ in range(20):
-        jugador.mejorar_velocidad(1)
-    assert jugador.velocidad == jugador.velocidad_maxima
-
-
-def test_mejorar_cadencia_topa_en_min(jugador):
-    for _ in range(50):
-        jugador.mejorar_cadencia(50)
-    assert jugador.cadencia_disparo == jugador.cadencia_disparo_maxima
-
-
 # --- Disparo ---
 
 def test_disparar_respeta_la_cadencia(jugador, imagen_bala):
@@ -151,8 +126,8 @@ def test_mover_ya_no_responde_a_la_tecla_por_defecto_si_se_reasigno(jugador):
 # --- Reinicio in situ ---
 
 def test_reiniciar_restaura_estado(jugador):
-    jugador.mejorar_danio()
-    jugador.mejorar_velocidad(2)
+    jugador.danio = 3
+    jugador.velocidad = 6
     jugador.tipo_disparo = "triple"
     jugador.vidas = 1
     jugador.salud = 1
