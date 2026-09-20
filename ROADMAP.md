@@ -58,10 +58,10 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
   árbol de 12 mejoras permanentes en tres ramas (Ataque, Defensa, Utilidad), con
   pantalla propia en el menú, guardado en `data/saves/progresion.json` y
   restablecer gratis. Los costes y el ritmo de monedas son de primera pasada y
-  quieren partidas de prueba. Ver `[Unreleased]` → próxima versión.
+  quieren partidas de prueba. Ver `[0.9.0]`.
 - **Hojas de sprites** — una animación puede ser una sola imagen con los
   fotogramas en una rejilla (`config.HOJAS`, `load_spritesheet` / `get_frames`);
-  la explosión ya se carga así. Ver `[Unreleased]` → próxima versión.
+  la explosión ya se carga así. Ver `[0.9.0]`.
 
 ## En curso / próximo (por orden)
 
