@@ -419,3 +419,17 @@ def test_la_pista_avisa_de_que_se_puede_desplazar_solo_si_hace_falta(menu_largo,
 
 def test_la_pista_de_monedas_usa_el_ritmo_real_del_juego(menu_largo, monkeypatch):
     assert any(f"por cada {settings.MONEDAS_PUNTOS} puntos" in f for f in _textos_dibujados(menu_largo, monkeypatch))
+
+
+@pytest.mark.parametrize("idioma", i18n.IDIOMAS)
+def test_ninguna_descripcion_pasa_de_dos_lineas(menu, idioma):
+    """Con tres líneas el texto pisaría el pie de la tarjeta (coste / estado)."""
+    from src.ui import menu as modulo
+    antes = i18n.idioma_actual()
+    i18n.establecer_idioma(idioma)
+    try:
+        for m in mejoras.MEJORAS:
+            lineas = modulo._ajustar_texto(menu.font_mini, i18n.t(f"mejoras.{m.id}.desc"), modulo._MEJ_ANCHO - 20)
+            assert len(lineas) <= 2, (idioma, m.id, lineas)
+    finally:
+        i18n.establecer_idioma(antes)

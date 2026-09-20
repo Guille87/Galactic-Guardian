@@ -109,7 +109,7 @@
   "mejoras.defensa_3.nombre": "Extra life",
   "mejoras.defensa_3.desc": "Start with one more life",
   "mejoras.defensa_4.nombre": "Regeneration",
-  "mejoras.defensa_4.desc": "Recover 0.5 health per second after 3 s without damage",
+  "mejoras.defensa_4.desc": "Heal 0.5 per second after 3 s unhurt",
   "mejoras.defensa_5.nombre": "Armor III",
   "mejoras.defensa_5.desc": "+20 max health",
   "mejoras.defensa_6.nombre": "Long shield",
