@@ -6,14 +6,13 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
 
 Juego de naves 2D (shoot 'em up) hecho con **pygame-ce**. Sobrevive el mayor tiempo
-posible, destruye oleadas de enemigos, mejora tu nave con potenciadores y derrota al
+posible, destruye oleadas de enemigos, mejora tu nave entre partidas y derrota al
 jefe de cada nivel.
 
 ## Características
 
 - **Oleadas por fases:** la dificultad y los tipos de enemigo cambian según avanza el nivel, hasta que aparece el jefe.
 - **Dos modos:** una **campaña** de niveles con jefe final y un modo **sin fin** de oleadas cada vez más duras (con un jefe cada 5), cada uno con su propia tabla de puntuaciones.
-- **Mejoras de nave:** daño, cadencia de disparo (hasta triple), velocidad y curación, con probabilidad de aparición según lo que necesites.
 - **Progresión:** gana monedas jugando y gástalas en un árbol de mejoras permanentes (ataque, defensa y utilidad) desde el menú.
 - **Combo de puntuación:** cada baja seguida sin que te den sube el multiplicador hasta ×5; el primer golpe lo rompe.
 - **Tabla de puntuaciones** local, con entrada de nombre al conseguir un top 10.
@@ -27,7 +26,7 @@ jefe de cada nivel.
 | Pausa | `Esc` o `P` |
 | Depuración (hitboxes) | `F1` — muestra los círculos de colisión; vuelve a pulsar para ocultarlo |
 
-Objetivo: aguanta con vida, recoge las mejoras que sueltan los enemigos y derrota al jefe
+Objetivo: aguanta con vida, gana monedas para mejorar tu nave entre partidas y derrota al jefe
 para pasar de nivel. En **Sin fin** no hay final: aguanta cuantas oleadas puedas y sube en su ranking.
 
 ## Descargar y jugar (Windows)

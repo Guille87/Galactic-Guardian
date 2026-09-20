@@ -54,41 +54,6 @@ class EnemigoBase(pygame.sprite.Sprite, MovimientoSubpixel):
     def take_damage(self, damage):
         self.salud -= damage
 
-    def die(self, jugador, enemigos_eliminados):
-        """Determina si suelta un ítem al morir."""
-        return self.generate_item(jugador, enemigos_eliminados)
-
-    CANDIDATOS_LOOT = ("potenciador_danio", "potenciador_cadencia", "potenciador_velocidad", "curacion")
-
-    @staticmethod
-    def _loot_util(tipo, jugador):
-        """¿Le sirve al jugador este power-up ahora mismo?"""
-        if tipo == "curacion":
-            return jugador.salud < jugador.salud_maxima
-        if tipo == "potenciador_velocidad":
-            return jugador.velocidad < jugador.velocidad_maxima
-        if tipo == "potenciador_cadencia":
-            return jugador.cadencia_disparo > jugador.cadencia_disparo_maxima
-        if tipo == "potenciador_danio":
-            return jugador.tipo_disparo != "triple"
-        return True
-
-    def generate_item(self, jugador, enemigos_eliminados):
-        """Lógica de probabilidad de loot basada en el estado del jugador."""
-        pool = [t for t in self.CANDIDATOS_LOOT if self._loot_util(t, jugador)]
-
-        if not pool: return None
-
-        # El jefe no pasa por aquí: sobrescribe die() y nunca suelta ítems.
-        prob = 0.05
-        if isinstance(self, EnemigoTipo2): prob = 0.1
-        if isinstance(self, EnemigoTipo3): prob = 0.2
-        prob += jugador.bonus.probabilidad_item      # mejora permanente "Suerte"
-
-        if random.random() < prob or enemigos_eliminados >= 10:
-            return random.choice(pool)
-        return None
-
     def _crear_proyectil_hacia_jugador(self, rm, nombre_bala, danio, velocidad, jugador):
         # La bala aparece en la parte baja del enemigo: el vector director se
         # calcula DESDE ese mismo punto (antes se calculaba desde el centro y la
@@ -184,10 +149,6 @@ class Jefe(EnemigoBase):
         El jefe maneja su propia posición en update.
         """
         pass
-
-    def die(self, jugador, enemigos_eliminados):
-        """El jefe no suelta ítems: pasar de nivel ya es su recompensa."""
-        return None
 
     def update(self, dt=0):
         """Lógica de patrulla del Jefe (independiente de FPS)."""

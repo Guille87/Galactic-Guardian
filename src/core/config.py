@@ -41,7 +41,6 @@ MUSICA = {
 SONIDOS = {
     "laser_gun": "sonidos/laser-gun.wav",
     "hit": "sonidos/hit.wav",
-    "item_take": "sonidos/item-take.wav",
 }
 
 # Hojas de sprites (animaciones): una imagen con los fotogramas en una rejilla

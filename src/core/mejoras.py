@@ -30,7 +30,6 @@ class Bonus:
     disparo_inicial: str = "simple"     # tipo de disparo con el que se empieza
     invulnerable_extra_ms: int = 0      # escudo de reaparición más largo
     monedas_pct: float = 0.0            # +% de monedas (0.25 = +25 %)
-    probabilidad_item: float = 0.0      # +probabilidad (0..1) de que un enemigo suelte ítem
     combo_factor: float = 1.0           # multiplica los umbrales del combo (<1 = más fácil)
 
 
@@ -41,23 +40,24 @@ class Mejora:
     coste: int
     efecto: dict = field(default_factory=dict)
     requiere: str = None                # id de la mejora anterior de su rama
+    icono: str = None                   # nombre de imagen (`config.RECURSOS`) para su nodo, o ninguno
 
 
 MEJORAS = (
     # --- Ataque
-    Mejora("ataque_1", "ataque", 100, {"danio_extra": 1}),
-    Mejora("ataque_2", "ataque", 200, {"cadencia_menos_ms": 50}, requiere="ataque_1"),
-    Mejora("ataque_3", "ataque", 300, {"cadencia_menos_ms": 50}, requiere="ataque_2"),
-    Mejora("ataque_4", "ataque", 400, {"disparo_inicial": "doble"}, requiere="ataque_3"),
+    Mejora("ataque_1", "ataque", 100, {"danio_extra": 1}, icono="potenciador_danio"),
+    Mejora("ataque_2", "ataque", 200, {"cadencia_menos_ms": 50}, requiere="ataque_1", icono="potenciador_cadencia"),
+    Mejora("ataque_3", "ataque", 300, {"cadencia_menos_ms": 50}, requiere="ataque_2", icono="potenciador_cadencia"),
+    Mejora("ataque_4", "ataque", 400, {"disparo_inicial": "doble"}, requiere="ataque_3", icono="potenciador_danio"),
     # --- Defensa
-    Mejora("defensa_1", "defensa", 100, {"salud_extra": 1}),
-    Mejora("defensa_2", "defensa", 200, {"vidas_extra": 1}, requiere="defensa_1"),
-    Mejora("defensa_3", "defensa", 300, {"salud_extra": 1}, requiere="defensa_2"),
+    Mejora("defensa_1", "defensa", 100, {"salud_extra": 1}, icono="curacion"),
+    Mejora("defensa_2", "defensa", 200, {"vidas_extra": 1}, requiere="defensa_1", icono="curacion"),
+    Mejora("defensa_3", "defensa", 300, {"salud_extra": 1}, requiere="defensa_2", icono="curacion"),
     Mejora("defensa_4", "defensa", 400, {"invulnerable_extra_ms": 2000}, requiere="defensa_3"),
     # --- Utilidad
-    Mejora("utilidad_1", "utilidad", 100, {"velocidad_extra": 0.5}),
+    Mejora("utilidad_1", "utilidad", 100, {"velocidad_extra": 0.5}, icono="potenciador_velocidad"),
     Mejora("utilidad_2", "utilidad", 200, {"monedas_pct": 0.25}, requiere="utilidad_1"),
-    Mejora("utilidad_3", "utilidad", 300, {"probabilidad_item": 0.05}, requiere="utilidad_2"),
+    Mejora("utilidad_3", "utilidad", 300, {"monedas_pct": 0.25}, requiere="utilidad_2"),   # provisional: Botín II
     Mejora("utilidad_4", "utilidad", 400, {"combo_factor": 0.8}, requiere="utilidad_3"),
 )
 

@@ -7,6 +7,27 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Sin ítems de curación, la salud vuelve por otros caminos.** En el sin fin,
+  cada oleada nueva recupera el 40 % de la salud máxima y derrotar a un jefe la
+  deja completa; en la campaña sigue curándose del todo al pasar de nivel.
+- La tercera mejora de **Utilidad** ya no es "Suerte" (que subía la probabilidad
+  de ítems) sino **Botín II**: otro +25 % de monedas. Es provisional hasta que se
+  amplíe el árbol. Quien ya la tuviera comprada la conserva.
+- **Botín** pasa a llamarse **Botín I**.
+- Los nodos del árbol de **Mejoras** llevan ahora el icono de los antiguos ítems
+  (daño, cadencia, reparación y velocidad) en la esquina, atenuado mientras la
+  mejora está bloqueada; las que no tienen un icono a juego, solo texto.
+
+### Removed
+
+- **Los ítems de la partida.** Los enemigos ya no sueltan potenciadores de daño,
+  cadencia y velocidad ni curación: la nave solo mejora con las mejoras
+  permanentes del árbol. Desaparecen el objeto, el reparto de botín, el contador
+  de "piedad", el sonido de recogida y los métodos con los que la nave se
+  mejoraba en la partida.
+
 ## [0.9.0] - 2026-09-20
 
 Llega la progresión entre partidas: monedas y un árbol de mejoras permanentes.

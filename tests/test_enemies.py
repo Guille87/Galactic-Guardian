@@ -30,11 +30,6 @@ def test_salud_enemigo_lineal(img_enemigo, nivel):
     assert e.salud_maxima < 16
 
 
-def test_jefe_no_suelta_loot_ni_siquiera_por_la_racha_de_piedad(img_jefe, jugador):
-    jefe = Jefe(img_jefe, 0, 0, 600, 800, 1, jugador)
-    assert jefe.die(jugador, enemigos_eliminados=999) is None
-
-
 def test_salud_jefe_crece_pero_no_se_dispara(img_jefe, jugador):
     saludes = [Jefe(img_jefe, 0, 0, 600, 800, n, jugador).salud_maxima for n in (1, 2, 3, 4)]
     assert saludes[0] == 100
@@ -47,42 +42,6 @@ def test_take_damage(img_enemigo):
     s = e.salud
     e.take_damage(1)
     assert e.salud == s - 1
-
-
-# --- Loot ---
-
-def test_loot_util_curacion(jugador):
-    jugador.salud = jugador.salud_maxima
-    assert EnemigoBase._loot_util("curacion", jugador) is False   # a tope de vida no sirve
-    jugador.salud = 1
-    assert EnemigoBase._loot_util("curacion", jugador) is True
-
-
-def test_loot_util_danio(jugador):
-    assert EnemigoBase._loot_util("potenciador_danio", jugador) is True
-    jugador.tipo_disparo = "triple"
-    assert EnemigoBase._loot_util("potenciador_danio", jugador) is False
-
-
-def test_loot_util_velocidad(jugador):
-    assert EnemigoBase._loot_util("potenciador_velocidad", jugador) is True
-    jugador.velocidad = jugador.velocidad_maxima
-    assert EnemigoBase._loot_util("potenciador_velocidad", jugador) is False
-
-
-def test_generate_item_forzado_por_racha(img_enemigo, jugador):
-    e = EnemigoTipo1(img_enemigo, 0, 0, 600, 1)
-    # con 10+ enemigos eliminados el drop es seguro
-    assert e.generate_item(jugador, enemigos_eliminados=10) in EnemigoBase.CANDIDATOS_LOOT
-
-
-def test_generate_item_pool_vacio_devuelve_none(img_enemigo, jugador):
-    e = EnemigoTipo1(img_enemigo, 0, 0, 600, 1)
-    jugador.salud = jugador.salud_maxima
-    jugador.velocidad = jugador.velocidad_maxima
-    jugador.cadencia_disparo = jugador.cadencia_disparo_maxima
-    jugador.tipo_disparo = "triple"
-    assert e.generate_item(jugador, enemigos_eliminados=999) is None
 
 
 # --- Rebote en los bordes ---

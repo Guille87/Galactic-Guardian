@@ -11,7 +11,7 @@ def _enemigo(rm, x=300, y=100):
 
 def test_grupos_arrancan_vacios(juego):
     em = juego.entity_manager
-    assert all(len(g) == 0 for g in (em.balas, em.balas_enemigo, em.items, em.efectos))
+    assert all(len(g) == 0 for g in (em.balas, em.balas_enemigo, em.efectos))
     # `enemigos` puede tener spawns si el juego ya corrió; recién creado está vacío
     assert len(em.enemigos) == 0
 

@@ -224,7 +224,7 @@ class RenderManager:
     def _dibujar_entidades(self):
         """Dibuja los grupos de sprites en orden de capas (de atrás a delante)."""
         em = self.juego.entity_manager
-        for grupo in (em.efectos, em.items, em.balas, em.balas_enemigo, em.enemigos):
+        for grupo in (em.efectos, em.balas, em.balas_enemigo, em.enemigos):
             grupo.draw(self.pantalla)
 
     def _dibujar_hitboxes(self):

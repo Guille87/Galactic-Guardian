@@ -74,7 +74,7 @@ Cambio grande decidido por el autor, en **cuatro pasos**, cada uno con su PR y
 probado por separado:
 
 0. **Cerrar la progresión** actual (PR + release), para partir de una base estable.
-1. **Quitar los ítems de la partida** (potenciadores y curación: `Item`, loot,
+1. **Quitar los ítems de la partida — hecho** (potenciadores y curación: `Item`, loot,
    contador de "piedad", su sonido y la mejora "Suerte") y **reutilizar sus
    iconos** en el árbol si quedan bien (daño y cadencia se parecen; si no, texto).
 2. **Números reales, sin cambiar el juego**: todo ×10 (bala 10, salud 50, bala

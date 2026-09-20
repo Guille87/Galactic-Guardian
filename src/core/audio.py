@@ -23,7 +23,6 @@ class AudioManager:
         self.efectos = {
             "disparo": self.resource_manager.get_sound("laser_gun"),
             "golpe": self.resource_manager.get_sound("hit"),
-            "item": self.resource_manager.get_sound("item_take"),
         }
 
         pygame.mixer.music.set_volume(volumen_musica)

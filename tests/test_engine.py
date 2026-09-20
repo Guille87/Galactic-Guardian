@@ -59,7 +59,7 @@ def test_reiniciar_avance_de_nivel(juego, rm):
 def test_reiniciar_desde_cero(juego):
     juego.puntuacion = 500
     jugador_viejo = juego.jugador
-    juego.jugador.mejorar_danio()
+    juego.jugador.danio = 2
     juego.jugador.vidas = 1
     juego.jefe_derrotado = False
     juego.reiniciar_juego()
@@ -175,7 +175,7 @@ def test_transicion_centra_sube_y_acelera_el_fondo_hasta_completarse(juego):
 
 def test_seleccionar_nivel_arranca_ese_nivel_desde_cero(juego):
     juego.puntuacion = 500
-    juego.jugador.mejorar_danio()
+    juego.jugador.danio = 2
     juego.reiniciar_juego(nivel_forzado=3)
     assert juego.nivel == 3
     assert juego.puntuacion == 0
@@ -195,14 +195,11 @@ def test_enemigos_eliminados_nivel_cuenta_y_se_resetea(juego, rm):
     assert juego.enemigos_eliminados_nivel == 0
 
 
-def test_al_eliminar_enemigo_puntua_y_suelta_loot(juego, rm):
+def test_al_eliminar_enemigo_puntua(juego, rm):
     enemigo = EnemigoTipo1(rm.get_image_scaled("enemigo1", (48, 48)), 0, 0, 600, 1)
     p0 = juego.puntuacion
-    juego.enemigos_eliminados = 9          # el nº 10 fuerza el loot
     juego.al_eliminar_enemigo(enemigo)
     assert juego.puntuacion == p0 + enemigo.valor_puntuacion * juego.nivel
-    assert len(juego.entity_manager.items) == 1
-    assert juego.enemigos_eliminados == 0
 
 
 def test_disparar_añade_balas(juego):
@@ -334,7 +331,7 @@ def _herido(juego):
 
 
 def test_avanzar_de_nivel_restaura_la_salud_pero_conserva_mejoras_y_vidas(juego):
-    juego.jugador.mejorar_danio()
+    juego.jugador.danio = 2
     juego.jugador.vidas = 2
     _herido(juego)
     juego.jefe_derrotado = True
