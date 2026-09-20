@@ -7,6 +7,12 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-09-20
+
+Llega el combo de puntuación y el menú principal queda centrado. Sin cambios
+incompatibles con partidas ni configuración anteriores; las puntuaciones nuevas
+serán mayores por el multiplicador.
+
 ### Added
 
 - **Combo de puntuación.** Cada baja seguida sin recibir daño sube tu racha, y
@@ -388,7 +394,8 @@ puesta a punto del repositorio (licencia, tests, integración continua, document
   los grupos tipados y `groupcollide`).
 - `__init__.py` vacío en la raíz del repositorio.
 
-[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.4.0...v0.5.0
