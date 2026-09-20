@@ -23,19 +23,26 @@ _MENU_BOTONES_Y = 265       # borde superior del primer botón
 _MENU_BOTONES_PASO = 70     # separación entre botones (altura 50 + 20)
 _MENU_AVISO_Y = 700         # centro del texto del aviso; su botón va justo debajo
 
-# Pantalla "Mejoras": tres columnas (una por rama) de cuatro nodos.
+# Pantalla "Mejoras": tres columnas (una por rama) de nodos, en una zona que se
+# desplaza cuando las ramas son más largas de lo que cabe (rueda del ratón, barra
+# lateral o teclas). Los rects de los nodos se guardan en coordenadas del contenido
+# (el primero en y = 0); `_rect_pantalla` los pasa a coordenadas de pantalla.
 _MEJ_COL_X = (15, 215, 415)     # borde izquierdo de cada columna
 _MEJ_ANCHO = 170
-_MEJ_Y0 = 215                   # borde superior del primer nodo
+_MEJ_AREA = pygame.Rect(0, 210, 600, 456)   # zona visible de los nodos
 _MEJ_ALTO = 98
 _MEJ_PASO = 112                 # de un nodo al siguiente (alto + hueco para el conector)
+_MEJ_PASO_RUEDA = 56            # píxeles que desplaza un "clic" de la rueda o una flecha
+_MEJ_BARRA_X = 590              # barra de desplazamiento (a la derecha de la tercera columna)
+_MEJ_BARRA_ANCHO = 6
 _MEJ_AVISO_MS = 2500            # cuánto dura un aviso de la pantalla
 _MEJ_ICONO = 28                 # lado del icono de un nodo (esquina superior derecha)
 
 
 def _rect_mejora(rama_i, orden):
-    """Rect del nodo `orden` (0..3) de la rama número `rama_i`."""
-    return pygame.Rect(_MEJ_COL_X[rama_i], _MEJ_Y0 + orden * _MEJ_PASO, _MEJ_ANCHO, _MEJ_ALTO)
+    """Rect del nodo número `orden` (0, 1, 2...) de la rama número `rama_i`, en
+    coordenadas del contenido."""
+    return pygame.Rect(_MEJ_COL_X[rama_i], orden * _MEJ_PASO, _MEJ_ANCHO, _MEJ_ALTO)
 
 
 def _ajustar_texto(fuente, texto, ancho):
@@ -105,6 +112,8 @@ class MenuManager:
         self.progresion = progresion if progresion is not None else Progresion(persistir=False)
         self._aviso_mejoras = None              # (texto, instante en que caduca)
         self._iconos_mejoras = {}               # (imagen, atenuado) -> Surface del icono
+        self._scroll_mejoras = 0                # píxeles desplazados de la zona de nodos
+        self._arrastrando_barra = False         # el ratón tiene agarrada la barra de desplazamiento
         self._rects_mejoras = {                 # id de mejora -> Rect de su nodo
             m.id: _rect_mejora(i, orden)
             for i, rama in enumerate(mejoras.RAMAS) for orden, m in enumerate(mejoras.de_la_rama(rama))
@@ -787,7 +796,67 @@ class MenuManager:
     # ------------------------------------------------------------------ MEJORAS
     def _abrir_mejoras(self):
         self._aviso_mejoras = None
+        self._scroll_mejoras = 0
+        self._arrastrando_barra = False
         self.estado = "MEJORAS"
+
+    def _altura_contenido(self):
+        """Alto total de las ramas (la más larga), más un pequeño margen abajo."""
+        filas = max((len(mejoras.de_la_rama(r)) for r in mejoras.RAMAS), default=0)
+        return max(0, filas * _MEJ_PASO - (_MEJ_PASO - _MEJ_ALTO)) + 8
+
+    def _scroll_maximo(self):
+        return max(0, self._altura_contenido() - _MEJ_AREA.height)
+
+    def _desplazar_mejoras(self, pixeles):
+        """Mueve la zona de nodos (positivo = hacia abajo), sin salirse del contenido."""
+        self._scroll_mejoras = max(0, min(self._scroll_maximo(), self._scroll_mejoras + pixeles))
+
+    def _rect_pantalla(self, id_):
+        """Rect de un nodo en la pantalla (según lo desplazado que esté)."""
+        return self._rects_mejoras[id_].move(0, _MEJ_AREA.top - self._scroll_mejoras)
+
+    def _rect_barra(self):
+        """`(pista, agarrador)` de la barra de desplazamiento, o `None` si no hace falta."""
+        maximo = self._scroll_maximo()
+        if maximo <= 0:
+            return None
+        pista = pygame.Rect(_MEJ_BARRA_X, _MEJ_AREA.top, _MEJ_BARRA_ANCHO, _MEJ_AREA.height)
+        alto = max(30, round(_MEJ_AREA.height * _MEJ_AREA.height / self._altura_contenido()))
+        y = pista.top + round((pista.height - alto) * self._scroll_mejoras / maximo)
+        return pista, pygame.Rect(pista.left, y, pista.width, alto)
+
+    def _arrastrar_barra_a(self, y):
+        """Coloca el agarrador de la barra con su centro en `y` (coordenada de pantalla)."""
+        barra = self._rect_barra()
+        if barra is None:
+            return
+        pista, agarrador = barra
+        recorrido = pista.height - agarrador.height
+        fraccion = (y - agarrador.height / 2 - pista.top) / recorrido if recorrido else 0
+        self._scroll_mejoras = max(0, min(self._scroll_maximo(), round(fraccion * self._scroll_maximo())))
+
+    def _evento_mejoras(self, event):
+        """Rueda, barra lateral y teclas de desplazamiento de la pantalla de mejoras."""
+        if event.type == pygame.MOUSEWHEEL:
+            self._desplazar_mejoras(-event.y * _MEJ_PASO_RUEDA)
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                self._desplazar_mejoras(-_MEJ_PASO_RUEDA)
+            elif event.key == pygame.K_DOWN:
+                self._desplazar_mejoras(_MEJ_PASO_RUEDA)
+            elif event.key == pygame.K_PAGEUP:
+                self._desplazar_mejoras(-_MEJ_AREA.height)
+            elif event.key == pygame.K_PAGEDOWN:
+                self._desplazar_mejoras(_MEJ_AREA.height)
+            elif event.key == pygame.K_HOME:
+                self._scroll_mejoras = 0
+            elif event.key == pygame.K_END:
+                self._scroll_mejoras = self._scroll_maximo()
+        elif event.type == pygame.MOUSEMOTION and self._arrastrando_barra:
+            self._arrastrar_barra_a(event.pos[1])
+        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+            self._arrastrando_barra = False
 
     def _avisar_mejoras(self, texto):
         self._aviso_mejoras = (texto, pygame.time.get_ticks() + _MEJ_AVISO_MS)
@@ -800,15 +869,27 @@ class MenuManager:
             devuelto = self.progresion.restablecer()
             self._avisar_mejoras(t("mejoras.aviso_restablecido", n=devuelto) if devuelto
                                  else t("mejoras.aviso_nada"))
-        else:
-            for id_, rect in self._rects_mejoras.items():
-                if rect.collidepoint(pos):
+        elif self._clic_en_barra(pos):
+            pass
+        elif _MEJ_AREA.collidepoint(pos):                 # solo cuenta lo que se ve dentro de la zona
+            for id_ in self._rects_mejoras:
+                if self._rect_pantalla(id_).collidepoint(pos):
                     resultado = self.progresion.comprar(id_)
                     if resultado == SIN_SALDO:
                         self._avisar_mejoras(t("mejoras.aviso_sin_saldo"))
                     elif resultado == BLOQUEADA:
                         self._avisar_mejoras(t("mejoras.aviso_bloqueada"))
                     break
+
+    def _clic_en_barra(self, pos):
+        """Si `pos` cae en la barra de desplazamiento, la agarra (o salta a ese punto)."""
+        barra = self._rect_barra()
+        if barra is None or not barra[0].inflate(14, 0).collidepoint(pos):
+            return False
+        if not barra[1].collidepoint(pos):
+            self._arrastrar_barra_a(pos[1])
+        self._arrastrando_barra = True
+        return True
 
     def _icono_mejora(self, nombre, atenuado):
         """Icono de un nodo (cacheado); atenuado si la mejora aún está bloqueada."""
@@ -864,6 +945,8 @@ class MenuManager:
                 self.estado = "PRINCIPAL"
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 self._clic_mejoras(event.pos)
+            else:
+                self._evento_mejoras(event)
 
         self.pantalla.blit(self.rm.get_image("imagen_fondo1"), (0, 0))
         self.pantalla.blit(self._overlay_oscuro(), (0, 0))
@@ -872,21 +955,39 @@ class MenuManager:
         self.pantalla.blit(titulo, titulo.get_rect(center=(300, 65)))
         monedas = self.font_estandar.render(t("mejoras.monedas", n=self.progresion.monedas), True, (255, 215, 0))
         self.pantalla.blit(monedas, monedas.get_rect(center=(300, 122)))
-        pista = self.font_mini.render(t("mejoras.pista"), True, (160, 160, 170))
+        texto_pista = t("mejoras.pista", n=settings.MONEDAS_PUNTOS)
+        if self._scroll_maximo() > 0:
+            texto_pista += "  ·  " + t("mejoras.pista_desplazar")
+        pista = self.font_mini.render(texto_pista, True, (160, 160, 170))
         self.pantalla.blit(pista, pista.get_rect(center=(300, 150)))
 
         for i, rama in enumerate(mejoras.RAMAS):
             cabecera = self.font_estandar.render(t(f"mejoras.rama_{rama}"), True, (255, 255, 255))
             self.pantalla.blit(cabecera, cabecera.get_rect(center=(_MEJ_COL_X[i] + _MEJ_ANCHO // 2, 190)))
+
+        # Los nodos se dibujan recortados a su zona, para que al desplazarse no invadan
+        # las cabeceras ni los botones.
+        self.pantalla.set_clip(_MEJ_AREA)
+        for rama in mejoras.RAMAS:
             cadena = mejoras.de_la_rama(rama)
             for orden, mejora in enumerate(cadena):
-                rect = self._rects_mejoras[mejora.id]
+                rect = self._rect_pantalla(mejora.id)
+                if rect.bottom < _MEJ_AREA.top or rect.top > _MEJ_AREA.bottom:
+                    continue
                 if orden:                                    # conector con el nodo anterior
                     hecha = self.progresion.estado(cadena[orden - 1].id) == COMPRADA
                     x = rect.centerx
                     pygame.draw.line(self.pantalla, (255, 215, 0) if hecha else (80, 80, 90),
                                      (x, rect.top - (_MEJ_PASO - _MEJ_ALTO)), (x, rect.top), 3)
                 self._dibujar_nodo_mejora(mejora, rect)
+        self.pantalla.set_clip(None)
+
+        barra = self._rect_barra()
+        if barra is not None:
+            pista_barra, agarrador = barra
+            pygame.draw.rect(self.pantalla, (50, 50, 60), pista_barra, border_radius=3)
+            pygame.draw.rect(self.pantalla, (200, 200, 215) if self._arrastrando_barra else (140, 140, 160),
+                             agarrador, border_radius=3)
 
         if self._aviso_mejoras is not None:
             texto, hasta = self._aviso_mejoras

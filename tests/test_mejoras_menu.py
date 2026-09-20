@@ -2,7 +2,7 @@
 import pygame
 import pytest
 
-from src.core import i18n, settings
+from src.core import i18n, mejoras, settings
 from src.core.engine import Juego
 from src.ui.menu import MenuManager
 
@@ -25,7 +25,7 @@ def _clic(menu, pos):
 
 
 def _clic_nodo(menu, id_):
-    _clic(menu, menu._rects_mejoras[id_].center)
+    _clic(menu, menu._rect_pantalla(id_).center)
 
 
 # --- Acceso desde el menú principal ------------------------------------------
@@ -53,15 +53,22 @@ def test_el_bloque_de_seis_botones_sigue_centrado(menu):
 
 # --- Geometría ---------------------------------------------------------------
 
-def test_los_nodos_caben_en_pantalla_sin_solaparse(menu):
+def test_los_nodos_no_se_solapan_y_caben_a_lo_ancho(menu):
     rects = list(menu._rects_mejoras.values())
-    assert len(rects) == 12
-    pantalla = pygame.Rect(0, 0, settings.ANCHO, settings.ALTO)
-    assert all(pantalla.contains(r) for r in rects)
+    assert len(rects) == len(mejoras.MEJORAS)
+    ancho = pygame.Rect(0, 0, settings.ANCHO, 10_000)
+    assert all(ancho.contains(r) for r in rects)
     for i, a in enumerate(rects):
         assert not any(a.colliderect(b) for b in rects[i + 1:])
+
+
+def test_la_zona_de_nodos_no_invade_las_cabeceras_ni_los_botones(menu):
+    from src.ui import menu as modulo
+    zona = modulo._MEJ_AREA
+    assert zona.top >= 190 + 18                                  # bajo las cabeceras de las ramas
     for boton in (menu.btn_restablecer_mejoras.rect, menu.btn_volver_mejoras.rect):
-        assert pantalla.contains(boton) and not any(boton.colliderect(r) for r in rects)
+        assert not zona.colliderect(boton) and pygame.Rect(0, 0, settings.ANCHO, settings.ALTO).contains(boton)
+    assert zona.right <= settings.ANCHO
 
 
 # --- Comprar y restablecer ---------------------------------------------------
@@ -235,7 +242,7 @@ def test_el_icono_se_dibuja_en_la_esquina_superior_derecha_solo_si_la_mejora_lo_
 
     con_icono = [id_ for id_, m in __import__("src.core.mejoras", fromlist=["POR_ID"]).POR_ID.items() if m.icono]
     assert len(llamadas) == len(con_icono)                      # ni uno más ni uno menos
-    rect = menu._rects_mejoras["ataque_1"]
+    rect = menu._rect_pantalla("ataque_1")
     centro = (rect.right - 8 - modulo._MEJ_ICONO // 2, rect.y + 4 + modulo._MEJ_ICONO // 2)
     assert menu.pantalla.get_at(centro)[:3] == (255, 0, 255)
 
@@ -246,3 +253,167 @@ def test_el_icono_atenuado_de_una_mejora_bloqueada_se_cachea_aparte(menu):
     assert normal is menu._icono_mejora("curacion", False)      # caché
     assert normal is not atenuado and atenuado.get_alpha() < 255
     assert normal.get_size() == (28, 28)
+
+
+# --- Zona desplazable ----------------------------------------------------------------
+
+@pytest.fixture
+def menu_largo(monkeypatch, rm, audio, scoreboard, progresion):
+    """Un `MenuManager` con un árbol de 8 filas en la rama de ataque (no cabe en la zona)."""
+    extra = tuple(mejoras.Mejora(f"ataque_{i}", "ataque", 100 * i, {"danio_extra": 10}, requiere=f"ataque_{i - 1}")
+                  for i in range(5, 9))
+    nuevas = mejoras.MEJORAS + extra
+    monkeypatch.setattr(mejoras, "MEJORAS", nuevas)
+    monkeypatch.setattr(mejoras, "POR_ID", {m.id: m for m in nuevas})
+    return MenuManager(pygame.display.get_surface(), rm, audio, scoreboard, None, progresion)
+
+
+def _evento(menu, tipo, **datos):
+    pygame.event.clear()
+    pygame.event.post(pygame.event.Event(tipo, **datos))
+    menu._menu_mejoras()
+
+
+def test_un_arbol_que_cabe_no_se_desplaza_ni_dibuja_barra(monkeypatch, rm, audio, scoreboard, progresion):
+    corto = tuple(m for m in mejoras.MEJORAS if int(m.id.split("_")[1]) <= 3)
+    monkeypatch.setattr(mejoras, "MEJORAS", corto)
+    monkeypatch.setattr(mejoras, "POR_ID", {m.id: m for m in corto})
+    menu = MenuManager(pygame.display.get_surface(), rm, audio, scoreboard, None, progresion)
+    assert menu._scroll_maximo() == 0 and menu._rect_barra() is None
+    menu._desplazar_mejoras(500)
+    assert menu._scroll_mejoras == 0
+
+
+def test_un_arbol_largo_se_puede_desplazar_y_tiene_barra(menu_largo):
+    assert menu_largo._scroll_maximo() > 0
+    pista, agarrador = menu_largo._rect_barra()
+    assert pista.contains(agarrador) and agarrador.top == pista.top            # arranca arriba del todo
+
+
+def test_el_scroll_tiene_tope_arriba_y_abajo(menu_largo):
+    menu_largo._desplazar_mejoras(-999)
+    assert menu_largo._scroll_mejoras == 0
+    menu_largo._desplazar_mejoras(999_999)
+    assert menu_largo._scroll_mejoras == menu_largo._scroll_maximo()
+    assert menu_largo._rect_barra()[1].bottom == menu_largo._rect_barra()[0].bottom      # agarrador abajo del todo
+
+
+def test_la_rueda_del_raton_desplaza_y_no_pasa_de_los_topes(menu_largo):
+    from src.ui import menu as modulo
+    menu_largo._abrir_mejoras()
+    _evento(menu_largo, pygame.MOUSEWHEEL, x=0, y=-1)                   # rueda hacia abajo
+    assert menu_largo._scroll_mejoras == modulo._MEJ_PASO_RUEDA
+    _evento(menu_largo, pygame.MOUSEWHEEL, x=0, y=1)
+    assert menu_largo._scroll_mejoras == 0
+    _evento(menu_largo, pygame.MOUSEWHEEL, x=0, y=1)
+    assert menu_largo._scroll_mejoras == 0
+    _evento(menu_largo, pygame.MOUSEWHEEL, x=0, y=-500)
+    assert menu_largo._scroll_mejoras == menu_largo._scroll_maximo()
+
+
+def test_las_teclas_desplazan(menu_largo):
+    for tecla, comprobar in (
+        (pygame.K_DOWN, lambda m: m._scroll_mejoras > 0),
+        (pygame.K_UP, lambda m: m._scroll_mejoras == 0),
+        (pygame.K_PAGEDOWN, lambda m: m._scroll_mejoras > 0),
+        (pygame.K_HOME, lambda m: m._scroll_mejoras == 0),
+        (pygame.K_END, lambda m: m._scroll_mejoras == m._scroll_maximo()),
+        (pygame.K_PAGEUP, lambda m: m._scroll_mejoras < m._scroll_maximo()),
+    ):
+        _evento(menu_largo, pygame.KEYDOWN, key=tecla)
+        assert comprobar(menu_largo), pygame.key.name(tecla)
+
+
+def test_arrastrar_el_agarrador_de_la_barra_desplaza_el_contenido(menu_largo):
+    pista, agarrador = menu_largo._rect_barra()
+    _clic(menu_largo, agarrador.center)                                 # lo agarra
+    assert menu_largo._arrastrando_barra
+    _evento(menu_largo, pygame.MOUSEMOTION, pos=(agarrador.centerx, pista.bottom), rel=(0, 0), buttons=(1, 0, 0))
+    assert menu_largo._scroll_mejoras == menu_largo._scroll_maximo()    # arrastrado hasta el fondo
+    _evento(menu_largo, pygame.MOUSEBUTTONUP, button=1, pos=(agarrador.centerx, pista.bottom))
+    assert not menu_largo._arrastrando_barra
+    _evento(menu_largo, pygame.MOUSEMOTION, pos=(agarrador.centerx, pista.top), rel=(0, 0), buttons=(0, 0, 0))
+    assert menu_largo._scroll_mejoras == menu_largo._scroll_maximo()    # ya no lo sigue
+
+
+def test_pulsar_en_la_pista_de_la_barra_salta_a_ese_punto(menu_largo):
+    pista, _ = menu_largo._rect_barra()
+    _clic(menu_largo, (pista.centerx, pista.bottom - 2))
+    assert menu_largo._scroll_mejoras > menu_largo._scroll_maximo() * 0.8
+
+
+def test_un_clic_en_la_barra_no_compra_nada(menu_largo, progresion):
+    progresion.ingresar(10_000)
+    pista, _ = menu_largo._rect_barra()
+    _clic(menu_largo, pista.center)
+    assert not progresion.compradas
+
+
+def test_un_nodo_desplazado_fuera_de_la_zona_no_se_puede_pulsar(menu_largo, progresion):
+    progresion.ingresar(10_000)
+    menu_largo._desplazar_mejoras(999_999)
+    fuera = menu_largo._rect_pantalla("ataque_1")                       # ya subió por encima de la zona
+    assert fuera.bottom < 210 or fuera.top < 210
+    _clic(menu_largo, (fuera.centerx, 100))                             # sobre el título, no en la zona
+    assert not progresion.compradas
+
+
+def test_un_nodo_que_se_ve_tras_desplazar_se_compra_en_su_nueva_posicion(menu_largo, progresion):
+    progresion.ingresar(10_000)
+    for id_ in ("ataque_1", "ataque_2", "ataque_3", "ataque_4"):
+        assert progresion.comprar(id_) == "ok"
+    menu_largo._desplazar_mejoras(999_999)
+    _clic_nodo(menu_largo, "ataque_5")                                   # 5.º de la rama: solo visible desplazado
+    assert "ataque_5" in progresion.compradas
+
+
+def test_abrir_la_pantalla_vuelve_arriba_y_suelta_la_barra(menu_largo):
+    menu_largo._desplazar_mejoras(999_999)
+    menu_largo._arrastrando_barra = True
+    menu_largo._abrir_mejoras()
+    assert menu_largo._scroll_mejoras == 0 and not menu_largo._arrastrando_barra
+
+
+def test_los_nodos_desplazados_no_invaden_las_cabeceras(menu_largo):
+    from src.ui import menu as modulo
+    menu_largo._abrir_mejoras()
+    menu_largo._menu_mejoras()
+    y = modulo._MEJ_AREA.top - 4                                        # entre las cabeceras y la zona
+    antes = [tuple(menu_largo.pantalla.get_at((x, y))) for x in range(20, 580, 7)]
+    menu_largo._desplazar_mejoras(300)
+    menu_largo._menu_mejoras()
+    despues = [tuple(menu_largo.pantalla.get_at((x, y))) for x in range(20, 580, 7)]
+    assert antes == despues
+
+
+class _Espia:
+    """Envuelve una fuente y apunta los textos que se dibujan con ella."""
+    def __init__(self, real, frases):
+        self.real, self.frases = real, frases
+
+    def render(self, texto, *args):
+        self.frases.append(texto)
+        return self.real.render(texto, *args)
+
+    def size(self, texto):
+        return self.real.size(texto)
+
+
+def _textos_dibujados(menu, monkeypatch):
+    frases = []
+    monkeypatch.setattr(menu, "font_mini", _Espia(menu.font_mini, frases))
+    menu._menu_mejoras()
+    return frases
+
+
+def test_la_pista_avisa_de_que_se_puede_desplazar_solo_si_hace_falta(menu_largo, monkeypatch, rm, audio, scoreboard,
+                                                                    progresion):
+    assert any("Rueda del ratón" in f for f in _textos_dibujados(menu_largo, monkeypatch))
+    corto = MenuManager(pygame.display.get_surface(), rm, audio, scoreboard, None, progresion)
+    monkeypatch.setattr(mejoras, "MEJORAS", mejoras.MEJORAS[:4])
+    monkeypatch.setattr(mejoras, "POR_ID", {m.id: m for m in mejoras.MEJORAS})
+    assert not any("Rueda del ratón" in f for f in _textos_dibujados(corto, monkeypatch))
+
+
+def test_la_pista_de_monedas_usa_el_ritmo_real_del_juego(menu_largo, monkeypatch):
+    assert any(f"por cada {settings.MONEDAS_PUNTOS} puntos" in f for f in _textos_dibujados(menu_largo, monkeypatch))
