@@ -23,8 +23,11 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
   segundos sin recibir daño.
 - **Disparo triple**, además del doble, y más **disparos por segundo** y **velocidad**
   desde el árbol.
-- La pantalla **Mejoras** se **desplaza** (rueda del ratón, barra lateral o teclas)
-  para que quepan los 17 nodos del árbol.
+- La pantalla **Mejoras** se **desplaza** (rueda del ratón, barra lateral, teclas o
+  **arrastrando con el ratón** como en el móvil) para que quepan los 17 nodos del
+  árbol. Las mejoras se compran al soltar el clic, para distinguir un toque de un arrastre.
+- Con **disparo doble** las balas salen de los cañones de las alas de la nave; con
+  **triple**, de los dos cañones y del morro.
 
 ### Changed
 

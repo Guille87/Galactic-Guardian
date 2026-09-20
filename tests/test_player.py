@@ -246,3 +246,38 @@ def test_la_regeneracion_no_pasa_de_la_salud_maxima_ni_revive(jugador):
     jugador.salud = 0
     _regenerar(jugador, 5)
     assert jugador.salud == 0                                      # con 0 ya se perdió la vida: no regenera
+
+
+# --- De dónde salen las balas ------------------------------------------------------------------
+
+def _origenes(jugador, imagen_bala, balas):
+    jugador.balas_por_disparo = balas
+    jugador.ultimo_disparo = -99999
+    return [(b.rect.centerx - jugador.rect.centerx, b.rect.centery - jugador.rect.top)
+            for b in jugador.disparar(0, imagen_bala)]
+
+
+def test_con_una_bala_sale_del_morro(jugador, imagen_bala):
+    assert _origenes(jugador, imagen_bala, 1) == [(0, 10)]
+
+
+def test_con_dos_balas_salen_de_los_canones_de_las_alas_y_no_del_centro(jugador, imagen_bala):
+    (xi, _), (xd, _) = _origenes(jugador, imagen_bala, 2)
+    assert xi == -xd < 0 and abs(xi) >= 15                       # una a cada lado, bien separadas
+
+
+def test_con_tres_balas_salen_los_canones_y_el_morro(jugador, imagen_bala):
+    origenes = _origenes(jugador, imagen_bala, 3)
+    assert sorted(x for x, _ in origenes) == [-20, 0, 20]
+    assert set(_origenes(jugador, imagen_bala, 2)) <= set(origenes)   # los cañones son los mismos que con dos
+
+
+def test_los_canones_de_las_alas_quedan_algo_mas_atras_que_el_morro(jugador, imagen_bala):
+    lados = [dy for dx, dy in _origenes(jugador, imagen_bala, 3) if dx]
+    centro = [dy for dx, dy in _origenes(jugador, imagen_bala, 3) if not dx]
+    assert all(dy > centro[0] for dy in lados)
+
+
+def test_los_canones_estan_dentro_de_la_nave(jugador, imagen_bala):
+    ancho = jugador.rect.width
+    assert all(abs(x) < ancho / 2 for x, _ in _origenes(jugador, imagen_bala, 3))

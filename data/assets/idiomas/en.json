@@ -78,7 +78,7 @@
   "mejoras.titulo": "Upgrades",
   "mejoras.monedas": "Coins: {n}",
   "mejoras.pista": "You earn 1 coin for every {n} points",
-  "mejoras.pista_desplazar": "Mouse wheel to see more",
+  "mejoras.pista_desplazar": "Drag or use the wheel to see more",
   "mejoras.rama_ataque": "Attack",
   "mejoras.rama_defensa": "Defense",
   "mejoras.rama_utilidad": "Utility",

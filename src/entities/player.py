@@ -25,7 +25,14 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
     destello_constante = None   # halo de invulnerabilidad en pantalla (lo crea `EffectManager`)
 
     # Separación horizontal (px) de cada bala según cuántas se disparan a la vez
-    OFFSETS_BALAS = {1: (0,), 2: (-10, 10), 3: (-15, 0, 15)}
+    # Dónde nace cada bala respecto al centro de la nave, (dx, dy) con dy desde el borde superior:
+    # una sale del morro; con dos salen de los cañones de las alas (a ±20 px, algo más atrasados
+    # que el morro); con tres, las de los cañones y la del morro.
+    ORIGENES_BALAS = {
+        1: ((0, 10),),
+        2: ((-20, 23), (20, 23)),
+        3: ((-20, 23), (0, 10), (20, 23)),
+    }
 
     def __init__(self, imagen, pantalla_ancho, pantalla_alto, bonus=None):
         super().__init__()
@@ -153,11 +160,8 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
         ResourceManager)."""
         balas = []
 
-        pos_x = self.rect.centerx
-        pos_y = self.rect.top + 10
-
-        for offset in self.OFFSETS_BALAS[self.balas_por_disparo]:
-            balas.append(Bala(imagen_bala, pos_x + offset, pos_y, self.danio))
+        for dx, dy in self.ORIGENES_BALAS[self.balas_por_disparo]:
+            balas.append(Bala(imagen_bala, self.rect.centerx + dx, self.rect.top + dy, self.danio))
 
         return balas
 

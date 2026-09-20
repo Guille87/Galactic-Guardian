@@ -25,7 +25,12 @@ def _clic(menu, pos):
 
 
 def _clic_nodo(menu, id_):
-    _clic(menu, menu._rect_pantalla(id_).center)
+    """Un toque completo (pulsar y soltar) sobre un nodo: es al soltar cuando compra."""
+    pos = menu._rect_pantalla(id_).center
+    pygame.event.clear()
+    pygame.event.post(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=pos))
+    pygame.event.post(pygame.event.Event(pygame.MOUSEBUTTONUP, button=1, pos=pos))
+    menu._menu_mejoras()
 
 
 # --- Acceso desde el menú principal ------------------------------------------
@@ -410,11 +415,11 @@ def _textos_dibujados(menu, monkeypatch):
 
 def test_la_pista_avisa_de_que_se_puede_desplazar_solo_si_hace_falta(menu_largo, monkeypatch, rm, audio, scoreboard,
                                                                     progresion):
-    assert any("Rueda del ratón" in f for f in _textos_dibujados(menu_largo, monkeypatch))
+    assert any("rueda" in f for f in _textos_dibujados(menu_largo, monkeypatch))
     corto = MenuManager(pygame.display.get_surface(), rm, audio, scoreboard, None, progresion)
     monkeypatch.setattr(mejoras, "MEJORAS", mejoras.MEJORAS[:4])
     monkeypatch.setattr(mejoras, "POR_ID", {m.id: m for m in mejoras.MEJORAS})
-    assert not any("Rueda del ratón" in f for f in _textos_dibujados(corto, monkeypatch))
+    assert not any("rueda" in f for f in _textos_dibujados(corto, monkeypatch))
 
 
 def test_la_pista_de_monedas_usa_el_ritmo_real_del_juego(menu_largo, monkeypatch):
@@ -433,3 +438,88 @@ def test_ninguna_descripcion_pasa_de_dos_lineas(menu, idioma):
             assert len(lineas) <= 2, (idioma, m.id, lineas)
     finally:
         i18n.establecer_idioma(antes)
+
+
+# --- Arrastrar con el ratón (como en el móvil) -----------------------------------
+
+def _gesto(menu, inicio, *puntos, botones=(1, 0, 0), soltar=True):
+    """Pulsa en `inicio`, mueve el ratón por `puntos` y suelta en el último."""
+    pygame.event.clear()
+    pygame.event.post(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=inicio))
+    for p in puntos:
+        pygame.event.post(pygame.event.Event(pygame.MOUSEMOTION, pos=p, rel=(0, 0), buttons=botones))
+    if soltar:
+        pygame.event.post(pygame.event.Event(pygame.MOUSEBUTTONUP, button=1, pos=puntos[-1] if puntos else inicio))
+    menu._menu_mejoras()
+
+
+def test_arrastrar_hacia_arriba_desplaza_el_contenido_hacia_abajo(menu_largo):
+    y = 400
+    _gesto(menu_largo, (300, y), (300, y - 40), (300, y - 100))
+    assert menu_largo._scroll_mejoras == 100                            # el contenido sigue al puntero
+
+
+def test_arrastrar_hacia_abajo_vuelve_hacia_arriba_y_respeta_los_topes(menu_largo):
+    menu_largo._desplazar_mejoras(150)
+    _gesto(menu_largo, (300, 300), (300, 340))
+    assert menu_largo._scroll_mejoras == 110
+    _gesto(menu_largo, (300, 300), (300, 900))                          # más allá del principio
+    assert menu_largo._scroll_mejoras == 0
+    _gesto(menu_largo, (300, 600), (300, -3000))                        # más allá del final
+    assert menu_largo._scroll_mejoras == menu_largo._scroll_maximo()
+
+
+def test_un_arrastre_no_compra_al_soltar(menu_largo, progresion):
+    progresion.ingresar(10_000)
+    centro = menu_largo._rect_pantalla("ataque_1").center
+    _gesto(menu_largo, centro, (centro[0], centro[1] + 60))
+    assert not progresion.compradas
+
+
+def test_un_toque_con_un_pequeno_temblor_sigue_comprando(menu_largo, progresion):
+    progresion.ingresar(10_000)
+    centro = menu_largo._rect_pantalla("ataque_1").center
+    _gesto(menu_largo, centro, (centro[0], centro[1] + 3))              # menos que el umbral
+    assert "ataque_1" in progresion.compradas and menu_largo._scroll_mejoras == 0
+
+
+def test_pulsar_sin_soltar_todavia_no_compra(menu_largo, progresion):
+    progresion.ingresar(10_000)
+    centro = menu_largo._rect_pantalla("ataque_1").center
+    pygame.event.clear()
+    pygame.event.post(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=centro))
+    menu_largo._menu_mejoras()
+    assert not progresion.compradas
+
+
+def test_al_arrastrar_se_puede_seguir_hasta_un_nodo_lejano_y_comprarlo(menu_largo, progresion):
+    progresion.ingresar(10_000)
+    for id_ in ("ataque_1", "ataque_2", "ataque_3", "ataque_4"):
+        progresion.comprar(id_)
+    _gesto(menu_largo, (300, 600), (300, -3000))                        # hasta el fondo
+    _clic_nodo(menu_largo, "ataque_5")
+    assert "ataque_5" in progresion.compradas
+
+
+def test_soltar_fuera_de_la_ventana_no_deja_el_arrastre_colgado(menu_largo):
+    _gesto(menu_largo, (300, 400), (300, 380), soltar=False)            # pulsa y arrastra, sin soltar
+    assert menu_largo._arrastre_mejoras is not None
+    _gesto_sin_boton = pygame.event.Event(pygame.MOUSEMOTION, pos=(300, 300), rel=(0, 0), buttons=(0, 0, 0))
+    pygame.event.clear()
+    pygame.event.post(_gesto_sin_boton)
+    menu_largo._menu_mejoras()
+    assert menu_largo._arrastre_mejoras is None
+
+
+def test_pulsar_en_un_boton_o_en_la_barra_no_inicia_un_arrastre_del_contenido(menu_largo):
+    _clic(menu_largo, menu_largo.btn_restablecer_mejoras.rect.center)
+    assert menu_largo._arrastre_mejoras is None
+    pista, agarrador = menu_largo._rect_barra()
+    _clic(menu_largo, agarrador.center)
+    assert menu_largo._arrastre_mejoras is None and menu_largo._arrastrando_barra
+
+
+def test_abrir_la_pantalla_cancela_un_arrastre_a_medias(menu_largo):
+    menu_largo._arrastre_mejoras = [(0, 0), 0, True]
+    menu_largo._abrir_mejoras()
+    assert menu_largo._arrastre_mejoras is None

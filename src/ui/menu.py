@@ -33,6 +33,7 @@ _MEJ_AREA = pygame.Rect(0, 210, 600, 456)   # zona visible de los nodos
 _MEJ_ALTO = 98
 _MEJ_PASO = 112                 # de un nodo al siguiente (alto + hueco para el conector)
 _MEJ_PASO_RUEDA = 56            # píxeles que desplaza un "clic" de la rueda o una flecha
+_MEJ_UMBRAL_ARRASTRE = 6          # píxeles que hay que mover el ratón pulsado para que deje de ser un clic
 _MEJ_BARRA_X = 590              # barra de desplazamiento (a la derecha de la tercera columna)
 _MEJ_BARRA_ANCHO = 6
 _MEJ_AVISO_MS = 2500            # cuánto dura un aviso de la pantalla
@@ -114,6 +115,7 @@ class MenuManager:
         self._iconos_mejoras = {}               # (imagen, atenuado) -> Surface del icono
         self._scroll_mejoras = 0                # píxeles desplazados de la zona de nodos
         self._arrastrando_barra = False         # el ratón tiene agarrada la barra de desplazamiento
+        self._arrastre_mejoras = None           # pulsación en la zona de nodos: [pos, scroll inicial, ya se arrastró]
         self._rects_mejoras = {                 # id de mejora -> Rect de su nodo
             m.id: _rect_mejora(i, orden)
             for i, rama in enumerate(mejoras.RAMAS) for orden, m in enumerate(mejoras.de_la_rama(rama))
@@ -798,6 +800,7 @@ class MenuManager:
         self._aviso_mejoras = None
         self._scroll_mejoras = 0
         self._arrastrando_barra = False
+        self._arrastre_mejoras = None
         self.estado = "MEJORAS"
 
     def _altura_contenido(self):
@@ -853,10 +856,30 @@ class MenuManager:
                 self._scroll_mejoras = 0
             elif event.key == pygame.K_END:
                 self._scroll_mejoras = self._scroll_maximo()
-        elif event.type == pygame.MOUSEMOTION and self._arrastrando_barra:
-            self._arrastrar_barra_a(event.pos[1])
+        elif event.type == pygame.MOUSEMOTION:
+            if self._arrastrando_barra:
+                self._arrastrar_barra_a(event.pos[1])
+            elif self._arrastre_mejoras is not None:
+                if event.buttons[0]:
+                    self._arrastrar_contenido(event.pos)
+                else:                                       # se soltó fuera de la ventana
+                    self._arrastre_mejoras = None
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             self._arrastrando_barra = False
+            arrastre, self._arrastre_mejoras = self._arrastre_mejoras, None
+            if arrastre is not None and not arrastre[2]:    # un toque, no un arrastre: es una compra
+                self._comprar_en(arrastre[0])
+
+    def _arrastrar_contenido(self, pos):
+        """Arrastrar con el ratón pulsado (como en el móvil): el contenido sigue al puntero.
+        Hasta que se mueve `_MEJ_UMBRAL_ARRASTRE` px cuenta como un toque y no como un arrastre,
+        para que un clic con un pequeño temblor de la mano siga comprando."""
+        origen, scroll_inicial, arrastrado = self._arrastre_mejoras
+        dy = pos[1] - origen[1]
+        if not arrastrado and abs(dy) < _MEJ_UMBRAL_ARRASTRE:
+            return
+        self._arrastre_mejoras[2] = True
+        self._scroll_mejoras = max(0, min(self._scroll_maximo(), scroll_inicial - dy))
 
     def _avisar_mejoras(self, texto):
         self._aviso_mejoras = (texto, pygame.time.get_ticks() + _MEJ_AVISO_MS)
@@ -871,15 +894,23 @@ class MenuManager:
                                  else t("mejoras.aviso_nada"))
         elif self._clic_en_barra(pos):
             pass
-        elif _MEJ_AREA.collidepoint(pos):                 # solo cuenta lo que se ve dentro de la zona
-            for id_ in self._rects_mejoras:
-                if self._rect_pantalla(id_).collidepoint(pos):
-                    resultado = self.progresion.comprar(id_)
-                    if resultado == SIN_SALDO:
-                        self._avisar_mejoras(t("mejoras.aviso_sin_saldo"))
-                    elif resultado == BLOQUEADA:
-                        self._avisar_mejoras(t("mejoras.aviso_bloqueada"))
-                    break
+        elif _MEJ_AREA.collidepoint(pos):
+            # Todavía no se sabe si es un toque (comprar) o el inicio de un arrastre: lo decide
+            # el ratón al soltarse (`_evento_mejoras`).
+            self._arrastre_mejoras = [pos, self._scroll_mejoras, False]
+
+    def _comprar_en(self, pos):
+        """Compra la mejora que hay en `pos` (solo cuenta lo que se ve dentro de la zona)."""
+        if not _MEJ_AREA.collidepoint(pos):
+            return
+        for id_ in self._rects_mejoras:
+            if self._rect_pantalla(id_).collidepoint(pos):
+                resultado = self.progresion.comprar(id_)
+                if resultado == SIN_SALDO:
+                    self._avisar_mejoras(t("mejoras.aviso_sin_saldo"))
+                elif resultado == BLOQUEADA:
+                    self._avisar_mejoras(t("mejoras.aviso_bloqueada"))
+                break
 
     def _clic_en_barra(self, pos):
         """Si `pos` cae en la barra de desplazamiento, la agarra (o salta a ese punto)."""
