@@ -96,10 +96,10 @@ def test_la_curacion_escala_con_la_salud_maxima(rm, audio, scoreboard, progresio
     for id_ in ("defensa_1", "defensa_2", "defensa_3"):
         progresion.comprar(id_)
     j = Juego(pygame.display.get_surface(), audio, scoreboard, rm, modo=settings.MODO_SIN_FIN, progresion=progresion)
-    assert j.jugador.salud_maxima == 7
+    assert j.jugador.salud_maxima == 70
     j.jugador.salud = 1
     j._avanzar_oleada()
-    assert j.jugador.salud == 1 + math.ceil(settings.SIN_FIN_CURACION_OLEADA * 7)
+    assert j.jugador.salud == 1 + math.ceil(settings.SIN_FIN_CURACION_OLEADA * 70)
 
 
 def test_la_campana_sigue_curando_al_pasar_de_nivel(juego):

@@ -22,9 +22,9 @@ _ORDEN_DISPARO = ("simple", "doble", "triple")
 @dataclass(frozen=True)
 class Bonus:
     """Suma de los efectos de las mejoras compradas (todo a cero = sin mejoras)."""
-    salud_extra: int = 0                # salud máxima inicial
+    salud_extra: int = 0                # salud máxima inicial (en puntos de salud reales)
     vidas_extra: int = 0                # vidas iniciales
-    danio_extra: int = 0                # daño inicial
+    danio_extra: int = 0                # daño inicial (por bala, en puntos reales)
     cadencia_menos_ms: int = 0          # ms menos entre disparos
     velocidad_extra: float = 0.0        # velocidad inicial
     disparo_inicial: str = "simple"     # tipo de disparo con el que se empieza
@@ -45,14 +45,14 @@ class Mejora:
 
 MEJORAS = (
     # --- Ataque
-    Mejora("ataque_1", "ataque", 100, {"danio_extra": 1}, icono="potenciador_danio"),
+    Mejora("ataque_1", "ataque", 100, {"danio_extra": 10}, icono="potenciador_danio"),
     Mejora("ataque_2", "ataque", 200, {"cadencia_menos_ms": 50}, requiere="ataque_1", icono="potenciador_cadencia"),
     Mejora("ataque_3", "ataque", 300, {"cadencia_menos_ms": 50}, requiere="ataque_2", icono="potenciador_cadencia"),
     Mejora("ataque_4", "ataque", 400, {"disparo_inicial": "doble"}, requiere="ataque_3", icono="potenciador_danio"),
     # --- Defensa
-    Mejora("defensa_1", "defensa", 100, {"salud_extra": 1}, icono="curacion"),
+    Mejora("defensa_1", "defensa", 100, {"salud_extra": 10}, icono="curacion"),
     Mejora("defensa_2", "defensa", 200, {"vidas_extra": 1}, requiere="defensa_1", icono="curacion"),
-    Mejora("defensa_3", "defensa", 300, {"salud_extra": 1}, requiere="defensa_2", icono="curacion"),
+    Mejora("defensa_3", "defensa", 300, {"salud_extra": 10}, requiere="defensa_2", icono="curacion"),
     Mejora("defensa_4", "defensa", 400, {"invulnerable_extra_ms": 2000}, requiere="defensa_3"),
     # --- Utilidad
     Mejora("utilidad_1", "utilidad", 100, {"velocidad_extra": 0.5}, icono="potenciador_velocidad"),

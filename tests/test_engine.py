@@ -59,7 +59,7 @@ def test_reiniciar_avance_de_nivel(juego, rm):
 def test_reiniciar_desde_cero(juego):
     juego.puntuacion = 500
     jugador_viejo = juego.jugador
-    juego.jugador.danio = 2
+    juego.jugador.danio = 20
     juego.jugador.vidas = 1
     juego.jefe_derrotado = False
     juego.reiniciar_juego()
@@ -67,7 +67,7 @@ def test_reiniciar_desde_cero(juego):
     # El jugador se restablece in situ: misma instancia, estado inicial (item 14).
     assert juego.jugador is jugador_viejo
     assert juego.jugador.vidas == juego.jugador.CONFIG["vidas_init"]
-    assert juego.jugador.danio == 1
+    assert juego.jugador.danio == juego.jugador.CONFIG["danio_base"]
 
 
 def test_reiniciar_desde_cero_limpia_enemigos_golpeados(juego, rm):
@@ -175,11 +175,11 @@ def test_transicion_centra_sube_y_acelera_el_fondo_hasta_completarse(juego):
 
 def test_seleccionar_nivel_arranca_ese_nivel_desde_cero(juego):
     juego.puntuacion = 500
-    juego.jugador.danio = 2
+    juego.jugador.danio = 20
     juego.reiniciar_juego(nivel_forzado=3)
     assert juego.nivel == 3
     assert juego.puntuacion == 0
-    assert juego.jugador.danio == 1
+    assert juego.jugador.danio == juego.jugador.CONFIG["danio_base"]
     assert (juego.MIN_TIEMPO_GENERACION, juego.MAX_TIEMPO_GENERACION) == definicion_nivel(3).intervalo_spawn
 
 
@@ -331,14 +331,14 @@ def _herido(juego):
 
 
 def test_avanzar_de_nivel_restaura_la_salud_pero_conserva_mejoras_y_vidas(juego):
-    juego.jugador.danio = 2
+    juego.jugador.danio = 20
     juego.jugador.vidas = 2
     _herido(juego)
     juego.jefe_derrotado = True
     juego.reiniciar_juego()
     assert juego.nivel == 2
     assert juego.jugador.salud == juego.jugador.salud_maxima
-    assert juego.jugador.danio == 2          # las mejoras siguen ahí
+    assert juego.jugador.danio == 20         # las mejoras siguen ahí
     assert juego.jugador.vidas == 2          # las vidas también: solo se cura la barra
 
 

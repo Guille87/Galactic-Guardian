@@ -57,7 +57,7 @@ def test_sin_mejoras_el_bonus_es_neutro():
 
 def test_los_efectos_numericos_se_suman():
     b = calcular_bonus(["defensa_1", "defensa_3", "ataque_2", "ataque_3"])
-    assert b.salud_extra == 2 and b.cadencia_menos_ms == 100
+    assert b.salud_extra == 20 and b.cadencia_menos_ms == 100
 
 
 def test_efectos_especiales():
@@ -69,7 +69,7 @@ def test_efectos_especiales():
 
 
 def test_ids_desconocidos_se_ignoran():
-    assert calcular_bonus(["no_existe", "ataque_1"]).danio_extra == 1
+    assert calcular_bonus(["no_existe", "ataque_1"]).danio_extra == 10
 
 
 # --- Compra ------------------------------------------------------------------
@@ -90,7 +90,7 @@ def test_comprar_descuenta_el_coste_y_aplica_el_bonus(prog):
     assert prog.comprar("ataque_1") == progresion.OK
     assert prog.monedas == 150 - POR_ID["ataque_1"].coste
     assert prog.estado("ataque_1") == progresion.COMPRADA
-    assert prog.bonus().danio_extra == 1
+    assert prog.bonus().danio_extra == 10
 
 
 def test_no_se_compra_sin_saldo_suficiente(prog):

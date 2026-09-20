@@ -21,8 +21,10 @@ class EnemigoBase(pygame.sprite.Sprite, MovimientoSubpixel):
         self.valor_puntuacion = 1
         self._init_subpixel()
 
-        # Escalado de salud lineal por nivel: base * (1 + FACTOR * (nivel - 1))
-        self.salud_maxima = max(1, round(salud_base * (1 + self.FACTOR_NIVEL * (nivel - 1))))
+        # Escalado de salud lineal por nivel: base * (1 + FACTOR * (nivel - 1)), redondeado
+        # a múltiplos de `SALUD_PASO_NIVEL` (ver settings).
+        paso = settings.SALUD_PASO_NIVEL
+        self.salud_maxima = max(paso, round(salud_base / paso * (1 + self.FACTOR_NIVEL * (nivel - 1))) * paso)
         self.salud = self.salud_maxima
 
         self.velocidad_x = random.uniform(-2, 2)
@@ -80,7 +82,7 @@ class EnemigoTipo1(EnemigoBase):
     RECURSO = "enemigo1"   # nombre lógico de su sprite en config.RECURSOS
 
     def __init__(self, imagen, x, y, pantalla_ancho, nivel):
-        super().__init__(imagen, x, y, pantalla_ancho, nivel, salud_base=1)
+        super().__init__(imagen, x, y, pantalla_ancho, nivel, salud_base=10)
         # Atributos específicos del tipo de enemigo 1
         self.velocidad_x = random.uniform(-3, 3)
 
@@ -89,7 +91,7 @@ class EnemigoTipo2(EnemigoBase):
     RECURSO = "enemigo2"
 
     def __init__(self, imagen, x, y, pantalla_ancho, nivel, jugador):
-        super().__init__(imagen, x, y, pantalla_ancho, nivel, salud_base=2)
+        super().__init__(imagen, x, y, pantalla_ancho, nivel, salud_base=20)
         # Atributos específicos del tipo de enemigo 2
         self.jugador = jugador  # Guarda la referencia al jugador
         self.tiempo_ultimo_ataque = 0  # Inicializa el tiempo del último ataque
@@ -109,7 +111,7 @@ class EnemigoTipo3(EnemigoBase):
     RECURSO = "enemigo3"
 
     def __init__(self, imagen, x, y, pantalla_ancho, nivel, jugador):
-        super().__init__(imagen, x, y, pantalla_ancho, nivel, salud_base=3)
+        super().__init__(imagen, x, y, pantalla_ancho, nivel, salud_base=30)
         # Atributos específicos del tipo de enemigo 3
         self.jugador = jugador
         self.velocidad_y = random.uniform(3, 6)
@@ -132,7 +134,7 @@ class Jefe(EnemigoBase):
     FACTOR_NIVEL = settings.DIFICULTAD_FACTOR_JEFE
 
     def __init__(self, imagen_surface, x, y, pantalla_ancho, pantalla_alto, nivel, jugador):
-        super().__init__(imagen_surface, x, y, pantalla_ancho, nivel, salud_base=100)
+        super().__init__(imagen_surface, x, y, pantalla_ancho, nivel, salud_base=1000)
         # Atributos específicos del jefe
         self.pantalla_alto = pantalla_alto
         self.jugador = jugador

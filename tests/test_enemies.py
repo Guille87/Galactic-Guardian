@@ -23,25 +23,26 @@ def img_jefe(rm):
 
 @pytest.mark.parametrize("nivel", [1, 2, 3, 4, 5])
 def test_salud_enemigo_lineal(img_enemigo, nivel):
-    e = EnemigoTipo1(img_enemigo, 100, 100, 600, nivel)     # salud_base = 1
-    esperado = max(1, round(1 + settings.DIFICULTAD_FACTOR_ENEMIGO * (nivel - 1)))
+    e = EnemigoTipo1(img_enemigo, 100, 100, 600, nivel)     # salud_base = 10 (1 "punto" de los de antes)
+    paso = settings.SALUD_PASO_NIVEL
+    esperado = max(1, round(1 + settings.DIFICULTAD_FACTOR_ENEMIGO * (nivel - 1))) * paso
     assert e.salud_maxima == esperado == e.salud
-    # nunca exponencial: el nivel 5 no debe ser >= 2**4
-    assert e.salud_maxima < 16
+    # nunca exponencial: el nivel 5 no debe ser >= 2**4 veces la salud base
+    assert e.salud_maxima < 16 * paso
 
 
 def test_salud_jefe_crece_pero_no_se_dispara(img_jefe, jugador):
     saludes = [Jefe(img_jefe, 0, 0, 600, 800, n, jugador).salud_maxima for n in (1, 2, 3, 4)]
-    assert saludes[0] == 100
+    assert saludes[0] == 1000
     assert saludes == sorted(saludes)          # crece
-    assert saludes[3] < 400                    # y no explota (con x2^n sería 800)
+    assert saludes[3] < 4000                   # y no explota (con x2^n sería 8000)
 
 
 def test_take_damage(img_enemigo):
     e = EnemigoTipo1(img_enemigo, 0, 0, 600, 3)
     s = e.salud
-    e.take_damage(1)
-    assert e.salud == s - 1
+    e.take_damage(7)
+    assert e.salud == s - 7
 
 
 # --- Rebote en los bordes ---

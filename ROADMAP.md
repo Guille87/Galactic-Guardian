@@ -77,7 +77,7 @@ probado por separado:
 1. **Quitar los ítems de la partida — hecho** (potenciadores y curación: `Item`, loot,
    contador de "piedad", su sonido y la mejora "Suerte") y **reutilizar sus
    iconos** en el árbol si quedan bien (daño y cadencia se parecen; si no, texto).
-2. **Números reales, sin cambiar el juego**: todo ×10 (bala 10, salud 50, bala
+2. **Números reales, sin cambiar el juego — hecho**: todo ×10 (bala 10, salud 50, bala
    enemiga 10, jefe pesado 20, vida de enemigos ×10). La salud pasa a **barra**
    y las barras de estadísticas se ajustan al máximo alcanzable. Con pruebas de
    equivalencia (tests y simulación) para demostrar que no cambia nada.

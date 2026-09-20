@@ -24,8 +24,8 @@ def _teclas(*pulsadas):
 # --- Salud / vidas ---
 
 def test_recibir_danio(jugador):
-    jugador.recibir_danio(2)
-    assert jugador.salud == jugador.salud_maxima - 2
+    jugador.recibir_danio(20)
+    assert jugador.salud == jugador.salud_maxima - 20
 
 
 def test_recibir_danio_no_baja_de_cero(jugador):
@@ -35,7 +35,7 @@ def test_recibir_danio_no_baja_de_cero(jugador):
 
 def test_invulnerable_ignora_danio(jugador):
     jugador.invulnerable = True
-    assert jugador.recibir_danio(3) is False
+    assert jugador.recibir_danio(30) is False
     assert jugador.salud == jugador.salud_maxima
 
 
@@ -126,7 +126,7 @@ def test_mover_ya_no_responde_a_la_tecla_por_defecto_si_se_reasigno(jugador):
 # --- Reinicio in situ ---
 
 def test_reiniciar_restaura_estado(jugador):
-    jugador.danio = 3
+    jugador.danio = 30
     jugador.velocidad = 6
     jugador.tipo_disparo = "triple"
     jugador.vidas = 1
@@ -141,7 +141,7 @@ def test_reiniciar_restaura_estado(jugador):
 
     assert jugador.vidas == jugador.CONFIG["vidas_init"]
     assert jugador.salud == jugador.salud_maxima
-    assert jugador.danio == 1
+    assert jugador.danio == jugador.CONFIG["danio_base"]
     assert jugador.velocidad == 4
     assert jugador.tipo_disparo == "simple"
     assert jugador.invulnerable is False

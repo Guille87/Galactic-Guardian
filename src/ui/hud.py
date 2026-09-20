@@ -124,20 +124,28 @@ class UIManager:
         pygame.draw.rect(pantalla, color, (bx, by, llenado, alto))
         pygame.draw.rect(pantalla, self.COLOR_BORDE, (bx, by, ancho, alto), 1)
 
+    # Píxeles de la barra de salud bajo la nave por punto de salud máxima: 50 de salud
+    # ocupan 48 px (lo que ocupaban los cinco puntitos de antes) y más salud alarga la barra.
+    PX_POR_PUNTO_DE_SALUD = 0.96
+    SALUD_POR_MARCA = 10          # una marca oscura cada tantos puntos de salud
+
     def _dibujar_indicador_salud_nave(self, pantalla):
-        """Muestra puntos de salud directamente bajo la nave del jugador."""
+        """Barra de salud directamente bajo la nave del jugador."""
         jugador = self.juego.jugador
-        # Centramos los puntos bajo la nave
-        ancho_punto = 8
-        espacio = 2
-        ancho_total = (jugador.salud_maxima * (ancho_punto + espacio)) - espacio
-
-        x_inicio = jugador.rect.centerx - (ancho_total // 2)
+        ancho = max(24, round(jugador.salud_maxima * self.PX_POR_PUNTO_DE_SALUD))
+        x = jugador.rect.centerx - ancho // 2
         y = jugador.rect.bottom + 12
+        alto = 6
 
-        for i in range(jugador.salud_maxima):
-            color = (0, 255, 100) if i < jugador.salud else (60, 60, 60)
-            pygame.draw.rect(pantalla, color, (x_inicio + i * (ancho_punto + espacio), y, ancho_punto, 6))
+        pygame.draw.rect(pantalla, (60, 60, 60), (x, y, ancho, alto))
+        llenado = round(ancho * max(0, jugador.salud) / jugador.salud_maxima)
+        pygame.draw.rect(pantalla, (0, 255, 100), (x, y, llenado, alto))
+        # Marcas oscuras cada 10 puntos de salud (lo que quita un impacto normal)
+        marca = self.SALUD_POR_MARCA
+        while marca < jugador.salud_maxima:
+            px = x + round(ancho * marca / jugador.salud_maxima)
+            pygame.draw.line(pantalla, (20, 20, 20), (px, y), (px, y + alto - 1))
+            marca += self.SALUD_POR_MARCA
 
     def _dibujar_barra_salud_jefe(self, pantalla):
         """Barra de salud cinemática para el jefe."""

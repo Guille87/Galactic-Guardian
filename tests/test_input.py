@@ -136,7 +136,7 @@ def test_clic_elegir_nivel_abre_el_selector(juego):
 
 def test_clic_en_selector_de_nivel_salta_a_ese_nivel(juego):
     juego.nivel = 3
-    juego.jugador.danio = 2            # mejora que un nivel "a rejugar" debe perder
+    juego.jugador.danio = 20           # mejora que un nivel "a rejugar" debe perder
     juego.mostrando_seleccion_nivel = True
     juego.pausado = True
     juego.dibujar()   # crea los botones de los niveles 1..4 (superados + el siguiente)
@@ -145,7 +145,7 @@ def test_clic_en_selector_de_nivel_salta_a_ese_nivel(juego):
     _procesar(juego)
     assert juego.nivel == 2
     assert juego.mostrando_seleccion_nivel is False
-    assert juego.jugador.danio == 1    # nivel a rejugar: nave desde cero
+    assert juego.jugador.danio == juego.jugador.CONFIG["danio_base"]    # nivel a rejugar: nave desde cero
 
 
 def test_clic_en_el_siguiente_nivel_del_selector_conserva_las_mejoras(juego):
@@ -153,7 +153,7 @@ def test_clic_en_el_siguiente_nivel_del_selector_conserva_las_mejoras(juego):
     nave ni la puntuación, a diferencia de rejugar un nivel ya superado."""
     juego.nivel = 3
     juego.jefe_derrotado = True        # lo deja así al_eliminar_enemigo
-    juego.jugador.danio = 2
+    juego.jugador.danio = 20
     juego.puntuacion = 500
     juego.mostrando_seleccion_nivel = True
     juego.pausado = True
@@ -165,7 +165,7 @@ def test_clic_en_el_siguiente_nivel_del_selector_conserva_las_mejoras(juego):
     _procesar(juego)
 
     assert juego.nivel == 4
-    assert juego.jugador.danio == 2    # se conserva, como con "Continuar"
+    assert juego.jugador.danio == 20   # se conserva, como con "Continuar"
     assert juego.puntuacion == 500
 
 

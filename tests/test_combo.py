@@ -123,7 +123,7 @@ def _chocar(juego, enemigo):
 def test_el_contacto_con_un_enemigo_tambien_lo_rompe(juego, rm):
     juego.combo.racha = 60
     enemigo = _enemigo(rm)
-    enemigo.salud = 10                                         # sobrevive al choque
+    enemigo.salud = 10 * settings.DANIO_EMBESTIDA              # sobrevive al choque
     _chocar(juego, enemigo)
     assert juego.combo.racha == 0
 
@@ -132,7 +132,7 @@ def test_un_choque_que_destruye_al_enemigo_rompe_el_combo_y_la_baja_abre_el_sigu
     """El daño rompe la racha y el enemigo destruido por el choque cuenta ya
     como la primera baja de la nueva (con multiplicador x1)."""
     juego.combo.racha = 60
-    _chocar(juego, _enemigo(rm))                               # salud 1: muere en el choque
+    _chocar(juego, _enemigo(rm))                               # salud = DANIO_EMBESTIDA: muere en el choque
     assert juego.combo.racha == 1 and juego.combo.multiplicador == 1
 
 
