@@ -54,8 +54,8 @@
             </div>
         </aside>
         <h2>
-            <span class="text">8 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">8<span class="text"> run</span></button>
+            <span class="text">10 statements &nbsp;</span>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">10<span class="text"> run</span></button>
             <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">0<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_0618756b1ff51bca_engine_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-20 11:13 +0000
+            created at 2026-09-20 11:43 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -94,29 +94,30 @@
     <p class="pln"><span class="n"><a id="t12" href="#t12">12</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t13" href="#t13">13</a></span><span class="t"><span class="key">import</span> <span class="nam">pygame</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t"><span class="nam">ACCIONES</span> <span class="op">=</span> <span class="op">(</span><span class="str">&quot;arriba&quot;</span><span class="op">,</span> <span class="str">&quot;abajo&quot;</span><span class="op">,</span> <span class="str">&quot;izquierda&quot;</span><span class="op">,</span> <span class="str">&quot;derecha&quot;</span><span class="op">,</span> <span class="str">&quot;disparar&quot;</span><span class="op">,</span> <span class="str">&quot;pausa&quot;</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t"><span class="key">from</span> <span class="nam">src</span><span class="op">.</span><span class="nam">core</span><span class="op">.</span><span class="nam">i18n</span> <span class="key">import</span> <span class="nam">t</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t"><span class="nam">ETIQUETAS</span> <span class="op">=</span> <span class="op">{</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t">    <span class="str">&quot;arriba&quot;</span><span class="op">:</span> <span class="str">&quot;Arriba&quot;</span><span class="op">,</span> <span class="str">&quot;abajo&quot;</span><span class="op">:</span> <span class="str">&quot;Abajo&quot;</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t">    <span class="str">&quot;izquierda&quot;</span><span class="op">:</span> <span class="str">&quot;Izquierda&quot;</span><span class="op">,</span> <span class="str">&quot;derecha&quot;</span><span class="op">:</span> <span class="str">&quot;Derecha&quot;</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t">    <span class="str">&quot;disparar&quot;</span><span class="op">:</span> <span class="str">&quot;Disparar&quot;</span><span class="op">,</span> <span class="str">&quot;pausa&quot;</span><span class="op">:</span> <span class="str">&quot;Pausa&quot;</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t"><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t"><span class="nam">POR_DEFECTO</span> <span class="op">=</span> <span class="op">{</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t">    <span class="str">&quot;arriba&quot;</span><span class="op">:</span> <span class="nam">pygame</span><span class="op">.</span><span class="nam">K_w</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t25" href="#t25">25</a></span><span class="t">    <span class="str">&quot;abajo&quot;</span><span class="op">:</span> <span class="nam">pygame</span><span class="op">.</span><span class="nam">K_s</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t26" href="#t26">26</a></span><span class="t">    <span class="str">&quot;izquierda&quot;</span><span class="op">:</span> <span class="nam">pygame</span><span class="op">.</span><span class="nam">K_a</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t27" href="#t27">27</a></span><span class="t">    <span class="str">&quot;derecha&quot;</span><span class="op">:</span> <span class="nam">pygame</span><span class="op">.</span><span class="nam">K_d</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t">    <span class="str">&quot;disparar&quot;</span><span class="op">:</span> <span class="nam">pygame</span><span class="op">.</span><span class="nam">K_SPACE</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t">    <span class="str">&quot;pausa&quot;</span><span class="op">:</span> <span class="nam">pygame</span><span class="op">.</span><span class="nam">K_p</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t"><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t"><span class="nam">ACCIONES</span> <span class="op">=</span> <span class="op">(</span><span class="str">&quot;arriba&quot;</span><span class="op">,</span> <span class="str">&quot;abajo&quot;</span><span class="op">,</span> <span class="str">&quot;izquierda&quot;</span><span class="op">,</span> <span class="str">&quot;derecha&quot;</span><span class="op">,</span> <span class="str">&quot;disparar&quot;</span><span class="op">,</span> <span class="str">&quot;pausa&quot;</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t"><span class="nam">POR_DEFECTO</span> <span class="op">=</span> <span class="op">{</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t">    <span class="str">&quot;arriba&quot;</span><span class="op">:</span> <span class="nam">pygame</span><span class="op">.</span><span class="nam">K_w</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t">    <span class="str">&quot;abajo&quot;</span><span class="op">:</span> <span class="nam">pygame</span><span class="op">.</span><span class="nam">K_s</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t">    <span class="str">&quot;izquierda&quot;</span><span class="op">:</span> <span class="nam">pygame</span><span class="op">.</span><span class="nam">K_a</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t">    <span class="str">&quot;derecha&quot;</span><span class="op">:</span> <span class="nam">pygame</span><span class="op">.</span><span class="nam">K_d</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t">    <span class="str">&quot;disparar&quot;</span><span class="op">:</span> <span class="nam">pygame</span><span class="op">.</span><span class="nam">K_SPACE</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t25" href="#t25">25</a></span><span class="t">    <span class="str">&quot;pausa&quot;</span><span class="op">:</span> <span class="nam">pygame</span><span class="op">.</span><span class="nam">K_p</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t26" href="#t26">26</a></span><span class="t"><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t27" href="#t27">27</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t"><span class="key">def</span> <span class="nam">etiqueta</span><span class="op">(</span><span class="nam">accion</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t">    <span class="str">&quot;&quot;&quot;Nombre de la acci&#243;n en el idioma actual (p. ej. &quot;Disparar&quot;).&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t">    <span class="key">return</span> <span class="nam">t</span><span class="op">(</span><span class="fst">f&quot;</span><span class="fst">controles.</span><span class="op">{</span><span class="nam">accion</span><span class="op">}</span><span class="fst">&quot;</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t"><span class="key">def</span> <span class="nam">nombre_tecla</span><span class="op">(</span><span class="nam">codigo</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t">    <span class="str">&quot;&quot;&quot;Nombre legible de una tecla (p.ej. &quot;w&quot;, &quot;espacio&quot;).&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t">    <span class="key">if</span> <span class="nam">codigo</span> <span class="op">==</span> <span class="nam">pygame</span><span class="op">.</span><span class="nam">K_SPACE</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t">        <span class="key">return</span> <span class="str">&quot;Espacio&quot;</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t">    <span class="key">return</span> <span class="nam">pygame</span><span class="op">.</span><span class="nam">key</span><span class="op">.</span><span class="nam">name</span><span class="op">(</span><span class="nam">codigo</span><span class="op">)</span><span class="op">.</span><span class="nam">capitalize</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t"><span class="key">def</span> <span class="nam">nombre_tecla</span><span class="op">(</span><span class="nam">codigo</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t">    <span class="str">&quot;&quot;&quot;Nombre legible de una tecla (p.ej. &quot;W&quot;, &quot;Espacio&quot;).&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t">    <span class="key">if</span> <span class="nam">codigo</span> <span class="op">==</span> <span class="nam">pygame</span><span class="op">.</span><span class="nam">K_SPACE</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t">        <span class="key">return</span> <span class="nam">t</span><span class="op">(</span><span class="str">&quot;controles.tecla_espacio&quot;</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t">    <span class="key">return</span> <span class="nam">pygame</span><span class="op">.</span><span class="nam">key</span><span class="op">.</span><span class="nam">name</span><span class="op">(</span><span class="nam">codigo</span><span class="op">)</span><span class="op">.</span><span class="nam">capitalize</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -126,7 +127,7 @@
             <a class="nav" href="z_0618756b1ff51bca_engine_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-20 11:13 +0000
+            created at 2026-09-20 11:43 +0000
         </p>
     </div>
 </footer>
