@@ -51,6 +51,10 @@ MEJORAS = (
     Mejora("ataque_4", "ataque", 750, {"danio_extra": 5}, requiere="ataque_3", icono="potenciador_danio"),
     Mejora("ataque_5", "ataque", 1100, {"disparos_extra": 1.0}, requiere="ataque_4", icono="potenciador_cadencia"),
     Mejora("ataque_6", "ataque", 1700, {"balas_extra": 1}, requiere="ataque_5", icono="potenciador_danio"),     # triple
+    Mejora("ataque_7", "ataque", 2000, {"danio_extra": 5}, requiere="ataque_6", icono="potenciador_danio"),
+    Mejora("ataque_8", "ataque", 2300, {"disparos_extra": 1.0}, requiere="ataque_7", icono="potenciador_cadencia"),
+    Mejora("ataque_9", "ataque", 2700, {"danio_extra": 5}, requiere="ataque_8", icono="potenciador_danio"),
+    Mejora("ataque_10", "ataque", 3100, {"disparos_extra": 1.0}, requiere="ataque_9", icono="potenciador_cadencia"),
     # --- Defensa: salud, vidas, regeneración y escudo
     Mejora("defensa_1", "defensa", 60, {"salud_extra": 15}, icono="curacion"),
     Mejora("defensa_2", "defensa", 150, {"salud_extra": 15}, requiere="defensa_1", icono="curacion"),

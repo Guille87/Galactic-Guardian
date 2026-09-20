@@ -26,7 +26,7 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 - **Disparo triple**, además del doble, y más **disparos por segundo** y **velocidad**
   desde el árbol.
 - La pantalla **Mejoras** se **desplaza** (rueda del ratón, barra lateral, teclas o
-  **arrastrando con el ratón** como en el móvil) para que quepan los 17 nodos del
+  **arrastrando con el ratón** como en el móvil) para que quepan los 21 nodos del
   árbol. Las mejoras se compran al soltar el clic, para distinguir un toque de un arrastre.
 - Con **disparo doble** las balas salen de los cañones de las alas de la nave; con
   **triple**, de los dos cañones y del morro.
@@ -38,7 +38,9 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
   - **La nave base** empieza con velocidad 5 (antes 4), 4 disparos por segundo
     (antes ~2,9) y 1 bala; el tope de velocidad se queda en 6 y el de cadencia
     sube a 8 disparos por segundo.
-  - **Árbol de 17 mejoras** (Ataque 6, Defensa 6, Utilidad 5) con nuevos costes
+  - **Árbol de 21 mejoras** (Ataque 10, Defensa 6, Utilidad 5; las cuatro últimas de
+    Ataque —Daño III y IV, Cadencia III y IV— llevan el daño a 30 y los disparos a 8 por
+    segundo) con nuevos costes
     y efectos; la cadencia y la velocidad se leen en el juego como
     "+1 disparo por segundo" y "+10 % de velocidad" en vez de milisegundos.
   - **Dificultad por tablas de nivel** (`src/core/escalado.py`): vida de los
@@ -61,8 +63,8 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
   con partidas deterministas idénticas fotograma a fotograma antes y después. Es
   el paso previo al reequilibrio, que ya podrá usar valores intermedios.
 - **La salud bajo la nave es ahora una barra** (con una marca cada 10 de salud, así
-  se ve cuántos impactos normales aguanta) en vez de puntitos, y se alarga si
-  tienes más salud máxima.
+  se ve cuántos impactos normales aguanta, hasta 4 marcas) en vez de puntitos. Mide
+  siempre lo mismo, y se queda entera dentro de la pantalla aunque la nave esté en el borde.
 - **Sin ítems de curación, la salud vuelve por otros caminos.** En el sin fin,
   cada oleada nueva recupera el 40 % de la salud máxima y derrotar a un jefe la
   deja completa; en la campaña sigue curándose del todo al pasar de nivel.

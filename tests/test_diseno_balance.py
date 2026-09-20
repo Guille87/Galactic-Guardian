@@ -145,3 +145,10 @@ def test_el_modelo_usa_las_tablas_del_juego():
     """Lo que evalúa la herramienta es lo que hay en el juego, no una copia."""
     assert M.danio_x(3) == escalado.DANIO_X[2] and M.vida(Jefe, 4) == escalado.VIDA_JEFE[3]
     assert M.monedas_puntos == settings.MONEDAS_PUNTOS
+
+
+def test_el_arbol_entero_lleva_daño_cadencia_y_velocidad_a_sus_topes():
+    """El jugador ha de sentirse poderoso al final: 30 de daño, 8 disparos/s, 3 balas y velocidad 6."""
+    n, c = _nave(1.0), Jugador.CONFIG
+    assert (n.danio, n.disparos_s, n.balas, n.velocidad) == (c["danio_max"], c["disparos_max"],
+                                                              c["balas_max"], c["vel_max"])

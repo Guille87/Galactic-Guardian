@@ -118,14 +118,14 @@ def _barra(juego, salud):
     juego.jugador.salud = salud
     juego.ui_manager._dibujar_indicador_salud_nave(pantalla)
     j = juego.jugador
-    ancho = max(24, round(j.salud_maxima * juego.ui_manager.PX_POR_PUNTO_DE_SALUD))
+    ancho = juego.ui_manager.ANCHO_BARRA_SALUD
     x0, y = j.rect.centerx - ancho // 2, j.rect.bottom + 12 + 2
     return pantalla, x0, ancho, y
 
 
 def test_la_barra_esta_llena_con_la_salud_completa(juego):
     pantalla, x0, ancho, y = _barra(juego, juego.jugador.salud_maxima)
-    assert ancho == 48                                              # lo que ocupaban los cinco puntitos
+    assert ancho == 48
     assert pantalla.get_at((x0 + 2, y))[:3] == VERDE and pantalla.get_at((x0 + ancho - 2, y))[:3] == VERDE
 
 
@@ -140,16 +140,33 @@ def test_sin_salud_no_hay_verde(juego):
     assert all(pantalla.get_at((x0 + i, y))[:3] != VERDE for i in range(ancho))
 
 
+def _marcas(juego, salud_maxima):
+    juego.jugador.salud_maxima = salud_maxima
+    pantalla, x0, ancho, y = _barra(juego, salud_maxima)
+    return [i for i in range(ancho) if pantalla.get_at((x0 + i, y))[:3] == (20, 20, 20)]
+
+
 def test_hay_una_marca_oscura_cada_diez_de_salud(juego):
-    pantalla, x0, ancho, y = _barra(juego, juego.jugador.salud_maxima)
-    marcas = [i for i in range(ancho) if pantalla.get_at((x0 + i, y))[:3] == (20, 20, 20)]
-    assert len(marcas) == juego.jugador.salud_maxima // 10 - 1     # 4 marcas para 5 tramos de 10
+    assert len(_marcas(juego, 50)) == 4                              # 5 tramos de 10
+    assert len(_marcas(juego, 30)) == 2
 
 
-def test_mas_salud_maxima_alarga_la_barra(juego):
-    juego.jugador.salud_maxima = 70
-    _, _, ancho, _ = _barra(juego, 70)
-    assert ancho == round(70 * 0.96)
+def test_con_mucha_salud_no_salen_mas_de_cuatro_marcas_ni_se_alarga_la_barra(juego):
+    assert len(_marcas(juego, 100)) == juego.ui_manager.MARCAS_MAX == 4
+    _, _, ancho, _ = _barra(juego, 100)
+    assert ancho == 48                                               # el mismo ancho que con 50
+
+
+@pytest.mark.parametrize("centerx", [0, 10, 300, 590, 600])
+def test_la_barra_entera_cabe_en_pantalla_aunque_la_nave_este_en_el_borde(juego, centerx):
+    juego.jugador.salud_maxima = 100
+    juego.jugador.rect.centerx = centerx
+    pantalla, _, _, y = _barra(juego, 100)
+    juego.jugador.rect.centerx = centerx                              # `_barra` no la mueve, pero por claridad
+    pantalla.fill((0, 0, 0))
+    juego.ui_manager._dibujar_indicador_salud_nave(pantalla)
+    verdes = [x for x in range(pantalla.get_width()) if pantalla.get_at((x, y))[:3] in (VERDE, (20, 20, 20))]
+    assert len(verdes) >= 44 and min(verdes) >= 2 and max(verdes) <= pantalla.get_width() - 3
 
 
 def test_la_barra_no_falla_con_la_salud_por_debajo_de_cero_o_por_encima(juego):
