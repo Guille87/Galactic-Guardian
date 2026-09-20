@@ -118,6 +118,7 @@ def test_arrastre_permite_valores_libres(menu):
 
 def test_flecha_cuadra_un_valor_libre(menu):
     menu._abrir_opciones()
+    _ir_a_pestana(menu, "audio")
     _mover_slider(menu, menu.slider_efectos, 0.27)
     _click(menu, menu.slider_efectos.right_button)
     assert menu.vol_efectos == pytest.approx(0.3)   # 0.27 -> 0.3, no 0.37
@@ -126,6 +127,7 @@ def test_flecha_cuadra_un_valor_libre(menu):
 def test_flecha_desde_valor_libre_sin_salto_visible(menu):
     """El slider no debe pasar por 0.35 (±0.1 de pygame_gui) antes de cuadrar."""
     menu._abrir_opciones()
+    _ir_a_pestana(menu, "audio")
     _mover_slider(menu, menu.slider_musica, 0.25)
     menu.vol_musica = 0.25
 
@@ -145,6 +147,7 @@ def test_mantener_pulsada_la_flecha_no_dispara_el_volumen(menu):
     """pygame_gui, al mantener la flecha, arrancaba un scroll rápido; el volumen
     se "disparaba" y luego bajaba al escalón."""
     menu._abrir_opciones()
+    _ir_a_pestana(menu, "audio")
     menu._fijar_volumen("musica", 0.2)
     btn = menu.slider_musica.right_button
 
@@ -164,6 +167,7 @@ def test_mantener_pulsada_la_flecha_no_dispara_el_volumen(menu):
 def test_flecha_del_slider_de_musica_actualiza_volumen(menu):
     """Antes las flechas del slider de música no hacían nada."""
     menu._abrir_opciones()
+    _ir_a_pestana(menu, "audio")
     _mover_slider(menu, menu.slider_musica, 0.5)
     _click(menu, menu.slider_musica.left_button)
     assert menu.vol_musica == pytest.approx(0.4)
@@ -174,6 +178,7 @@ def test_volumen_fuera_de_rango_no_bloquea_los_sliders(menu):
     menu.vol_musica = -2.7755575615628914e-17
     menu.vol_efectos = -2.7755575615628914e-17
     menu._abrir_opciones()
+    _ir_a_pestana(menu, "audio")
     for _ in range(3):
         _click(menu, menu.slider_musica.right_button)
         _click(menu, menu.slider_efectos.right_button)
@@ -521,13 +526,13 @@ def _visibles(menu, nombre):
     return estados.pop()
 
 
-def test_hay_tres_pestanas_y_se_entra_por_audio(menu):
+def test_hay_tres_pestanas_en_orden_y_se_entra_por_la_primera(menu):
     menu._abrir_opciones()
-    assert list(menu._botones_pestana.values()) == ["audio", "idioma", "controles"]
-    assert menu._pestana == "audio"
-    assert _visibles(menu, "audio")
-    assert not _visibles(menu, "idioma") and not _visibles(menu, "controles")
-    assert next(b for b, n in menu._botones_pestana.items() if n == "audio").is_selected
+    assert list(menu._botones_pestana.values()) == ["controles", "idioma", "audio"]
+    assert menu._pestana == "controles"
+    assert _visibles(menu, "controles")
+    assert not _visibles(menu, "idioma") and not _visibles(menu, "audio")
+    assert next(b for b, n in menu._botones_pestana.items() if n == "controles").is_selected
 
 
 def test_cambiar_de_pestana_muestra_solo_la_elegida(menu):
@@ -544,6 +549,7 @@ def test_los_elementos_de_otra_pestana_no_reciben_clics(menu):
     """El botón de idioma "English" queda justo encima del slider de música, oculto:
     un clic ahí, con Audio abierta, debe caer en el slider y no cambiar el idioma."""
     menu._abrir_opciones()
+    _ir_a_pestana(menu, "audio")
     oculto = next(b for b, c in menu._botones_idioma.items() if c == "en")
     _click(menu, oculto)
     assert i18n.idioma_actual() == "es"
@@ -563,12 +569,13 @@ def test_al_rehacer_la_ui_por_el_idioma_se_conserva_la_pestana(menu):
     assert _visibles(menu, "idioma") and not _visibles(menu, "audio")
 
 
-def test_cada_entrada_a_opciones_empieza_por_audio(menu):
+def test_cada_entrada_a_opciones_empieza_por_la_primera_pestana(menu):
     menu._abrir_opciones()
-    _ir_a_pestana(menu, "controles")
+    _ir_a_pestana(menu, "audio")
     _click(menu, menu.btn_volver)
     menu._abrir_opciones()
-    assert menu._pestana == "audio" and _visibles(menu, "audio")
+    assert menu._pestana == "controles" and _visibles(menu, "controles")
+    assert not _visibles(menu, "audio")
 
 
 def test_cambiar_de_pestana_cancela_una_reasignacion_a_medias(menu):
@@ -599,11 +606,19 @@ def test_aviso_de_conflicto_solo_se_dibuja_en_la_pestana_de_controles(menu):
     """No debe asomar un aviso de teclas encima del slider de audio."""
     import time
     menu._abrir_opciones()
+    _ir_a_pestana(menu, "audio")
     menu._aviso_conflicto = "aviso de prueba"
     menu._aviso_conflicto_hasta = time.time() + 99
     menu._menu_opciones(0.016)          # en Audio: no debe romper ni dibujarse
     _ir_a_pestana(menu, "controles")
     menu._menu_opciones(0.016)
+
+
+def test_restaurar_deja_aire_respecto_a_las_teclas(menu):
+    """El botón "Restaurar" es distinto de las asignaciones: que no quede pegado."""
+    menu._abrir_opciones()
+    ultima_fila = max(b.rect.bottom for b in menu._botones_controles.values())
+    assert menu.btn_restaurar_controles.rect.top - ultima_fila >= 30
 
 
 def test_ui_de_opciones_se_reutiliza(menu):

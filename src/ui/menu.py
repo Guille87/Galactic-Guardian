@@ -12,7 +12,7 @@ from src.ui.components.button import Boton
 
 # Pestañas de Opciones, en el orden en que se muestran; el nombre es también el
 # sufijo de su clave de texto (`opciones.<nombre>`).
-PESTANAS = ("audio", "idioma", "controles")
+PESTANAS = ("controles", "idioma", "audio")
 
 # Escalón de las flechas ◄ ► (0.1). El arrastre de la barra es libre; solo se
 # redondea a 2 decimales para no guardar basura de coma flotante.
@@ -412,7 +412,7 @@ class MenuManager:
                 self._acciones_por_boton[boton] = accion
                 self._elementos_pestana["controles"].append(boton)
         self.btn_restaurar_controles = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((50, 407), (300, 40)),
+            relative_rect=pygame.Rect((50, 447), (300, 40)),
             text=t("opciones.restaurar"), manager=self.ui_manager,
         )
         self._elementos_pestana["controles"].append(self.btn_restaurar_controles)
@@ -637,7 +637,7 @@ class MenuManager:
         if (self._pestana == "controles" and self._aviso_conflicto
                 and time.time() < self._aviso_conflicto_hasta):
             aviso = self.font_version.render(self._aviso_conflicto, True, (255, 120, 120))
-            self.pantalla.blit(aviso, (50, 460))
+            self.pantalla.blit(aviso, (50, 497))
 
         self.ui_manager.draw_ui(self.pantalla)
         pygame.display.flip()
