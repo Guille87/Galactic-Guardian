@@ -71,7 +71,7 @@ class MenuManager:
         self.vol_musica = _clamp_volumen(vol_musica)
         self.vol_efectos = _clamp_volumen(vol_efectos)
         self.controles = config.cargar_controles()
-        self._reconstruir_ui = False         # pendiente de rehacer la UI de Opciones (cambio de idioma)
+        self._idioma_ui = None               # idioma con el que se construyó la UI de Opciones
         self._reasignando_accion = None      # acción esperando una pulsación, o None
         self._aviso_conflicto = None
         self._aviso_conflicto_hasta = 0
@@ -224,6 +224,8 @@ class MenuManager:
         # descuadrado y sin responder.
         self.vol_musica = _clamp_volumen(self.vol_musica)
         self.vol_efectos = _clamp_volumen(self.vol_efectos)
+        if self.ui_manager is not None and self._idioma_ui != i18n.idioma_actual():
+            self.ui_manager = None       # construida en otro idioma (p. ej. cambiado desde la pausa)
         if self.ui_manager is None:
             self._inicializar_interfaz_opciones()
         self.slider_musica.set_current_value(self.vol_musica)
@@ -287,6 +289,7 @@ class MenuManager:
         # a la izquierda, al ras de los sliders y los botones.
         tema = {"label": {"misc": {"text_horiz_alignment": "left"}}}
         self.ui_manager = pygame_gui.UIManager((settings.ANCHO, settings.ALTO), tema)
+        self._idioma_ui = i18n.idioma_actual()
 
         # Etiquetas
         pygame_gui.elements.UILabel(
@@ -371,13 +374,13 @@ class MenuManager:
 
         Los textos de los botones están cacheados (los de este menú y, en una
         partida, los de `Juego`), así que se rehacen: los del menú principal ya,
-        y la UI de Opciones al empezar el próximo frame (no en mitad de un bucle
-        de eventos que aún referencia los elementos viejos)."""
+        y la UI de Opciones cuando `_menu_opciones` ve que `_idioma_ui` ya no es
+        el actual (al empezar el próximo frame, no en mitad de un bucle de
+        eventos que aún referencia los elementos viejos)."""
         if codigo == i18n.idioma_actual():
             return
         i18n.establecer_idioma(codigo)
         self._crear_botones()
-        self._reconstruir_ui = True
 
     def _texto_boton_control(self, accion):
         return t("opciones.control_boton", accion=controles.etiqueta(accion),
@@ -453,11 +456,9 @@ class MenuManager:
 
     def _menu_opciones(self, time_delta):
         """Lógica de la pantalla de opciones usando pygame_gui."""
-        if self._reconstruir_ui:                    # cambio de idioma: rehacer la UI con los textos nuevos
-            self._reconstruir_ui = False
-            self.ui_manager = None
-            self._abrir_opciones()
-        if self.ui_manager is None:                 # entrada directa sin pasar por _abrir_opciones
+        if self.ui_manager is None or self._idioma_ui != i18n.idioma_actual():
+            # entrada directa sin pasar por _abrir_opciones, o idioma cambiado:
+            # se rehace la UI con los textos del idioma actual
             self._abrir_opciones()
 
         fondo = self.rm.get_image("imagen_fondo1")

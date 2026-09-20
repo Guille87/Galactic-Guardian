@@ -298,6 +298,31 @@ def test_menu_persistente_rehace_sus_botones_si_el_idioma_cambio_fuera(menu):
     assert menu.btn_jugar.texto == "Play"
 
 
+def test_opciones_del_menu_persistente_siguen_el_idioma_cambiado_fuera(menu):
+    """Opciones -> English; en una partida (otro MenuManager) -> Español; al volver
+    al menú, sus Opciones deben estar en español y con Español marcado (no con la
+    UI vieja en inglés, donde pulsar Español no hacía nada)."""
+    menu._abrir_opciones()
+    _click(menu, _boton_idioma(menu, "en"))               # Opciones -> English
+    menu.estado = "PRINCIPAL"
+
+    i18n.establecer_idioma("es")                            # cambiado desde la pausa
+    menu._menu_principal = lambda: setattr(menu, "ejecutando", False)
+    menu.ejecutar()                                         # vuelve al menú principal
+
+    menu._abrir_opciones()                                  # y abre Opciones
+    textos = {e.text for e in menu.ui_manager.get_root_container().elements
+              if isinstance(e, pygame_gui.elements.UILabel)}
+    assert {"Música", "Efectos", "Idioma", "Controles"} <= textos
+    assert _boton_idioma(menu, "es").is_selected and not _boton_idioma(menu, "en").is_selected
+
+    _click(menu, _boton_idioma(menu, "en"))                 # ahora sí responde a ambos
+    assert i18n.idioma_actual() == "en"
+    _click(menu, _boton_idioma(menu, "es"))
+    assert i18n.idioma_actual() == "es"
+    assert _boton_idioma(menu, "es").is_selected
+
+
 def test_ui_de_opciones_se_reutiliza(menu):
     menu._abrir_opciones()
     primero = menu.ui_manager
