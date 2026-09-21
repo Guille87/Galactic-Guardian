@@ -104,12 +104,15 @@ class MenuManager:
     """
 
     def __init__(self, pantalla, resource_manager, audio_manager, sistema_clasificacion,
-                 clasificacion_sin_fin=None, progresion=None):
+                 clasificacion_sin_fin=None, progresion=None, guardados=None):
         self.pantalla = pantalla
         self.rm = resource_manager
         self.am = audio_manager
         self.clasificacion = sistema_clasificacion
         self.clasificacion_sin_fin = clasificacion_sin_fin
+        # Partidas guardadas por modo (`guardado.Guardado`): si hay una, al elegir ese modo se
+        # pregunta si continuarla o empezar de cero. Sin ellas (la pausa) no se pregunta nada.
+        self.guardados = guardados or {}
         # Monedas y mejoras (pantalla "Mejoras"); sin ella, una en memoria que no toca el disco
         self.progresion = progresion if progresion is not None else Progresion(persistir=False)
         self._aviso_mejoras = None              # (texto, instante en que caduca)
@@ -245,13 +248,9 @@ class MenuManager:
                         and self.btn_actualizar.clic_en_boton(event.pos):
                     self._pulsar_actualizar(info)
                 elif self.btn_jugar.clic_en_boton(event.pos):
-                    self.am.detener_musica("skyfire_theme")
-                    self.ejecutando = False
-                    self.resultado = "JUGAR"
+                    self._empezar(settings.MODO_CAMPANA)
                 elif self.btn_sin_fin.clic_en_boton(event.pos):
-                    self.am.detener_musica("skyfire_theme")
-                    self.ejecutando = False
-                    self.resultado = "JUGAR_SIN_FIN"
+                    self._empezar(settings.MODO_SIN_FIN)
                 elif self.btn_mejoras.clic_en_boton(event.pos):
                     self._abrir_mejoras()
                 elif self.btn_opciones.clic_en_boton(event.pos):
@@ -285,6 +284,66 @@ class MenuManager:
             txt_version.get_rect(bottomright=(settings.ANCHO - 8, settings.ALTO - 6)),
         )
         pygame.display.flip()
+
+    def _empezar(self, modo):
+        """Arranca la campaña o el sin fin. Si hay una partida guardada de ese modo, antes
+        pregunta si continuarla o empezar de cero (`Volver` deja el menú como estaba)."""
+        nueva = "JUGAR" if modo == settings.MODO_CAMPANA else "JUGAR_SIN_FIN"
+        continuar = "CONTINUAR" if modo == settings.MODO_CAMPANA else "CONTINUAR_SIN_FIN"
+        guardado = self.guardados.get(modo)
+        if guardado is None or not guardado.existe:
+            resultado = nueva
+        else:
+            eleccion = self._dialogo_partida_guardada(modo, guardado)
+            resultado = {"CONTINUAR": continuar, "NUEVA": nueva, "SALIR": "SALIR"}.get(eleccion)
+        if resultado is None:
+            return
+        if resultado != "SALIR":
+            self.am.detener_musica("skyfire_theme")
+        self.ejecutando = False
+        self.resultado = resultado
+
+    def _dialogo_partida_guardada(self, modo, guardado):
+        """Diálogo bloqueante para una partida guardada. Devuelve `"CONTINUAR"`, `"NUEVA"`,
+        `"SALIR"` (se cerró la ventana) o `None` (Volver / Esc)."""
+        cx = self.pantalla.get_rect().centerx
+        etiqueta = t("menu.continuar_campana" if modo == settings.MODO_CAMPANA else "menu.continuar_sin_fin",
+                     n=guardado.nivel)
+        boton_continuar = Boton(etiqueta, (0, 160, 0), (255, 255, 255), cx, 300, 380, 50, 10)
+        boton_nueva = Boton(t("menu.nueva_partida"), (170, 90, 0), (255, 255, 255), cx, 365, 380, 50, 10)
+        boton_volver = Boton(t("comun.volver"), (0, 0, 200), (255, 255, 255), cx, 430, 380, 50, 10)
+
+        fondo_oscuro = pygame.Surface((settings.ANCHO, settings.ALTO))
+        fondo_oscuro.set_alpha(200)
+        fondo_oscuro.fill((0, 0, 0))
+        self.pantalla.blit(fondo_oscuro, (0, 0))
+        rect = pygame.Rect(50, 180, 500, 340)
+        pygame.draw.rect(self.pantalla, (25, 25, 45), rect, border_radius=10)
+        pygame.draw.rect(self.pantalla, (200, 200, 220), rect, 2, border_radius=10)
+        titulo = self.font_estandar.render(t("menu.partida_guardada"), True, (255, 255, 255))
+        self.pantalla.blit(titulo, titulo.get_rect(center=(cx, 215)))
+        puntos = self.font_version.render(t("menu.guardado_puntos", n=guardado.puntuacion), True, (210, 210, 220))
+        self.pantalla.blit(puntos, puntos.get_rect(center=(cx, 250)))
+        aviso = self.font_mini.render(t("menu.nueva_borra"), True, (255, 200, 120))
+        self.pantalla.blit(aviso, aviso.get_rect(center=(cx, 495)))
+        for boton in (boton_continuar, boton_nueva, boton_volver):
+            boton.dibujar(self.pantalla, self.font_estandar)
+        pygame.display.flip()
+
+        while True:
+            self.clock.tick(settings.FPS)   # evita el busy-wait al 100 % de CPU
+            for evento in pygame.event.get():
+                if evento.type == pygame.QUIT:
+                    return "SALIR"
+                if evento.type == pygame.KEYDOWN and evento.key == pygame.K_ESCAPE:
+                    return None
+                if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
+                    if boton_continuar.clic_en_boton(evento.pos):
+                        return "CONTINUAR"
+                    if boton_nueva.clic_en_boton(evento.pos):
+                        return "NUEVA"
+                    if boton_volver.clic_en_boton(evento.pos):
+                        return None
 
     def _confirmar_salida(self):
         """Diálogo bloqueante "¿Seguro que quieres salir?". Devuelve True si

@@ -7,6 +7,16 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+
+- **Guardado de partida.** El juego apunta el último nivel de la campaña (o la última oleada del sin
+  fin) al que has llegado, con tu puntuación, y al pulsar **Campaña** o **Sin fin** puedes
+  elegir *Continuar (Nivel N)* o *Nueva partida*. Se guarda al terminar cada nivel o cambiar de
+  oleada y se conserva aunque pierdas todas las vidas o cierres el juego, para no tener que
+  rejugar los primeros niveles cuando ya estás avanzado. Continuar arranca el nivel con las vidas
+  y la salud de una partida nueva y sin combo. Solo se borra al empezar de cero o al completar
+  la campaña.
+
 ## [0.10.0] - 2026-09-21
 
 Reequilibrio completo: ahora **todo el poder de la nave viene del árbol de mejoras**

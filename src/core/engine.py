@@ -26,7 +26,7 @@ from src.managers.waves import WaveManager
 
 class Juego:
     def __init__(self, pantalla, audio_manager, clasificacion, resource_manager,
-                 modo=settings.MODO_CAMPANA, progresion=None):
+                 modo=settings.MODO_CAMPANA, progresion=None, guardado=None, continuar=False):
         # 1. Configuración básica y Hardware
         # `modo`: campaña (niveles fijos con jefe final) o sin fin (oleadas sin
         # techo). `clasificacion` es el ranking de ese modo: quien crea el `Juego`
@@ -38,6 +38,9 @@ class Juego:
         self.progresion = progresion
         self.bonus = progresion.bonus() if progresion else Bonus()
         self.monedas_cobradas = 0   # monedas de esta partida ya ingresadas
+        # Punto de control de este modo (ver `guardado.py`). Con `continuar`, la partida arranca
+        # en el nivel u oleada guardado y con su puntuación (vidas y salud, las de partida nueva).
+        self.guardado = guardado
         self.rm = resource_manager
         self.pantalla = pantalla
         self.pantalla_ancho = pantalla.get_width()
@@ -48,6 +51,10 @@ class Juego:
         self.puntuacion = 0
         self.combo = Combo(self.bonus.combo_factor)   # bajas seguidas sin daño -> multiplicador
         self.nivel = 1   # nivel de la campaña, o nº de oleada en el modo sin fin
+        if continuar and guardado is not None and guardado.existe:
+            self.nivel = guardado.nivel
+            self.puntuacion = guardado.puntuacion
+            self.monedas_cobradas = self._monedas_de(self.puntuacion)   # esos puntos ya se cobraron en su día
         self.pausado = False
         self.estado_game_over = False
         self.pidiendo_nombre = False
@@ -362,6 +369,7 @@ class Juego:
         salud_max = self.jugador.salud_maxima
         self.jugador.curar(salud_max if curar_todo else math.ceil(settings.SIN_FIN_CURACION_OLEADA * salud_max))
         self.nivel += 1
+        self._guardar_punto_de_control(self.nivel)
         self.inicio_juego = self.tiempo_juego
         definicion = self._definicion()
         self.MIN_TIEMPO_GENERACION, self.MAX_TIEMPO_GENERACION = definicion.intervalo_spawn
@@ -451,8 +459,11 @@ class Juego:
         self.pausado = True
 
         if self.nivel >= settings.NIVEL_MAX:
+            if self.guardado is not None:
+                self.guardado.borrar()          # campaña completada: no queda nada que continuar
             self._pedir_nombre_o_mostrar("victoria")
         else:
+            self._guardar_punto_de_control(self.nivel + 1)   # ya cuenta aunque se cierre en el resumen
             self.estado_nivel_completado = True
 
     def _cualifica_para_el_top10(self):
@@ -480,11 +491,21 @@ class Juego:
         se llama en cada forma de terminar o pausar el progreso de una partida."""
         if self.progresion is None:
             return
-        total = int((self.puntuacion // settings.MONEDAS_PUNTOS) * (1 + self.bonus.monedas_pct))
+        total = self._monedas_de(self.puntuacion)
         nuevas = total - self.monedas_cobradas
         if nuevas > 0:
             self.progresion.ingresar(nuevas)
             self.monedas_cobradas = total
+
+    def _monedas_de(self, puntuacion):
+        """Monedas que dan `puntuacion` puntos (con el % de la mejora "Botín")."""
+        return int((puntuacion // settings.MONEDAS_PUNTOS) * (1 + self.bonus.monedas_pct))
+
+    def _guardar_punto_de_control(self, nivel):
+        """Apunta en el guardado que se continuará en `nivel` con la puntuación actual (ver
+        `guardado.py`). Se llama al terminar un nivel de la campaña y al cambiar de oleada."""
+        if self.guardado is not None:
+            self.guardado.guardar_punto(nivel, self.puntuacion)
 
     def volver_al_menu(self):
         """Solicita terminar la partida y devolver el control al menú principal."""

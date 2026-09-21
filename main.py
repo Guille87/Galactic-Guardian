@@ -12,6 +12,7 @@ from src.core.config import (RECURSOS, MUSICA, SONIDOS, HOJAS, DIR_ASSETS, carga
                              cargar_temblor, cargar_cifras_dano, cargar_idioma)
 from src.core.version import __version__
 from src.core.progresion import Progresion
+from src.core.guardado import Guardado
 from src.ui.scoreboard import SistemaClasificacion
 
 RANKING_SIN_FIN = "puntuaciones_sin_fin.json"
@@ -126,9 +127,13 @@ def main():
     # (donde se compran) y por cada partida (que cobra monedas y lee el bonus).
     progresion = Progresion()
 
+    # Punto de control de cada modo (nivel u oleada al que se continúa)
+    guardados = {settings.MODO_CAMPANA: Guardado(settings.MODO_CAMPANA),
+                 settings.MODO_SIN_FIN: Guardado(settings.MODO_SIN_FIN)}
+
     # El menú es persistente; se reutiliza cada vez que se vuelve a él
     menu = MenuManager(pantalla, resource_manager, audio_manager, sistema_clasificacion,
-                       clasificacion_sin_fin, progresion)
+                       clasificacion_sin_fin, progresion, guardados)
 
     # --- Máquina de estados de alto nivel ---
     # Cada pantalla (menú / juego) devuelve el siguiente estado en lugar de
@@ -136,14 +141,16 @@ def main():
     estado = "MENU"
     while estado != "SALIR":
         if estado == "MENU":
-            estado = menu.ejecutar()  # -> "JUGAR", "JUGAR_SIN_FIN" o "SALIR"
-        elif estado in ("JUGAR", "JUGAR_SIN_FIN"):
-            if estado == "JUGAR_SIN_FIN":
-                juego = Juego(pantalla, audio_manager, clasificacion_sin_fin, resource_manager,
-                              modo=settings.MODO_SIN_FIN, progresion=progresion)
-            else:
-                juego = Juego(pantalla, audio_manager, sistema_clasificacion, resource_manager,
-                              progresion=progresion)
+            estado = menu.ejecutar()  # -> "JUGAR", "CONTINUAR", "JUGAR_SIN_FIN", "CONTINUAR_SIN_FIN" o "SALIR"
+        elif estado in ("JUGAR", "CONTINUAR", "JUGAR_SIN_FIN", "CONTINUAR_SIN_FIN"):
+            modo = settings.MODO_SIN_FIN if estado.endswith("SIN_FIN") else settings.MODO_CAMPANA
+            continuar = estado.startswith("CONTINUAR")
+            if not continuar:
+                guardados[modo].borrar()    # empezar de cero descarta el punto de control anterior
+            juego = Juego(pantalla, audio_manager,
+                          clasificacion_sin_fin if modo == settings.MODO_SIN_FIN else sistema_clasificacion,
+                          resource_manager, modo=modo, progresion=progresion,
+                          guardado=guardados[modo], continuar=continuar)
             estado = juego.ejecutar()  # -> "MENU" o "SALIR"
         else:
             estado = "SALIR"
