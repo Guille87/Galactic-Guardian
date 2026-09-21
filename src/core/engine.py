@@ -38,6 +38,7 @@ class Juego:
         self.progresion = progresion
         self.bonus = progresion.bonus() if progresion else Bonus()
         self.monedas_cobradas = 0   # monedas de esta partida ya ingresadas
+        self.monedas_inicio_nivel = 0   # `monedas_cobradas` al empezar el nivel en curso (para el resumen)
         # Punto de control de la campaña (ver `guardado.py`; el sin fin no se guarda). Con
         # `continuar`, la partida arranca en el nivel guardado y con su puntuación (vidas y
         # salud, las de partida nueva). `nivel_inicial` permite empezar en un nivel anterior
@@ -59,6 +60,7 @@ class Juego:
             if nivel_inicial is not None and 1 <= nivel_inicial < guardado.nivel:
                 self.nivel, self.puntuacion = nivel_inicial, 0
             self.monedas_cobradas = self._monedas_de(self.puntuacion)   # esos puntos ya se cobraron en su día
+            self.monedas_inicio_nivel = self.monedas_cobradas
         self.pausado = False
         self.estado_game_over = False
         self.pidiendo_nombre = False
@@ -72,6 +74,7 @@ class Juego:
         # Campaña: pantallas de fin de nivel / victoria final (ver ROADMAP)
         self.estado_nivel_completado = False
         self.estado_victoria_final = False
+        self.estado_resumen_salida = False   # resumen que se muestra al abandonar la partida desde la pausa
         self.mostrando_seleccion_nivel = False
         self.enemigos_eliminados_nivel = 0   # total del nivel (para la pantalla de resumen)
 
@@ -145,6 +148,7 @@ class Juego:
         self.boton_reintentar = None
         self.boton_salir_post = None
         self.boton_continuar = None
+        self.boton_menu_resumen = None
         self.boton_elegir_nivel = None
         self.botones_seleccion_nivel = None   # lista, se recrea si cambia el nivel máximo
         self.boton_reintentar_final = None
@@ -217,10 +221,12 @@ class Juego:
         self.estado_nivel_completado = False
         self.mostrando_seleccion_nivel = False
         self.estado_victoria_final = False
+        self.estado_resumen_salida = False
         self.transicion_activa = False
         self.transicion_fase = None
         self.transicion_tiempo_fase = 0.0
         self.background.velocidad = settings.FONDO_VELOCIDAD_NORMAL
+        self.monedas_inicio_nivel = self.monedas_cobradas      # el resumen del nivel cuenta desde aquí
 
         # Resetear el WaveManager para que el jefe pueda volver a salir en el siguiente nivel
         self.wave_manager.jefe_generado = False
@@ -503,6 +509,19 @@ class Juego:
             self.progresion.ingresar(nuevas)
             self.monedas_cobradas = total
 
+    @property
+    def monedas_del_nivel(self):
+        """Monedas ganadas en el nivel en curso (o en el que se acaba de terminar): las que da la
+        puntuación conseguida en él, con el % de la mejora "Botín" ya aplicado."""
+        return self.monedas_cobradas - self.monedas_inicio_nivel
+
+    def mostrar_resumen_salida(self):
+        """El jugador abandona la partida desde la pausa: se aseguran las monedas y se muestra un
+        resumen (como el de fin de nivel) antes de volver al menú."""
+        self._cobrar_monedas()
+        self.pausado = True
+        self.estado_resumen_salida = True
+
     def _monedas_de(self, puntuacion):
         """Monedas que dan `puntuacion` puntos (con el % de la mejora "Botín")."""
         return int((puntuacion // settings.MONEDAS_PUNTOS) * (1 + self.bonus.monedas_pct))
@@ -529,7 +548,7 @@ class Juego:
         """Olvida los botones de los overlays: `RenderManager` los vuelve a crear
         (con los textos del idioma actual) la próxima vez que se dibujen."""
         for nombre in ("boton_reanudar", "boton_opciones", "boton_salir", "boton_reintentar",
-                       "boton_salir_post", "boton_continuar", "boton_elegir_nivel",
+                       "boton_salir_post", "boton_continuar", "boton_elegir_nivel", "boton_menu_resumen",
                        "botones_seleccion_nivel", "boton_reintentar_final", "boton_menu_final"):
             setattr(self, nombre, None)
 

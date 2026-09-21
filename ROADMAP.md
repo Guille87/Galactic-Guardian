@@ -74,7 +74,7 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
   rama, con disparo doble y triple, regeneración y topes de 6 de velocidad, 8
   disparos/s y 30 de daño) en una pantalla desplazable (también arrastrando con el
   ratón), dificultad por **tablas de nivel** (`src/core/escalado.py`), enemigos y
-  balas retocados, economía pensada para unas **20 partidas** (1 moneda cada 70
+  balas retocados, economía pensada para unas **12 partidas** (1 moneda cada 40
   puntos), curación sin ítems (por nivel u oleada y regeneración), **cifras
   flotantes de daño** (apagables en Opciones), salud en cifras y la **herramienta de
   balance** (`tools/balance.py`, con sus objetivos como tests). Los números salen del
