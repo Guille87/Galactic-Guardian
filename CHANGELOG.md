@@ -12,6 +12,10 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 - **Cifras flotantes de daño:** cada impacto sobre un enemigo muestra el daño que hace (amarillo) y
   los que recibe tu nave lo muestran en rojo. Los impactos seguidos al mismo objetivo se suman en
   una sola cifra para no llenar la pantalla. Se pueden apagar en Opciones > Pantalla.
+  Entran con un "pop" (nacen pequeñas, crecen un poco de más y se asientan) y terminan
+  desvaneciéndose; el enemigo que embiste a tu nave también muestra su daño, aunque seas
+  invulnerable.
+- **La salud en cifras** ("SALUD: 87/150") bajo las vidas, en rojo cuando queda poca.
 - **Monedas de depuración:** en la pantalla Mejoras, al ejecutar desde el código fuente,
   F2 da 1000 monedas para probar el árbol sin jugar (no existe en el juego empaquetado).
 - **Herramienta de balance** (`tools/balance.py`, solo para desarrollo). Un modelo
