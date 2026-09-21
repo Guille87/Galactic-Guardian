@@ -13,7 +13,8 @@ jefe de cada nivel.
 
 - **Oleadas por fases:** la dificultad y los tipos de enemigo cambian según avanza el nivel, hasta que aparece el jefe.
 - **Dos modos:** una **campaña** de niveles con jefe final y un modo **sin fin** de oleadas cada vez más duras (con un jefe cada 5), cada uno con su propia tabla de puntuaciones.
-- **Progresión:** gana monedas jugando y gástalas en un árbol de mejoras permanentes (ataque, defensa y utilidad) desde el menú.
+- **Progresión:** gana monedas jugando y gástalas en un árbol de 30 mejoras permanentes (ataque, defensa y utilidad) desde el menú: disparo doble y triple, más daño y cadencia, regeneración, botín... Toda la potencia de la nave sale de ahí.
+- **Cifras de daño:** cada impacto muestra el daño que hace (y el que recibes); se pueden apagar en Opciones.
 - **Combo de puntuación:** cada baja seguida sin que te den sube el multiplicador hasta ×5; el primer golpe lo rompe.
 - **Tabla de puntuaciones** local, con entrada de nombre al conseguir un top 10.
 
@@ -25,6 +26,7 @@ jefe de cada nivel.
 | Disparar | `Espacio` o clic izquierdo |
 | Pausa | `Esc` o `P` |
 | Depuración (hitboxes) | `F1` — muestra los círculos de colisión; vuelve a pulsar para ocultarlo |
+| Depuración (monedas) | `F2` en la pantalla Mejoras — +1000 monedas; solo ejecutando desde el código |
 
 Objetivo: aguanta con vida, gana monedas para mejorar tu nave entre partidas y derrota al jefe
 para pasar de nivel. En **Sin fin** no hay final: aguanta cuantas oleadas puedas y sube en su ranking.
@@ -87,11 +89,12 @@ Estructura del código:
 
 | Carpeta | Contenido |
 |---|---|
-| `src/core/` | bucle de juego (`engine`), configuración (`config`, `settings`), recursos, audio, entrada |
+| `src/core/` | bucle de juego (`engine`), configuración (`config`, `settings`), datos de niveles, dificultad y mejoras (`niveles`, `escalado`, `mejoras`), progresión, recursos, audio, entrada |
 | `src/managers/` | entidades, colisiones, oleadas, render, efectos |
-| `src/entities/` | jugador, enemigos, balas, ítems |
+| `src/entities/` | jugador, enemigos, balas |
 | `src/ui/` | menú, HUD, tabla de puntuaciones |
-| `src/visual/` | fondo, explosiones, destellos |
+| `src/visual/` | fondo, explosiones, destellos, cifras de daño, temblor de pantalla |
+| `tools/` | herramienta de balance de la campaña (solo desarrollo) |
 | `tests/` | suite de `pytest` (headless) |
 
 Más detalle de la arquitectura en [`CLAUDE.md`](CLAUDE.md).

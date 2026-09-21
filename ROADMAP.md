@@ -10,7 +10,7 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
   jugabilidad. Detalle en [`AUDITORIA.md`](AUDITORIA.md).
 - **Repositorio** — licencia MIT, `requirements` saneados, `pyproject.toml`,
   `.gitattributes`, `.gitignore` acotado, `CONTRIBUTING.md`.
-- **Tests** — suite `pytest` headless (~84 % de cobertura).
+- **Tests** — suite `pytest` headless (~93 % de cobertura).
 - **Integración continua** — GitHub Actions (Python 3.11–3.13) + badge de cobertura;
   `main` protegido.
 - **Fase 5 — bugs conocidos** — arreglados todos. Ver `CHANGELOG.md` → `[0.1.1]`.
@@ -54,14 +54,24 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 - **Oleadas y niveles como datos** — cada nivel se define en una tabla
   (`src/core/niveles.py`); `WaveManager` solo la lee. Añadir contenido es
   "editar una tabla". Ver `[0.4.0]`.
-- **Progresión entre partidas** — monedas ganadas jugando (puntuación ÷ 100) y un
-  árbol de 12 mejoras permanentes en tres ramas (Ataque, Defensa, Utilidad), con
-  pantalla propia en el menú, guardado en `data/saves/progresion.json` y
-  restablecer gratis. Los costes y el ritmo de monedas son de primera pasada y
-  quieren partidas de prueba. Ver `[0.9.0]`.
+- **Progresión entre partidas** — monedas ganadas jugando y un árbol de mejoras
+  permanentes en tres ramas (Ataque, Defensa, Utilidad), con pantalla propia en el
+  menú, guardado en `data/saves/progresion.json` y restablecer gratis. Ver
+  `[0.9.0]` (primera versión, 12 mejoras) y `[0.10.0]` (árbol ampliado).
 - **Hojas de sprites** — una animación puede ser una sola imagen con los
   fotogramas en una rejilla (`config.HOJAS`, `load_spritesheet` / `get_frames`);
   la explosión ya se carga así. Ver `[0.9.0]`.
+- **Reequilibrio completo** — todo el poder de la nave sale del árbol de mejoras:
+  ítems de la partida fuera, salud y daño en números reales (bala 10, salud 50),
+  nave base nueva (velocidad 5, 4 disparos/s), árbol de **30 mejoras** (diez por
+  rama, con disparo doble y triple, regeneración y topes de 6 de velocidad, 8
+  disparos/s y 30 de daño) en una pantalla desplazable (también arrastrando con el
+  ratón), dificultad por **tablas de nivel** (`src/core/escalado.py`), enemigos y
+  balas retocados, economía pensada para unas **20 partidas** (1 moneda cada 70
+  puntos), curación sin ítems (por nivel u oleada y regeneración), **cifras
+  flotantes de daño** (apagables en Opciones), salud en cifras y la **herramienta de
+  balance** (`tools/balance.py`, con sus objetivos como tests). Los números salen del
+  modelo de esa herramienta y se afinan jugando. Ver `[0.10.0]`.
 
 ## En curso / próximo (por orden)
 
@@ -69,58 +79,22 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 un futuro juego en Unity. Aquí se sigue añadiendo lógica y sistemas, y como
 mucho algún icono suelto; lo que dependía de arte nuevo está en "Descartado".
 
-### 1 · Reequilibrio: daño real, ítems fuera y árbol ampliado
-Cambio grande decidido por el autor, en **cuatro pasos**, cada uno con su PR y
-probado por separado:
-
-0. **Cerrar la progresión** actual (PR + release), para partir de una base estable.
-1. **Quitar los ítems de la partida — hecho** (potenciadores y curación: `Item`, loot,
-   contador de "piedad", su sonido y la mejora "Suerte") y **reutilizar sus
-   iconos** en el árbol si quedan bien (daño y cadencia se parecen; si no, texto).
-2. **Números reales, sin cambiar el juego — hecho**: todo ×10 (bala 10, salud 50, bala
-   enemiga 10, jefe pesado 20, vida de enemigos ×10). La salud pasa a **barra**
-   y las barras de estadísticas se ajustan al máximo alcanzable. Con pruebas de
-   equivalencia (tests y simulación) para demostrar que no cambia nada.
-3. **Reequilibrio completo** (implementado en la rama, pendiente de probar a mano: nave base, árbol de 30 mejoras desplazable, tablas por nivel en `escalado.py`, regeneración, economía y cifras flotantes de daño):
-   - Base nueva: velocidad **5** (tope 6, igual), **4 disparos/s** (antes 2,9;
-     tope 8 en lugar del 6,7 actual, que salía de 1000 ÷ 150 ms), daño 10, salud 50.
-   - Hasta **2 y 3 balas** por disparo y más daño desde el árbol.
-   - **Árbol ampliado** (~6 mejoras por rama; nodos compactos con icono y una
-     descripción en un panel inferior): Ataque (daño, cadencia, disparo doble y
-     triple), Defensa (blindaje, vida extra, escudo, **regeneración**), Utilidad
-     (motores hasta el tope, botín, combo).
-   - **Dificultad en tablas por nivel** (multiplicador de vida y de daño
-     enemigo, en `niveles.py`) en vez de fórmulas; curva propia en el sin fin.
-   - **Economía recalculada** con el objetivo de que la campaña lleve unas **20
-     partidas**: el nivel 1 se supera sin mejoras y el 5 exige la mayor parte del
-     árbol.
-   - **Herramienta de balance** (script aparte): para builds de referencia (0 %,
-     25 %, 50 %, 75 %, 100 % del árbol) imprime, por nivel, el tiempo de matar al
-     jefe, la afluencia de vida enemiga frente al DPS y el daño entrante. Es un
-     modelo analítico: da el punto de partida y se afina jugando.
-   - **Cifras flotantes de daño** al golpear (y al recibir), con la posibilidad de
-     apagarlas desde Opciones junto al temblor — hecho.
-   - Migrar el guardado de progresión al cambiar los ids del árbol, sin perder
-     las compras.
-- **Curación sin ítems**: campaña, cura total al pasar de nivel (como hoy); sin
-  fin, una parte al cambiar de oleada; y una mejora de Defensa da regeneración.
-
-### 2 · Patrones de disparo reutilizables
+### 1 · Patrones de disparo reutilizables
 - Abanico, dirigido, ráfaga… para enemigos y jefes, con los sprites que ya hay.
   Es la vía para dar variedad sin arte nuevo, y prepara el punto siguiente.
 
-### 3 · Jefe con fases
+### 2 · Jefe con fases
 - Por umbral de vida, cambiando de patrón (depende de los patrones de disparo).
 
-### 4 · Mini-jefe
+### 3 · Mini-jefe
 - Variante reforzada y más grande de un enemigo normal (más vida, quizá un
   patrón extra) — reutiliza el sprite existente, sin ser una pieza nueva.
 
-### 5 · Habilidades nuevas (antes "ítems")
+### 4 · Habilidades nuevas (antes "ítems")
 - Al quitar los ítems de la partida, el **escudo temporal** y la **bomba de
   pantalla** (daño en área + limpia balas) dejan de encajar como objetos que
   caen; podrían volver como habilidades del árbol. Cada una necesitaría un icono
-  suelto. Pendiente de decidir cuando termine el reequilibrio.
+  suelto. Pendiente de decidir ahora que el reequilibrio ha terminado.
 
 ## Backlog — con intención clara de hacerse
 

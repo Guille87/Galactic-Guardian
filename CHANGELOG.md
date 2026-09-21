@@ -7,89 +7,82 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-09-21
+
+Reequilibrio completo: ahora **todo el poder de la nave viene del árbol de mejoras**
+y la campaña está pensada para llevar unas 20 partidas a un jugador medio. Cambia
+el árbol y su economía, así que **quien tuviera mejoras compradas las recupera como
+monedas** (ver más abajo) y empieza con el árbol vacío.
+
 ### Added
 
-- **Cifras flotantes de daño:** cada impacto sobre un enemigo muestra el daño que hace (amarillo) y
-  los que recibe tu nave lo muestran en rojo. Los impactos seguidos al mismo objetivo se suman en
-  una sola cifra para no llenar la pantalla. Se pueden apagar en Opciones > Pantalla.
-  Entran con un "pop" (nacen pequeñas, crecen un poco de más y se asientan) y terminan
-  desvaneciéndose; el enemigo que embiste a tu nave también muestra su daño, aunque seas
-  invulnerable.
+- **Árbol de 30 mejoras**, diez por rama (antes 12): Ataque (daño, cadencia, disparo doble
+  y triple), Defensa (blindaje, vidas, regeneración, escudo largo) y Utilidad (motores,
+  botín y combo). Se pueden ver más abajo en la nueva pantalla **Mejoras desplazable**:
+  rueda del ratón, barra lateral, teclas o **arrastrando con el ratón** como en el móvil
+  (las mejoras se compran al soltar el clic, para distinguir un toque de un arrastre).
+- **Disparo triple** y hasta **8 disparos por segundo** y **30 de daño**; con disparo doble
+  las balas salen de los cañones de las alas de la nave y con triple, de los dos cañones
+  y del morro.
+- **Regeneración** (rama Defensa): recuperas salud poco a poco cuando pasan 3 segundos sin
+  recibir daño.
+- **Cifras flotantes de daño:** cada impacto sobre un enemigo muestra el daño que hace
+  (amarillo) y los que recibe tu nave lo muestran en rojo. Entran con un "pop", suben y se
+  desvanecen; los impactos seguidos al mismo objetivo se suman en una sola cifra para no
+  llenar la pantalla, y el enemigo que embiste a tu nave también muestra su daño aunque
+  seas invulnerable. Se pueden apagar en Opciones > Pantalla, junto al temblor.
 - **La salud en cifras** ("SALUD: 87/150") bajo las vidas, en rojo cuando queda poca.
+- **Herramienta de balance** (`tools/balance.py`, solo para desarrollo). Un modelo
+  analítico de la campaña que, con los datos reales del juego, estima para cada nivel
+  cuánto daño se recibe, cuánto se tarda en matar al jefe y cuántas muertes cuesta, con
+  builds del árbol de referencia y tres perfiles de jugador; simula una partida y la
+  progresión entre partidas para calcular cuántas hacen falta para completar la campaña.
+  Está validado contra el juego real, y `tests/test_diseno_balance.py` guarda los objetivos
+  de diseño como pruebas.
 - **Monedas de depuración:** en la pantalla Mejoras, al ejecutar desde el código fuente,
   F2 da 1000 monedas para probar el árbol sin jugar (no existe en el juego empaquetado).
-- **Herramienta de balance** (`tools/balance.py`, solo para desarrollo). Un modelo
-  analítico de la campaña que, con los datos reales del juego, estima para cada
-  nivel cuánto daño se recibe, cuánto se tarda en matar al jefe y cuántas
-  muertes cuesta, con builds del árbol de referencia y tres perfiles de jugador;
-  simula una partida y la progresión entre partidas para calcular cuántas
-  hacen falta para completar la campaña. Está validado contra el juego real.
-  Con ella se diseñó el reequilibrio de abajo, y `tests/test_diseno_balance.py`
-  guarda sus objetivos como pruebas (la primera partida nunca gana, el nivel 1 se
-  supera sin mejoras, con el árbol entero se gana, la campaña lleva unas 20
-  partidas a un jugador medio).
-- **Regeneración** (rama Defensa): recuperas salud poco a poco cuando pasan 3
-  segundos sin recibir daño.
-- **Disparo triple**, además del doble, y más **disparos por segundo** y **velocidad**
-  desde el árbol.
-- La pantalla **Mejoras** se **desplaza** (rueda del ratón, barra lateral, teclas o
-  **arrastrando con el ratón** como en el móvil) para que quepan los 30 nodos del
-  árbol. Las mejoras se compran al soltar el clic, para distinguir un toque de un arrastre.
-- Con **disparo doble** las balas salen de los cañones de las alas de la nave; con
-  **triple**, de los dos cañones y del morro.
 
 ### Changed
 
-- **Reequilibrio de la dificultad y la progresión.** Todo el poder viene ahora
-  del árbol de mejoras y la campaña está pensada para llevar unas 20 partidas:
-  - **La nave base** empieza con velocidad 5 (antes 4), 4 disparos por segundo
-    (antes ~2,9) y 1 bala; el tope de velocidad se queda en 6 y el de cadencia
-    sube a 8 disparos por segundo.
-  - **Árbol de 30 mejoras**, diez por rama. Las últimas de Ataque (Daño III y IV,
-    Cadencia III y IV) llevan el daño a 30 y los disparos a 8 por segundo; Defensa
-    suma Blindaje IV y V, Regeneración II y otra Vida extra; Utilidad, Botín III y IV
-    (+125 % de monedas en total con Botín I y II), Maestría II y Motores III y IV. La
-    velocidad sube en cuatro pasos de +5 % (Motores I–IV) hasta el tope de 6. Comprarlo todo cuesta 39 250 monedas con nuevos costes
-    y efectos; la cadencia y la velocidad se leen en el juego como
-    "+25 % de velocidad de ataque" y "+5 % de velocidad" en vez de milisegundos.
-  - **Dificultad por tablas de nivel** (`src/core/escalado.py`): vida de los
-    enemigos, vida del jefe y daño enemigo por nivel; el primer nivel hace un 40 %
-    menos de daño, así que se supera sin mejoras. Los enemigos aparecen más
-    despacio (900–1100 ms entre uno y otro en el nivel 1, 400–600 en el 5).
+- **Reequilibrio de la dificultad y la progresión.**
+  - **La nave base** empieza con 50 de salud, velocidad 5 (antes 4), 4 disparos por segundo
+    (antes ~2,9) y 1 bala; el tope de velocidad se queda en 6 y el de cadencia sube a 8
+    disparos por segundo. La cadencia y la velocidad se leen ahora como "+25 % de velocidad
+    de ataque" y "+5 % de velocidad" en vez de milisegundos.
+  - **Dificultad por tablas de nivel** (`src/core/escalado.py`): vida de los enemigos, vida
+    del jefe y daño enemigo por nivel. El primer nivel hace un 40 % menos de daño, así que
+    se supera sin mejoras. Los enemigos aparecen más despacio (900–1100 ms entre uno y
+    otro en el nivel 1, 400–600 en el 5).
   - **Enemigos más manejables:** el tipo 1 cae más despacio (2–3 en vez de 2–4), el 2 pasa a
     2,5–3,5 y el 3 a 3,5–5,5 (antes 3–6); la bala del tipo 2 va más rápida (5) y la del
     tipo 3 más lenta (6, igual que la velocidad máxima de la nave).
-  - **Monedas:** 1 por cada 70 puntos (antes 100).
-  - **Sin fin:** la vida sigue creciendo por oleada con el mismo paso que entre
-    los dos últimos niveles, y el ritmo de aparición sigue el de la campaña.
-  - Quien tuviera mejoras compradas del árbol anterior **recupera todo lo gastado**
-    al cargar la partida guardada y empieza con el árbol vacío.
+  - **Monedas:** 1 por cada 70 puntos (antes 100). Comprar todo el árbol cuesta 39 250.
+  - **Sin fin:** la vida sigue creciendo por oleada con el mismo paso que entre los dos
+    últimos niveles, y el ritmo de aparición sigue el de la campaña.
+  - **Partidas guardadas:** quien tuviera mejoras compradas del árbol anterior recupera
+    todo lo gastado al cargar el guardado (`progresion.json` pasa a la versión 2) y
+    empieza con el árbol vacío.
 - **Salud y daño en números reales.** La nave tiene ahora **50 de salud** (antes 5
-  puntos), su bala hace **10** de daño (antes 1), las balas enemigas **10**, el
-  cañón pesado del jefe **20** y el choque con un enemigo **10**; los enemigos
-  pasan a 10, 20 y 30 de vida y el jefe a 1000 (más lo que suben por nivel). Es
-  lo de antes multiplicado por 10, **el juego se comporta igual**: se comprobó
-  con partidas deterministas idénticas fotograma a fotograma antes y después. Es
-  el paso previo al reequilibrio, que ya podrá usar valores intermedios.
-- **La salud bajo la nave es ahora una barra** (con una marca cada 10 de salud, así
-  se ve cuántos impactos normales aguanta, hasta 4 marcas) en vez de puntitos. Mide
-  siempre lo mismo, y se queda entera dentro de la pantalla aunque la nave esté en el borde.
-- **Sin ítems de curación, la salud vuelve por otros caminos.** En el sin fin,
-  cada oleada nueva recupera el 40 % de la salud máxima y derrotar a un jefe la
-  deja completa; en la campaña sigue curándose del todo al pasar de nivel.
-- La mejora "Suerte" (que subía la probabilidad de ítems) desaparece con los
-  ítems; el árbol nuevo tiene **Botín I** y **Botín II** (+25 % de monedas cada una).
-- Los nodos del árbol de **Mejoras** llevan ahora el icono de los antiguos ítems
-  (daño, cadencia, reparación y velocidad) en la esquina, atenuado mientras la
-  mejora está bloqueada; las que no tienen un icono a juego, solo texto.
+  puntos), su bala hace **10** de daño (antes 1), las balas enemigas **10**, el cañón
+  pesado del jefe **20** y el choque con un enemigo **10**. Fue un cambio de escala sin
+  efecto en el juego, comprobado con partidas deterministas idénticas fotograma a
+  fotograma, y es la base del reequilibrio.
+- **La salud bajo la nave es ahora una barra** (con marcas cada 10 de salud, hasta 4)
+  en vez de puntitos. Mide siempre lo mismo y se queda entera dentro de la pantalla
+  aunque la nave esté en el borde.
+- **Sin ítems de curación, la salud vuelve por otros caminos.** En el sin fin, cada oleada
+  nueva recupera el 40 % de la salud máxima y derrotar a un jefe la deja completa; en la
+  campaña sigue curándose del todo al pasar de nivel.
+- Los nodos del árbol de **Mejoras** llevan el icono de los antiguos ítems (daño, cadencia,
+  reparación y velocidad) en la esquina, atenuado mientras la mejora está bloqueada; las
+  que no tienen un icono a juego, solo texto.
 
 ### Removed
 
-- **Los ítems de la partida.** Los enemigos ya no sueltan potenciadores de daño,
-  cadencia y velocidad ni curación: la nave solo mejora con las mejoras
-  permanentes del árbol. Desaparecen el objeto, el reparto de botín, el contador
-  de "piedad", el sonido de recogida y los métodos con los que la nave se
-  mejoraba en la partida.
+- **Los ítems de la partida.** Los enemigos ya no sueltan potenciadores de daño, cadencia
+  y velocidad ni curación: la nave solo mejora con las mejoras permanentes del árbol.
+  Desaparecen el objeto, el reparto de botín, el contador de "piedad", el sonido de
+  recogida, los métodos con los que la nave se mejoraba en la partida y la mejora "Suerte".
 
 ## [0.9.0] - 2026-09-20
 
@@ -518,7 +511,8 @@ puesta a punto del repositorio (licencia, tests, integración continua, document
   los grupos tipados y `groupcollide`).
 - `__init__.py` vacío en la raíz del repositorio.
 
-[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.6.0...v0.7.0

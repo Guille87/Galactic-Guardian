@@ -53,7 +53,7 @@ Gracias por tu interés. El proyecto es pequeño; estas son las convenciones.
    español. Si el idioma usa un alfabeto que la fuente por defecto de pygame no
    cubre, habrá que cargar otra fuente.
 
-## Añadir un enemigo o un ítem
+## Añadir un enemigo o una mejora
 
 El patrón completo está en [CLAUDE.md](CLAUDE.md). En resumen:
 
@@ -64,9 +64,12 @@ El patrón completo está en [CLAUDE.md](CLAUDE.md). En resumen:
   `self.danio_escalado(...)` para el daño de la bala). Ponle `RECURSO` (el
   nombre lógico de su sprite), añade ese sprite a `config.RECURSOS` y
   colócalo en las `Fase` de los niveles que quieras en `src/core/niveles.py`.
-- **Ítem**: añade el efecto a `Item.EFECTOS` (`src/entities/items.py`), el tipo a
-  `EnemigoBase.CANDIDATOS_LOOT` y su condición de utilidad a
-  `EnemigoBase._loot_util`. Añade su sprite a `config.RECURSOS`.
+- **Mejora del árbol**: una `Mejora` más en `mejoras.MEJORAS` (`src/core/mejoras.py`) con
+  su rama, coste, `requiere` (la anterior de su rama) y su `efecto` (campos de `Bonus`), y
+  sus textos `mejoras.<id>.nombre` y `mejoras.<id>.desc` en cada idioma (la descripción no
+  debe pasar de 3 líneas: un test lo comprueba). Un efecto nuevo necesita además un campo
+  en `Bonus` y que `Jugador` lo aplique. Después vuelve a correr `python tools/balance.py`
+  y `pytest`: `tests/test_diseno_balance.py` guarda los objetivos de diseño.
 
 Todo cambio de lógica viene con su test.
 
