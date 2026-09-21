@@ -24,6 +24,8 @@
   "opciones.pantalla": "Pantalla",
   "opciones.temblor": "Temblor de pantalla: {estado}",
   "opciones.temblor_ayuda": "La pantalla tiembla al recibir golpes fuertes",
+  "opciones.cifras": "Cifras de daño: {estado}",
+  "opciones.cifras_ayuda": "Muestra el daño de cada impacto sobre los enemigos y la nave",
   "opciones.aviso_teclas_fijas": "Las flechas y Esc funcionan siempre, sin reasignar",
   "opciones.restaurar": "Restaurar valores por defecto",
   "opciones.control_boton": "{accion}: {tecla}",

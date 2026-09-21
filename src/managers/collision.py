@@ -47,6 +47,7 @@ class CollisionManager:
         for bala, enemigos_tocados in impactos.items():
             enemigo = enemigos_tocados[0]  # una bala daña a un solo enemigo
             enemigo.take_damage(bala.danio)
+            self.efectos.crear_cifra_dano(enemigo, bala.rect.midtop, bala.danio)
             if enemigo.salud <= 0:
                 self._eliminar_enemigo(enemigo)
 
@@ -60,7 +61,7 @@ class CollisionManager:
             collided=pygame.sprite.collide_circle,
         )
         for bala in tocadas:
-            self.jugador.recibir_danio(bala.danio)
+            self._danar_jugador(bala.danio)
             self.reglas.manejar_impacto_jugador()
 
         if tocadas:
@@ -70,7 +71,7 @@ class CollisionManager:
         for enemigo in pygame.sprite.spritecollide(self.jugador, self.em.enemigos, False):
             ultimo = self.enemigos_golpeados.get(enemigo, 0)
             if ahora - ultimo >= settings.CONTACTO_COOLDOWN_MS:
-                self.jugador.recibir_danio(enemigo.danio_escalado(settings.DANIO_CONTACTO))
+                self._danar_jugador(enemigo.danio_escalado(settings.DANIO_CONTACTO))
                 self.audio.reproducir_efecto("golpe")
                 self.enemigos_golpeados[enemigo] = ahora
                 self.reglas.manejar_impacto_jugador()
@@ -78,6 +79,12 @@ class CollisionManager:
 
             if enemigo.salud <= 0:
                 self._eliminar_enemigo(enemigo)
+
+    def _danar_jugador(self, danio):
+        """Aplica `danio` a la nave y, si le ha llegado (no estaba invulnerable), saca su cifra."""
+        if self.jugador.recibir_danio(danio):
+            self.efectos.crear_cifra_dano(self.jugador, (self.jugador.rect.centerx, self.jugador.rect.top),
+                                          danio, de_la_nave=True)
 
     # ------------------------------------------------------------------
     def _eliminar_enemigo(self, enemigo):

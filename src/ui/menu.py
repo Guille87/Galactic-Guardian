@@ -331,6 +331,7 @@ class MenuManager:
             "idioma": i18n.idioma_actual(),
             "controles": dict(self.controles),
             "temblor": preferencias.temblor_activado(),
+            "cifras_dano": preferencias.cifras_dano_activadas(),
         }
         self._preparar_ui_opciones()
 
@@ -345,6 +346,7 @@ class MenuManager:
         self.am.actualizar_volumen_efectos(self.vol_efectos)
         self.controles = dict(inst["controles"])
         preferencias.establecer_temblor(inst["temblor"])
+        preferencias.establecer_cifras_dano(inst["cifras_dano"])
         if inst["idioma"] != i18n.idioma_actual():
             i18n.establecer_idioma(inst["idioma"])
             self._crear_botones()          # la UI de Opciones se rehace sola (`_idioma_ui`)
@@ -371,6 +373,7 @@ class MenuManager:
         for accion in controles.ACCIONES:      # por si quedó "Pulsa una tecla…" a medias
             self._actualizar_texto_control(accion)
         self._actualizar_boton_temblor()       # puede haberse cambiado desde otro `MenuManager`
+        self._actualizar_boton_cifras()
         self._mostrar_pestana(self._pestana)   # la UI puede venir con otra pestaña a la vista
 
     def _descargando_actualizacion(self):
@@ -507,8 +510,8 @@ class MenuManager:
         )
         self._elementos_pestana["controles"].append(self.btn_restaurar_controles)
 
-        # --- Pantalla: interruptor del temblor de pantalla. Se aplica al instante;
-        # se guarda con "Guardar".
+        # --- Pantalla: interruptores del temblor de pantalla y de las cifras de daño. Se
+        # aplican al instante; se guardan con "Guardar".
         self.btn_temblor = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect((50, 220), (500, 44)), text="", manager=self.ui_manager,
         )
@@ -519,7 +522,18 @@ class MenuManager:
                 text=t("opciones.temblor_ayuda"), manager=self.ui_manager,
             ),
         ]
+        self.btn_cifras = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((50, 320), (500, 44)), text="", manager=self.ui_manager,
+        )
+        self._elementos_pestana["pantalla"] += [
+            self.btn_cifras,
+            pygame_gui.elements.UILabel(
+                relative_rect=pygame.Rect((50, 374), (500, 22)),
+                text=t("opciones.cifras_ayuda"), manager=self.ui_manager,
+            ),
+        ]
         self._actualizar_boton_temblor()
+        self._actualizar_boton_cifras()
 
         # Botones comunes (siempre visibles)
         self.btn_guardar = pygame_gui.elements.UIButton(
@@ -559,6 +573,16 @@ class MenuManager:
             self.btn_temblor.select()
         else:
             self.btn_temblor.unselect()
+
+    def _actualizar_boton_cifras(self):
+        """Texto y marca del interruptor de las cifras flotantes de daño."""
+        activas = preferencias.cifras_dano_activadas()
+        estado = t("comun.si") if activas else t("comun.no")
+        self.btn_cifras.set_text(t("opciones.cifras", estado=estado))
+        if activas:
+            self.btn_cifras.select()
+        else:
+            self.btn_cifras.unselect()
 
     def _marcar_idioma_actual(self):
         for boton, codigo in self._botones_idioma.items():
@@ -707,6 +731,10 @@ class MenuManager:
                 preferencias.establecer_temblor(not preferencias.temblor_activado())
                 self._actualizar_boton_temblor()
 
+            elif event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element == self.btn_cifras:
+                preferencias.establecer_cifras_dano(not preferencias.cifras_dano_activadas())
+                self._actualizar_boton_cifras()
+
             elif event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element in self._acciones_por_boton:
                 self._empezar_reasignacion(self._acciones_por_boton[event.ui_element])
 
@@ -719,7 +747,8 @@ class MenuManager:
                 if event.ui_element == self.btn_guardar:
                     config.guardar_configuracion(self.vol_musica, self.vol_efectos, self.controles,
                                                  idioma=i18n.idioma_actual(),
-                                                 temblor=preferencias.temblor_activado())
+                                                 temblor=preferencias.temblor_activado(),
+                                                 cifras_dano=preferencias.cifras_dano_activadas())
                     self.estado = "PRINCIPAL"
                 elif event.ui_element == self.btn_volver:
                     self._deshacer_cambios()

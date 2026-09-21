@@ -24,6 +24,8 @@
   "opciones.pantalla": "Display",
   "opciones.temblor": "Screen shake: {estado}",
   "opciones.temblor_ayuda": "The screen shakes on heavy hits",
+  "opciones.cifras": "Damage numbers: {estado}",
+  "opciones.cifras_ayuda": "Shows the damage of each hit on enemies and your ship",
   "opciones.aviso_teclas_fijas": "Arrow keys and Esc always work, no rebinding needed",
   "opciones.restaurar": "Restore defaults",
   "opciones.control_boton": "{accion}: {tecla}",

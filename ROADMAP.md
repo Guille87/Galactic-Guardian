@@ -81,7 +81,7 @@ probado por separado:
    enemiga 10, jefe pesado 20, vida de enemigos ×10). La salud pasa a **barra**
    y las barras de estadísticas se ajustan al máximo alcanzable. Con pruebas de
    equivalencia (tests y simulación) para demostrar que no cambia nada.
-3. **Reequilibrio completo** (implementado en la rama, pendiente de probar a mano: nave base, árbol de 17 mejoras desplazable, tablas por nivel en `escalado.py`, regeneración y economía; falta el daño flotante):
+3. **Reequilibrio completo** (implementado en la rama, pendiente de probar a mano: nave base, árbol de 30 mejoras desplazable, tablas por nivel en `escalado.py`, regeneración, economía y cifras flotantes de daño):
    - Base nueva: velocidad **5** (tope 6, igual), **4 disparos/s** (antes 2,9;
      tope 8 en lugar del 6,7 actual, que salía de 1000 ÷ 150 ms), daño 10, salud 50.
    - Hasta **2 y 3 balas** por disparo y más daño desde el árbol.
@@ -99,7 +99,7 @@ probado por separado:
      jefe, la afluencia de vida enemiga frente al DPS y el daño entrante. Es un
      modelo analítico: da el punto de partida y se afina jugando.
    - **Cifras flotantes de daño** al golpear (y al recibir), con la posibilidad de
-     apagarlas desde Opciones junto al temblor.
+     apagarlas desde Opciones junto al temblor — hecho.
    - Migrar el guardado de progresión al cambiar los ids del árbol, sin perder
      las compras.
 - **Curación sin ítems**: campaña, cura total al pasar de nivel (como hoy); sin

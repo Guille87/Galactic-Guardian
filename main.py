@@ -9,7 +9,7 @@ from src.core.audio import AudioManager
 from src.core.resources import ResourceManager
 from src.core import i18n, preferencias, settings
 from src.core.config import (RECURSOS, MUSICA, SONIDOS, HOJAS, DIR_ASSETS, cargar_configuracion,
-                             cargar_temblor, cargar_idioma)
+                             cargar_temblor, cargar_cifras_dano, cargar_idioma)
 from src.core.version import __version__
 from src.core.progresion import Progresion
 from src.ui.scoreboard import SistemaClasificacion
@@ -113,6 +113,7 @@ def main():
     vol_musica, vol_efectos = cargar_configuracion()
     i18n.establecer_idioma(cargar_idioma() or i18n.detectar_idioma_sistema())
     preferencias.establecer_temblor(cargar_temblor())
+    preferencias.establecer_cifras_dano(cargar_cifras_dano())
 
     # Un único AudioManager compartido entre el menú y la partida
     audio_manager = AudioManager(resource_manager, vol_musica, vol_efectos)

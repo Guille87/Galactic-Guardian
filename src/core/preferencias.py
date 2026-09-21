@@ -6,6 +6,7 @@ disco. No lee ni escribe la configuración por sí mismo.
 """
 
 _temblor = True
+_cifras_dano = True
 
 
 def temblor_activado():
@@ -16,3 +17,13 @@ def temblor_activado():
 def establecer_temblor(activos):
     global _temblor
     _temblor = bool(activos)
+
+
+def cifras_dano_activadas():
+    """True si se muestran las cifras flotantes de daño."""
+    return _cifras_dano
+
+
+def establecer_cifras_dano(activas):
+    global _cifras_dano
+    _cifras_dano = bool(activas)

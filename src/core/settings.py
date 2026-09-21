@@ -51,6 +51,14 @@ TEMBLOR_GOLPE = 0.5         # la nave recibe un impacto
 TEMBLOR_MUERTE = 0.85       # la nave pierde una vida
 TEMBLOR_JEFE = 1.0          # el jefe cae
 
+# --- Cifras flotantes de daño ---
+CIFRA_DURACION_MS = 650     # lo que dura una cifra en pantalla
+CIFRA_VELOCIDAD = 80        # px/s que sube
+CIFRA_TAMANO = 22           # tamaño de la fuente (px)
+CIFRA_TAMANO_NAVE = 28      # las que salen de la nave, algo mayores
+CIFRA_COMBINAR_MS = 250     # los impactos al mismo objetivo en este margen suman en una sola cifra
+CIFRAS_MAX = 40             # tope de cifras a la vez (con mucha cadencia y balas)
+
 # --- Combo de puntuación (ver src/core/combo.py) ---
 # Bajas seguidas sin recibir daño para llegar a ×2, ×3, ×4 y ×5 (el último es el tope).
 COMBO_UMBRALES = (10, 25, 50, 90)

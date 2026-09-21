@@ -46,8 +46,10 @@ def _temblor_activado():
     from src.core import preferencias
 
     preferencias.establecer_temblor(True)
+    preferencias.establecer_cifras_dano(True)
     yield
     preferencias.establecer_temblor(True)
+    preferencias.establecer_cifras_dano(True)
 
 
 @pytest.fixture(scope="session")
