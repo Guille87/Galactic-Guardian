@@ -308,9 +308,12 @@ class MenuManager:
         """Bucle de los diálogos de la campaña guardada. Devuelve el estado siguiente
         (`"CONTINUAR"`, `"JUGAR"`, `"SALIR"`) o `None` si se vuelve al menú. Al elegir un nivel
         deja su número en `self.nivel_elegido`."""
+        fondo = self.pantalla.copy()      # cada diálogo se dibuja sobre esto: si no, el oscurecido se acumula
         while True:
+            self.pantalla.blit(fondo, (0, 0))
             eleccion = self._dialogo_partida_guardada(guardado)
             if eleccion == "ELEGIR":
+                self.pantalla.blit(fondo, (0, 0))
                 nivel = self._dialogo_elegir_nivel(guardado)
                 if nivel == "SALIR":
                     return "SALIR"
@@ -609,7 +612,7 @@ class MenuManager:
         # Abajo solo y centrado debajo, y después Disparar / Pausa.
         filas = (("arriba",), ("izquierda", "derecha"), ("abajo",), ("disparar", "pausa"))
         for fila, acciones in enumerate(filas):
-            y = 245 + fila * 54
+            y = 245 + fila * 54 + (16 if fila == 3 else 0)     # un respiro entre la cruz y Disparar / Pausa
             for accion, x in zip(acciones, (190,) if len(acciones) == 1 else (50, 330)):
                 boton = pygame_gui.elements.UIButton(
                     relative_rect=pygame.Rect((x, y), (220, 44)),
@@ -620,17 +623,17 @@ class MenuManager:
                 self._elementos_pestana["controles"].append(boton)
         # Disparo automático: la nave dispara sola (se aplica al instante; se guarda con "Guardar")
         self.btn_disparo_auto = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((50, 485), (500, 44)), text="", manager=self.ui_manager,
+            relative_rect=pygame.Rect((50, 505), (500, 44)), text="", manager=self.ui_manager,
         )
         self._elementos_pestana["controles"] += [
             self.btn_disparo_auto,
             pygame_gui.elements.UILabel(
-                relative_rect=pygame.Rect((50, 535), (500, 22)),
+                relative_rect=pygame.Rect((50, 555), (500, 22)),
                 text=t("opciones.disparo_auto_ayuda"), manager=self.ui_manager,
             ),
         ]
         self.btn_restaurar_controles = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((50, 575), (300, 40)),
+            relative_rect=pygame.Rect((50, 595), (300, 40)),
             text=t("opciones.restaurar"), manager=self.ui_manager,
         )
         self._elementos_pestana["controles"].append(self.btn_restaurar_controles)
@@ -926,7 +929,7 @@ class MenuManager:
         if (self._pestana == "controles" and self._aviso_conflicto
                 and time.time() < self._aviso_conflicto_hasta):
             aviso = self.font_version.render(self._aviso_conflicto, True, (255, 120, 120))
-            self.pantalla.blit(aviso, (50, 458))
+            self.pantalla.blit(aviso, (50, 476))
 
         self.ui_manager.draw_ui(self.pantalla)
         pygame.display.flip()

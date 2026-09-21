@@ -222,7 +222,7 @@ def test_las_cuatro_direcciones_forman_una_cruz(botones):
 
 def test_el_aviso_de_tecla_repetida_no_pisa_ningun_boton(botones, menu):
     from src.ui import menu as modulo
-    y_aviso = 458
+    y_aviso = 476
     assert all(not (r.top <= y_aviso <= r.bottom) for r in list(botones.values()) + [menu.btn_disparo_auto.rect])
 
 
@@ -230,3 +230,9 @@ def test_cada_boton_de_control_sigue_reasignando_su_accion(menu):
     menu._abrir_opciones()
     for accion in controles.ACCIONES:
         assert menu._acciones_por_boton[menu._botones_controles[accion]] == accion
+
+
+def test_hay_un_respiro_entre_abajo_y_disparar_y_pausa(botones):
+    normal = botones["izquierda"].y - botones["arriba"].y         # separación entre las filas de la cruz
+    assert botones["disparar"].y - botones["abajo"].y > normal
+    assert botones["disparar"].top - botones["abajo"].bottom >= 20

@@ -450,3 +450,21 @@ def test_los_textos_de_los_dialogos_estan_traducidos():
     i18n.establecer_idioma("en")
     assert i18n.t("menu.elegir_nivel") == "Choose level"
     assert i18n.t("menu.nivel_guardado", n=4) == "Level 4 (saved)"
+
+
+# --- El fondo no se oscurece de más al ir y volver entre diálogos ------------------------------
+
+def test_ir_y_volver_entre_los_dos_dialogos_no_acumula_oscuridad(menu, monkeypatch):
+    menu.guardado.guardar_punto(4, 900)
+    menu.pantalla.fill((200, 200, 200))                          # "el menú" que hay detrás
+    muestras = []
+    respuestas = iter(["ELEGIR", None, "CONTINUAR"])             # elegir nivel -> Volver -> Continuar
+
+    def falso(botones):
+        muestras.append(tuple(menu.pantalla.get_at((5, 5)))[:3])  # una esquina del fondo, fuera de los cuadros
+        return next(respuestas)
+
+    monkeypatch.setattr(menu, "_esperar_clic", falso)
+    assert menu._elegir_como_empezar(menu.guardado) == "CONTINUAR"
+    assert len(muestras) == 3 and muestras[0] == muestras[1] == muestras[2]
+    assert muestras[0] != (200, 200, 200)                        # sí está oscurecido, pero una sola vez
