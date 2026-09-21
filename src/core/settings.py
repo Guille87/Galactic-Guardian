@@ -51,12 +51,23 @@ TEMBLOR_GOLPE = 0.5         # la nave recibe un impacto
 TEMBLOR_MUERTE = 0.85       # la nave pierde una vida
 TEMBLOR_JEFE = 1.0          # el jefe cae
 
+# --- Cifras flotantes de daño ---
+CIFRA_DURACION_MS = 800     # lo que dura una cifra en pantalla
+CIFRA_VELOCIDAD = 80        # px/s que sube
+CIFRA_POP_MS = 300          # "pop" de entrada: nace pequeña, se pasa de tamaño y se asienta
+CIFRA_POP_INICIO = 0.4      # escala con la que nace
+CIFRA_POP_MAX = 1.3         # escala máxima del pop
+CIFRA_TAMANO = 22           # tamaño de la fuente (px)
+CIFRA_TAMANO_NAVE = 28      # las que salen de la nave, algo mayores
+CIFRA_COMBINAR_MS = 250     # los impactos al mismo objetivo en este margen suman en una sola cifra
+CIFRAS_MAX = 40             # tope de cifras a la vez (con mucha cadencia y balas)
+
 # --- Combo de puntuación (ver src/core/combo.py) ---
 # Bajas seguidas sin recibir daño para llegar a ×2, ×3, ×4 y ×5 (el último es el tope).
 COMBO_UMBRALES = (10, 25, 50, 90)
 
 # --- Progresión entre partidas (ver src/core/progresion.py y mejoras.py) ---
-MONEDAS_PUNTOS = 100   # 1 moneda por cada tantos puntos de la partida
+MONEDAS_PUNTOS = 70    # 1 moneda por cada tantos puntos de la partida (ver tools/balance.py)
 
 # --- Curación (sin ítems que la den) ---
 SIN_FIN_CURACION_OLEADA = 0.4   # fracción de la salud máxima que se recupera al cambiar de oleada
@@ -66,6 +77,7 @@ VOLUMEN_PASO = 0.1  # cuánto sube/baja el volumen con las flechas del slider
 
 # --- Jugador ---
 JUGADOR_INVULNERABLE_MS = 3000
+JUGADOR_REGEN_ESPERA_MS = 3000   # sin recibir daño durante tanto, la regeneración empieza a curar
 CONTACTO_COOLDOWN_MS = 2000  # daño por contacto cuerpo a cuerpo (por enemigo)
 
 # --- Balance de daño (números reales) ---
@@ -80,19 +92,12 @@ DANIO_JEFE_NORMAL = 20
 DANIO_JEFE_RAPIDA = 10
 
 # Velocidad de las balas enemigas (px/frame-a-60fps)
-VEL_BALA_TIPO2 = 4
-VEL_BALA_TIPO3 = 7
+VEL_BALA_TIPO2 = 5
+VEL_BALA_TIPO3 = 6
 VEL_JEFE_NORMAL = 7
 VEL_JEFE_RAPIDA = 4
 
-# --- Escalado de salud por nivel (lineal, no exponencial) ---
-# salud = salud_base * (1 + FACTOR * (nivel - 1)), redondeada a múltiplos de
-# `SALUD_PASO_NIVEL`. Ese redondeo es herencia de cuando la salud eran "puntos"
-# (así el juego no cambió al pasar a números reales) y desaparece cuando la
-# dificultad pase a tablas por nivel.
-SALUD_PASO_NIVEL = 10
-DIFICULTAD_FACTOR_ENEMIGO = 0.5
-DIFICULTAD_FACTOR_JEFE = 0.6
+# (La vida y el daño de los enemigos por nivel están en `escalado.py`.)
 
 # --- Hitboxes circulares (radio en px). Sprites: jugador 50, enemigo 48,
 #     jefe 200, bala jugador 18, bala enemiga 24. ---

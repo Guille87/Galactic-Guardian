@@ -58,8 +58,10 @@ Gracias por tu interés. El proyecto es pequeño; estas son las convenciones.
 El patrón completo está en [CLAUDE.md](CLAUDE.md). En resumen:
 
 - **Enemigo**: una clase en `src/entities/enemies.py` que herede de `EnemigoBase`.
-  Sobrescribe `FACTOR_NIVEL` si escala distinto, e implementa
-  `disparo_enemigo(ahora, rm, nombre_bala)` si dispara. Ponle `RECURSO` (el
+  Dale su `SALUD_BASE` (la vida en el nivel 1; `src/core/escalado.py` la
+  multiplica por nivel) e implementa
+  `disparo_enemigo(ahora, rm, nombre_bala)` si dispara (usa
+  `self.danio_escalado(...)` para el daño de la bala). Ponle `RECURSO` (el
   nombre lógico de su sprite), añade ese sprite a `config.RECURSOS` y
   colócalo en las `Fase` de los niveles que quieras en `src/core/niveles.py`.
 - **Ítem**: añade el efecto a `Item.EFECTOS` (`src/entities/items.py`), el tipo a
@@ -99,6 +101,21 @@ En una Release, `build.yml` compila y sube el `.zip` y el `-setup.exe`.
 
 En la versión compilada, `config.ini` y las puntuaciones se guardan en
 `%APPDATA%\GalacticGuardian` (no junto al `.exe`).
+
+## Herramienta de balance
+
+`tools/balance.py` es un script de desarrollo (no forma parte del juego) que estima
+la dificultad de la campaña y la economía a partir de los datos reales del juego:
+
+```bash
+python tools/balance.py                  # informe del juego tal como está
+python tools/balance.py --perfil todos   # con los tres perfiles de jugador
+python tools/balance.py --niveles        # detalle por fase de cada nivel
+```
+
+Es un modelo analítico, no una simulación: sirve como brújula para fijar la
+curva de dificultad y el precio de las mejoras, y los números definitivos se
+afinan jugando. Si cambias vida, daño, niveles o el árbol, vuelve a correrlo.
 
 ## Publicar una versión
 

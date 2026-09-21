@@ -12,13 +12,27 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
         "tamano": (50, 50),
         "salud_max": 50,
         "vidas_init": 3,
+        "vel_base": 5,             # velocidad al empezar (px/frame-a-60fps)
         "vel_max": 6,
-        "cadencia_max": 150,
+        "disparos_base": 4.0,      # disparos por segundo al empezar
+        "disparos_max": 8.0,
+        "balas_base": 1,           # balas por disparo al empezar (2 = doble, 3 = triple)
+        "balas_max": 3,
         "danio_base": 10,          # daño de tu bala al empezar
         "danio_max": 30
     }
 
     destello_constante = None   # halo de invulnerabilidad en pantalla (lo crea `EffectManager`)
+
+    # Separación horizontal (px) de cada bala según cuántas se disparan a la vez
+    # Dónde nace cada bala respecto al centro de la nave, (dx, dy) con dy desde el borde superior:
+    # una sale del morro; con dos salen de los cañones de las alas (a ±20 px, algo más atrasados
+    # que el morro); con tres, las de los cañones y la del morro.
+    ORIGENES_BALAS = {
+        1: ((0, 10),),
+        2: ((-20, 23), (20, 23)),
+        3: ((-20, 23), (0, 10), (20, 23)),
+    }
 
     def __init__(self, imagen, pantalla_ancho, pantalla_alto, bonus=None):
         super().__init__()
@@ -51,13 +65,15 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
         self.vidas = self.CONFIG["vidas_init"] + b.vidas_extra
         self.salud_maxima = self.CONFIG["salud_max"] + b.salud_extra
         self.salud = self.salud_maxima
-        self.velocidad = min(self.CONFIG["vel_max"], 4 + b.velocidad_extra)
+        self.velocidad = min(self.CONFIG["vel_max"], self.CONFIG["vel_base"] + b.velocidad_extra)
+        self.regen_s = b.regen_s
+        self.ultimo_dano = -settings.JUGADOR_REGEN_ESPERA_MS   # (reloj de juego del último golpe recibido)
         self.danio = min(self.CONFIG["danio_max"], self.CONFIG["danio_base"] + b.danio_extra)
 
         # 3. Sistema de Armas
-        self.cadencia_disparo = max(self.CONFIG["cadencia_max"], 350 - b.cadencia_menos_ms)
+        self.disparos_s = min(self.CONFIG["disparos_max"], self.CONFIG["disparos_base"] + b.disparos_extra)
+        self.balas_por_disparo = min(self.CONFIG["balas_max"], self.CONFIG["balas_base"] + b.balas_extra)
         self.ultimo_disparo = 0
-        self.tipo_disparo = b.disparo_inicial  # simple, doble, triple
 
         # 4. Estado Físico
         self.terminar_invulnerabilidad()
@@ -89,8 +105,9 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
         return self.CONFIG["vel_max"]
 
     @property
-    def cadencia_disparo_maxima(self):
-        return self.CONFIG["cadencia_max"]
+    def cadencia_disparo(self):
+        """Milisegundos entre disparos (lo que se tarda en poder volver a disparar)."""
+        return 1000 / self.disparos_s
 
     def mover(self, teclas, pantalla, dt, mapa_teclas=None):
         """Mueve al jugador según las teclas presionadas (independiente de FPS).
@@ -129,30 +146,22 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
 
     def disparar(self, tiempo_actual, imagen_bala):
         """Lógica de control de tiempo para disparar."""
-        if tiempo_actual - self.ultimo_disparo > self.cadencia_disparo:
+        # (1e-6: a 60 FPS, 4 disparos/s son justo 15 fotogramas y la suma de tiempos en
+        # coma flotante no debe hacer que cada disparo se retrase un fotograma)
+        if tiempo_actual - self.ultimo_disparo >= self.cadencia_disparo - 1e-6:
             self.ultimo_disparo = tiempo_actual
             return self._generar_balas(imagen_bala)
         return []
 
     def _generar_balas(self, imagen_bala):
-        """Crea las instancias de balas según el power-up actual.
+        """Crea las balas del disparo: 1, 2 o 3 según `balas_por_disparo`.
 
         `imagen_bala` es la `Surface` ya escalada y orientada (cacheada por el
         ResourceManager)."""
         balas = []
 
-        pos_x = self.rect.centerx
-        pos_y = self.rect.top + 10
-
-        if self.tipo_disparo == "triple":
-            offsets = [-15, 0, 15]
-        elif self.tipo_disparo == "doble":
-            offsets = [-10, 10]
-        else:
-            offsets = [0]
-
-        for offset in offsets:
-            balas.append(Bala(imagen_bala, pos_x + offset, pos_y, self.danio))
+        for dx, dy in self.ORIGENES_BALAS[self.balas_por_disparo]:
+            balas.append(Bala(imagen_bala, self.rect.centerx + dx, self.rect.top + dy, self.danio))
 
         return balas
 
@@ -180,6 +189,15 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
         if self.invulnerable and tiempo_juego > self.tiempo_invulnerable:
             self.terminar_invulnerabilidad()
 
+        # Regeneración (mejora de Defensa): tras `JUGADOR_REGEN_ESPERA_MS` sin recibir daño
+        if (self.regen_s and 0 < self.salud < self.salud_maxima
+                and tiempo_juego - self.ultimo_dano >= settings.JUGADOR_REGEN_ESPERA_MS):
+            self.salud = min(self.salud_maxima, self.salud + self.regen_s * dt)
+
+    def marcar_golpe(self, tiempo_juego):
+        """Anota que se acaba de recibir daño (reinicia la espera de la regeneración)."""
+        self.ultimo_dano = tiempo_juego
+
     def terminar_invulnerabilidad(self):
         """Quita la invulnerabilidad **y** su halo. Siempre juntas: si el flag se
         apaga sin retirar el sprite, `update` ya no lo retira nunca (solo mira el
@@ -193,11 +211,10 @@ class Jugador(pygame.sprite.Sprite, MovimientoSubpixel):
 
     def obtener_cadencia_visual(self):
         """
-        Convierte la cadencia (ms) en disparos por segundo para la UI.
-        Ejemplo: 250 ms -> 4.0 disparos/seg.
+        Disparos por segundo, para la UI (ejemplo: 4.0).
         """
-        return round(1000 / self.cadencia_disparo, 1)
+        return round(self.disparos_s, 1)
 
     def obtener_cadencia_max_visual(self):
         """Devuelve el límite máximo de disparos por segundo."""
-        return round(1000 / self.CONFIG["cadencia_max"], 1)
+        return float(self.CONFIG["disparos_max"])

@@ -1,3 +1,5 @@
+import math
+
 import pygame
 
 from src.core import settings
@@ -7,6 +9,9 @@ from src.core.i18n import t
 class UIManager:
     """Capa Vista: HUD y overlays de texto. Recibe el `Juego` completo por diseño
     (solo lo lee); ver auditoría, item 14."""
+
+    SALUD_BAJA = 0.3                 # por debajo de esta fracción la salud se pinta en rojo
+    COLOR_SALUD_BAJA = (255, 90, 90)
 
     def __init__(self, juego):
         self.juego = juego
@@ -58,6 +63,18 @@ class UIManager:
         # Vidas arriba a la izquierda
         txt_vidas = self.fuente_pequena.render(t("hud.vidas", n=self.juego.jugador.vidas), True, color)
         pantalla.blit(txt_vidas, (20, 20))
+
+        # Salud en cifras, bajo las vidas: rojo cuando queda poca
+        jugador = self.juego.jugador
+        salud = math.ceil(max(0, jugador.salud))
+        if self.juego.pausado:
+            color_salud = color
+        elif salud <= jugador.salud_maxima * self.SALUD_BAJA:
+            color_salud = self.COLOR_SALUD_BAJA
+        else:
+            color_salud = self.COLOR_TEXTO
+        txt_salud = self.fuente_pequena.render(t("hud.salud", n=salud, max=jugador.salud_maxima), True, color_salud)
+        pantalla.blit(txt_salud, (20, 38))
 
     def _dibujar_combo(self, pantalla, y, pausado):
         """"COMBO ×n" con una barrita hacia el siguiente escalón. En ×1 no se
@@ -124,28 +141,33 @@ class UIManager:
         pygame.draw.rect(pantalla, color, (bx, by, llenado, alto))
         pygame.draw.rect(pantalla, self.COLOR_BORDE, (bx, by, ancho, alto), 1)
 
-    # Píxeles de la barra de salud bajo la nave por punto de salud máxima: 50 de salud
-    # ocupan 48 px (lo que ocupaban los cinco puntitos de antes) y más salud alarga la barra.
-    PX_POR_PUNTO_DE_SALUD = 0.96
-    SALUD_POR_MARCA = 10          # una marca oscura cada tantos puntos de salud
+    # Barra de salud bajo la nave: siempre del mismo ancho (más salud máxima no la alarga: con
+    # el árbol entero eran 100 y se salía por los bordes), con marcas oscuras que la parten en
+    # tramos de `SALUD_POR_MARCA` de salud como mucho `MARCAS_MAX` marcas, y siempre entera dentro
+    # de la pantalla aunque la nave esté pegada al borde.
+    ANCHO_BARRA_SALUD = 48
+    SALUD_POR_MARCA = 10          # una marca oscura cada tantos puntos de salud...
+    MARCAS_MAX = 4                # ...pero nunca más de tantas marcas
+    MARGEN_BARRA_SALUD = 2        # separación mínima con el borde de la pantalla
 
     def _dibujar_indicador_salud_nave(self, pantalla):
         """Barra de salud directamente bajo la nave del jugador."""
         jugador = self.juego.jugador
-        ancho = max(24, round(jugador.salud_maxima * self.PX_POR_PUNTO_DE_SALUD))
+        ancho = self.ANCHO_BARRA_SALUD
         x = jugador.rect.centerx - ancho // 2
+        x = max(self.MARGEN_BARRA_SALUD, min(self.juego.pantalla_ancho - self.MARGEN_BARRA_SALUD - ancho, x))
         y = jugador.rect.bottom + 12
         alto = 6
 
         pygame.draw.rect(pantalla, (60, 60, 60), (x, y, ancho, alto))
         llenado = round(ancho * max(0, jugador.salud) / jugador.salud_maxima)
         pygame.draw.rect(pantalla, (0, 255, 100), (x, y, llenado, alto))
-        # Marcas oscuras cada 10 puntos de salud (lo que quita un impacto normal)
-        marca = self.SALUD_POR_MARCA
-        while marca < jugador.salud_maxima:
-            px = x + round(ancho * marca / jugador.salud_maxima)
+        # Marcas oscuras: una cada 10 de salud (lo que quita un impacto normal), hasta un máximo
+        marcas = min(self.MARCAS_MAX, jugador.salud_maxima // self.SALUD_POR_MARCA - 1)
+        tramos = marcas + 1
+        for i in range(1, tramos):
+            px = x + round(ancho * i / tramos)
             pygame.draw.line(pantalla, (20, 20, 20), (px, y), (px, y + alto - 1))
-            marca += self.SALUD_POR_MARCA
 
     def _dibujar_barra_salud_jefe(self, pantalla):
         """Barra de salud cinemática para el jefe."""

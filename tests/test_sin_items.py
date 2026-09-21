@@ -9,6 +9,7 @@ from src.core import config, mejoras, settings, sin_fin
 from src.core.engine import Juego
 from src.core.mejoras import calcular_bonus
 from src.entities.enemies import EnemigoBase, EnemigoTipo1, Jefe
+from src.entities.player import Jugador
 
 DT60 = 1.0 / 60.0
 
@@ -96,10 +97,11 @@ def test_la_curacion_escala_con_la_salud_maxima(rm, audio, scoreboard, progresio
     for id_ in ("defensa_1", "defensa_2", "defensa_3"):
         progresion.comprar(id_)
     j = Juego(pygame.display.get_surface(), audio, scoreboard, rm, modo=settings.MODO_SIN_FIN, progresion=progresion)
-    assert j.jugador.salud_maxima == 70
+    maxima = j.jugador.salud_maxima
+    assert maxima > Jugador.CONFIG["salud_max"]                   # con la mejora, más que la base
     j.jugador.salud = 1
     j._avanzar_oleada()
-    assert j.jugador.salud == 1 + math.ceil(settings.SIN_FIN_CURACION_OLEADA * 70)
+    assert j.jugador.salud == 1 + math.ceil(settings.SIN_FIN_CURACION_OLEADA * maxima)
 
 
 def test_la_campana_sigue_curando_al_pasar_de_nivel(juego):
@@ -111,30 +113,30 @@ def test_la_campana_sigue_curando_al_pasar_de_nivel(juego):
 
 # --- "Botín II" sustituye a "Suerte" -----------------------------------------
 
-def test_la_tercera_mejora_de_utilidad_es_ahora_otro_botin():
-    m = mejoras.POR_ID["utilidad_3"]
-    assert m.efecto == {"monedas_pct": 0.25} and m.requiere == "utilidad_2" and m.coste == 300
+def test_botin_ii_es_la_quinta_de_utilidad_y_no_queda_rastro_de_suerte():
+    m = mejoras.POR_ID["utilidad_5"]
+    assert m.efecto == {"monedas_pct": 0.25} and m.requiere == "utilidad_4"
     assert not hasattr(mejoras.Bonus(), "probabilidad_item")
 
 
 def test_botin_i_y_ii_suman_un_50_por_ciento(rm, audio, scoreboard, progresion):
     progresion.ingresar(10_000)
-    for id_ in ("utilidad_1", "utilidad_2", "utilidad_3"):
+    for id_ in ("utilidad_1", "utilidad_2", "utilidad_3", "utilidad_4", "utilidad_5"):
         assert progresion.comprar(id_) == "ok"
     progresion.monedas = 0
     j = Juego(pygame.display.get_surface(), audio, scoreboard, rm, progresion=progresion)
-    j.puntuacion = 2000
+    j.puntuacion = 20 * settings.MONEDAS_PUNTOS
     j._cobrar_monedas()
     assert progresion.monedas == 30                               # 20 * 1,5
 
 
-def test_un_guardado_con_la_antigua_suerte_sigue_siendo_valido(tmp_path):
-    """El id `utilidad_3` se conserva: quien ya la tenía comprada no pierde nada."""
+def test_un_guardado_con_la_antigua_suerte_recupera_lo_que_costo(tmp_path):
+    """Con el árbol nuevo, lo comprado en el antiguo se devuelve entero (no se pierde nada)."""
     import json
     from src.core.progresion import Progresion
 
     ruta = tmp_path / "p.json"
     ruta.write_text(json.dumps({"version": 1, "monedas": 5, "mejoras": ["utilidad_1", "utilidad_2", "utilidad_3"]}))
     p = Progresion(ruta=str(ruta))
-    assert p.compradas == {"utilidad_1", "utilidad_2", "utilidad_3"} and p.monedas == 5
-    assert calcular_bonus(p.compradas).monedas_pct == pytest.approx(0.5)
+    assert p.compradas == set() and p.monedas == 5 + 100 + 200 + 300
+    assert calcular_bonus(p.compradas).monedas_pct == 0

@@ -16,7 +16,11 @@ import shutil
 
 from src.core import mejoras, paths
 
-VERSION_ARCHIVO = 1
+VERSION_ARCHIVO = 2
+
+# Lo que costaban las 12 mejoras de la versión 1 del archivo (el árbol de 4 nodos por
+# rama): al cambiar el árbol se devuelve lo gastado en ellas, sin perder nada.
+_COSTES_V1 = {f"{rama}_{n}": n * 100 for rama in ("ataque", "defensa", "utilidad") for n in (1, 2, 3, 4)}
 
 # Resultados de `comprar`
 OK = "ok"
@@ -122,6 +126,14 @@ class Progresion:
                 pass
             return
         self.monedas = max(0, monedas)
+        if datos.get("version", 1) < VERSION_ARCHIVO:
+            # Archivo de un árbol anterior: sus ids ya no significan lo mismo, así que se
+            # devuelven las monedas gastadas y se empieza con el árbol nuevo vacío.
+            self.monedas += sum(_COSTES_V1.get(i, 0) for i in ids if isinstance(i, str))
+            self.compradas = set()
+            print("Árbol de mejoras actualizado: se han devuelto las monedas gastadas en el anterior.")
+            self._guardar()
+            return
         # Solo mejoras que existen, y solo las alcanzables: una cuya anterior no
         # esté comprada (archivo editado a mano) se descarta y se devuelve su coste.
         self.compradas = {i for i in ids if isinstance(i, str) and i in mejoras.POR_ID}

@@ -12,7 +12,7 @@ La partida se divide en **oleadas** numeradas desde 1. Cada una es una
 
 No hay techo: el intervalo entre apariciones se estabiliza en `INTERVALO_MIN`,
 pero la vida de los enemigos y de los jefes sigue creciendo con el número de
-oleada (`FACTOR_NIVEL`, en la propia entidad) y la puntuación se multiplica por él.
+oleada (tablas de `escalado.py`, que siguen más allá del nivel 5) y la puntuación se multiplica por él.
 """
 
 import math
@@ -24,9 +24,9 @@ OLEADA_MS = 45000          # duración de una oleada normal
 JEFE_CADA = 5              # una de cada N oleadas es de jefe
 ESPERA_JEFE_MS = 3000      # margen entre el cambio de música y la aparición del jefe
 
-INTERVALO_INICIAL = (800, 1000)   # (mín, máx) ms entre apariciones en la oleada 1
+INTERVALO_INICIAL = (900, 1100)   # (mín, máx) ms entre apariciones en la oleada 1 (como el nivel 1)
 INTERVALO_PASO_MS = 100           # cuánto baja cada oleada, en cada extremo
-INTERVALO_MIN = (200, 200)        # suelo: el ritmo del último nivel de la campaña
+INTERVALO_MIN = (400, 600)        # suelo: el ritmo del último nivel de la campaña
 
 
 def es_oleada_de_jefe(oleada):
