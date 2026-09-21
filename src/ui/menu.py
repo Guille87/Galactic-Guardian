@@ -104,12 +104,16 @@ class MenuManager:
     """
 
     def __init__(self, pantalla, resource_manager, audio_manager, sistema_clasificacion,
-                 clasificacion_sin_fin=None, progresion=None):
+                 clasificacion_sin_fin=None, progresion=None, guardado=None):
         self.pantalla = pantalla
         self.rm = resource_manager
         self.am = audio_manager
         self.clasificacion = sistema_clasificacion
         self.clasificacion_sin_fin = clasificacion_sin_fin
+        # Campaña guardada (`guardado.Guardado`): si hay una, al elegir Campaña se pregunta si
+        # continuarla, elegir nivel o empezar de cero. Sin ella (la pausa) no se pregunta nada.
+        self.guardado = guardado
+        self.nivel_elegido = None     # nivel escogido en el diálogo de niveles (None = el guardado)
         # Monedas y mejoras (pantalla "Mejoras"); sin ella, una en memoria que no toca el disco
         self.progresion = progresion if progresion is not None else Progresion(persistir=False)
         self._aviso_mejoras = None              # (texto, instante en que caduca)
@@ -245,13 +249,9 @@ class MenuManager:
                         and self.btn_actualizar.clic_en_boton(event.pos):
                     self._pulsar_actualizar(info)
                 elif self.btn_jugar.clic_en_boton(event.pos):
-                    self.am.detener_musica("skyfire_theme")
-                    self.ejecutando = False
-                    self.resultado = "JUGAR"
+                    self._empezar(settings.MODO_CAMPANA)
                 elif self.btn_sin_fin.clic_en_boton(event.pos):
-                    self.am.detener_musica("skyfire_theme")
-                    self.ejecutando = False
-                    self.resultado = "JUGAR_SIN_FIN"
+                    self._empezar(settings.MODO_SIN_FIN)
                 elif self.btn_mejoras.clic_en_boton(event.pos):
                     self._abrir_mejoras()
                 elif self.btn_opciones.clic_en_boton(event.pos):
@@ -285,6 +285,118 @@ class MenuManager:
             txt_version.get_rect(bottomright=(settings.ANCHO - 8, settings.ALTO - 6)),
         )
         pygame.display.flip()
+
+    def _empezar(self, modo):
+        """Arranca la campaña o el sin fin. Si hay una campaña guardada, antes pregunta si
+        continuarla, elegir uno de los niveles ya alcanzados o empezar de cero (`Volver` deja el
+        menú como estaba). El sin fin no se guarda: siempre empieza directamente."""
+        self.nivel_elegido = None
+        if modo == settings.MODO_SIN_FIN:
+            resultado = "JUGAR_SIN_FIN"
+        elif self.guardado is None or not self.guardado.existe:
+            resultado = "JUGAR"
+        else:
+            resultado = self._elegir_como_empezar(self.guardado)
+        if resultado is None:
+            return
+        if resultado != "SALIR":
+            self.am.detener_musica("skyfire_theme")
+        self.ejecutando = False
+        self.resultado = resultado
+
+    def _elegir_como_empezar(self, guardado):
+        """Bucle de los diálogos de la campaña guardada. Devuelve el estado siguiente
+        (`"CONTINUAR"`, `"JUGAR"`, `"SALIR"`) o `None` si se vuelve al menú. Al elegir un nivel
+        deja su número en `self.nivel_elegido`."""
+        fondo = self.pantalla.copy()      # cada diálogo se dibuja sobre esto: si no, el oscurecido se acumula
+        while True:
+            self.pantalla.blit(fondo, (0, 0))
+            eleccion = self._dialogo_partida_guardada(guardado)
+            if eleccion == "ELEGIR":
+                self.pantalla.blit(fondo, (0, 0))
+                nivel = self._dialogo_elegir_nivel(guardado)
+                if nivel == "SALIR":
+                    return "SALIR"
+                if nivel is None:                 # Volver: otra vez el diálogo anterior
+                    continue
+                self.nivel_elegido = nivel
+                return "CONTINUAR"
+            return {"CONTINUAR": "CONTINUAR", "NUEVA": "JUGAR", "SALIR": "SALIR"}.get(eleccion)
+
+    def _dibujar_dialogo(self, rect, titulo, subtitulo=None):
+        """Fondo oscurecido, recuadro y título de los diálogos del menú."""
+        fondo_oscuro = pygame.Surface((settings.ANCHO, settings.ALTO))
+        fondo_oscuro.set_alpha(200)
+        fondo_oscuro.fill((0, 0, 0))
+        self.pantalla.blit(fondo_oscuro, (0, 0))
+        pygame.draw.rect(self.pantalla, (25, 25, 45), rect, border_radius=10)
+        pygame.draw.rect(self.pantalla, (200, 200, 220), rect, 2, border_radius=10)
+        img = self.font_estandar.render(titulo, True, (255, 255, 255))
+        self.pantalla.blit(img, img.get_rect(center=(rect.centerx, rect.top + 35)))
+        if subtitulo:
+            img = self.font_version.render(subtitulo, True, (210, 210, 220))
+            self.pantalla.blit(img, img.get_rect(center=(rect.centerx, rect.top + 70)))
+
+    def _esperar_clic(self, botones):
+        """Bucle bloqueante de un diálogo: devuelve el valor del botón pulsado, `None` con Esc y
+        `"SALIR"` al cerrar la ventana. `botones` es una lista de `(Boton, valor)`."""
+        while True:
+            self.clock.tick(settings.FPS)   # evita el busy-wait al 100 % de CPU
+            for evento in pygame.event.get():
+                if evento.type == pygame.QUIT:
+                    return "SALIR"
+                if evento.type == pygame.KEYDOWN and evento.key == pygame.K_ESCAPE:
+                    return None
+                if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
+                    for boton, valor in botones:
+                        if boton.clic_en_boton(evento.pos):
+                            return valor
+
+    def _dialogo_partida_guardada(self, guardado):
+        """Diálogo bloqueante de la campaña guardada. Devuelve `"CONTINUAR"`, `"ELEGIR"` (quiere
+        elegir nivel), `"NUEVA"`, `"SALIR"` (se cerró la ventana) o `None` (Volver / Esc)."""
+        cx = self.pantalla.get_rect().centerx
+        rect = pygame.Rect(50, 150, 500, 430)
+        botones = [
+            (Boton(t("menu.continuar_campana", n=guardado.nivel), (0, 160, 0), (255, 255, 255), cx, 280, 380, 50, 10),
+             "CONTINUAR"),
+            (Boton(t("menu.elegir_nivel"), (120, 60, 200), (255, 255, 255), cx, 345, 380, 50, 10), "ELEGIR"),
+            (Boton(t("menu.nueva_partida"), (170, 90, 0), (255, 255, 255), cx, 410, 380, 50, 10), "NUEVA"),
+            (Boton(t("comun.volver"), (0, 0, 200), (255, 255, 255), cx, 475, 380, 50, 10), None),
+        ]
+        if guardado.nivel <= 1:              # nada anterior que elegir
+            botones = [b for b in botones if b[1] != "ELEGIR"]
+            for i, (boton, _) in enumerate(botones):
+                boton.rect.centery = 280 + i * 65
+        self._dibujar_dialogo(rect, t("menu.partida_guardada"), t("menu.guardado_puntos", n=guardado.puntuacion))
+        aviso = self.font_mini.render(t("menu.nueva_borra"), True, (255, 200, 120))
+        self.pantalla.blit(aviso, aviso.get_rect(center=(cx, 545)))
+        for boton, _ in botones:
+            boton.dibujar(self.pantalla, self.font_estandar)
+        pygame.display.flip()
+        return self._esperar_clic(botones)
+
+    def _dialogo_elegir_nivel(self, guardado):
+        """Lista de niveles del 1 al guardado, para rejugar uno anterior. Devuelve su número,
+        `None` (Volver / Esc) o `"SALIR"`. El guardado no se toca: rejugar un nivel anterior no
+        lo hace retroceder."""
+        cx = self.pantalla.get_rect().centerx
+        niveles = range(1, guardado.nivel + 1)
+        rect = pygame.Rect(50, 130, 500, 120 + 60 * len(niveles) + 120)
+        botones = []
+        for i, n in enumerate(niveles):
+            clave = "menu.nivel_guardado" if n == guardado.nivel else "seleccion_nivel.nivel"
+            botones.append((Boton(t(clave, n=n), (0, 160, 0) if n == guardado.nivel else (50, 90, 160),
+                                  (255, 255, 255), cx, rect.top + 100 + i * 60, 380, 50, 10), n))
+        botones.append((Boton(t("comun.volver"), (0, 0, 200), (255, 255, 255), cx,
+                              rect.top + 100 + len(niveles) * 60 + 15, 380, 50, 10), None))
+        self._dibujar_dialogo(rect, t("seleccion_nivel.titulo"))
+        aviso = self.font_mini.render(t("menu.elegir_nivel_aviso"), True, (255, 200, 120))
+        self.pantalla.blit(aviso, aviso.get_rect(center=(cx, rect.bottom - 25)))
+        for boton, _ in botones:
+            boton.dibujar(self.pantalla, self.font_estandar)
+        pygame.display.flip()
+        return self._esperar_clic(botones)
 
     def _confirmar_salida(self):
         """Diálogo bloqueante "¿Seguro que quieres salir?". Devuelve True si
@@ -332,6 +444,7 @@ class MenuManager:
             "controles": dict(self.controles),
             "temblor": preferencias.temblor_activado(),
             "cifras_dano": preferencias.cifras_dano_activadas(),
+            "disparo_automatico": preferencias.disparo_automatico(),
         }
         self._preparar_ui_opciones()
 
@@ -347,6 +460,7 @@ class MenuManager:
         self.controles = dict(inst["controles"])
         preferencias.establecer_temblor(inst["temblor"])
         preferencias.establecer_cifras_dano(inst["cifras_dano"])
+        preferencias.establecer_disparo_automatico(inst["disparo_automatico"])
         if inst["idioma"] != i18n.idioma_actual():
             i18n.establecer_idioma(inst["idioma"])
             self._crear_botones()          # la UI de Opciones se rehace sola (`_idioma_ui`)
@@ -374,6 +488,7 @@ class MenuManager:
             self._actualizar_texto_control(accion)
         self._actualizar_boton_temblor()       # puede haberse cambiado desde otro `MenuManager`
         self._actualizar_boton_cifras()
+        self._actualizar_boton_disparo_auto()
         self._mostrar_pestana(self._pestana)   # la UI puede venir con otra pestaña a la vista
 
     def _descargando_actualizacion(self):
@@ -493,10 +608,12 @@ class MenuManager:
         ))
         self._botones_controles = {}   # acción -> UIButton
         self._acciones_por_boton = {}  # UIButton -> acción (inverso, para los eventos de clic)
-        filas = (("arriba", "abajo"), ("izquierda", "derecha"), ("disparar", "pausa"))
-        for fila, (accion_izq, accion_der) in enumerate(filas):
-            y = 245 + fila * 54
-            for accion, x in ((accion_izq, 50), (accion_der, 330)):
+        # Disposición como un mando: Arriba solo y centrado, Izquierda / Derecha a los lados,
+        # Abajo solo y centrado debajo, y después Disparar / Pausa.
+        filas = (("arriba",), ("izquierda", "derecha"), ("abajo",), ("disparar", "pausa"))
+        for fila, acciones in enumerate(filas):
+            y = 245 + fila * 54 + (16 if fila == 3 else 0)     # un respiro entre la cruz y Disparar / Pausa
+            for accion, x in zip(acciones, (190,) if len(acciones) == 1 else (50, 330)):
                 boton = pygame_gui.elements.UIButton(
                     relative_rect=pygame.Rect((x, y), (220, 44)),
                     text=self._texto_boton_control(accion), manager=self.ui_manager,
@@ -504,8 +621,19 @@ class MenuManager:
                 self._botones_controles[accion] = boton
                 self._acciones_por_boton[boton] = accion
                 self._elementos_pestana["controles"].append(boton)
+        # Disparo automático: la nave dispara sola (se aplica al instante; se guarda con "Guardar")
+        self.btn_disparo_auto = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((50, 505), (500, 44)), text="", manager=self.ui_manager,
+        )
+        self._elementos_pestana["controles"] += [
+            self.btn_disparo_auto,
+            pygame_gui.elements.UILabel(
+                relative_rect=pygame.Rect((50, 555), (500, 22)),
+                text=t("opciones.disparo_auto_ayuda"), manager=self.ui_manager,
+            ),
+        ]
         self.btn_restaurar_controles = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((50, 447), (300, 40)),
+            relative_rect=pygame.Rect((50, 595), (300, 40)),
             text=t("opciones.restaurar"), manager=self.ui_manager,
         )
         self._elementos_pestana["controles"].append(self.btn_restaurar_controles)
@@ -534,6 +662,7 @@ class MenuManager:
         ]
         self._actualizar_boton_temblor()
         self._actualizar_boton_cifras()
+        self._actualizar_boton_disparo_auto()
 
         # Botones comunes (siempre visibles)
         self.btn_guardar = pygame_gui.elements.UIButton(
@@ -573,6 +702,16 @@ class MenuManager:
             self.btn_temblor.select()
         else:
             self.btn_temblor.unselect()
+
+    def _actualizar_boton_disparo_auto(self):
+        """Texto y marca del interruptor del disparo automático (pestaña Controles)."""
+        activo = preferencias.disparo_automatico()
+        estado = t("comun.si") if activo else t("comun.no")
+        self.btn_disparo_auto.set_text(t("opciones.disparo_auto", estado=estado))
+        if activo:
+            self.btn_disparo_auto.select()
+        else:
+            self.btn_disparo_auto.unselect()
 
     def _actualizar_boton_cifras(self):
         """Texto y marca del interruptor de las cifras flotantes de daño."""
@@ -731,6 +870,10 @@ class MenuManager:
                 preferencias.establecer_temblor(not preferencias.temblor_activado())
                 self._actualizar_boton_temblor()
 
+            elif event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element == self.btn_disparo_auto:
+                preferencias.establecer_disparo_automatico(not preferencias.disparo_automatico())
+                self._actualizar_boton_disparo_auto()
+
             elif event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element == self.btn_cifras:
                 preferencias.establecer_cifras_dano(not preferencias.cifras_dano_activadas())
                 self._actualizar_boton_cifras()
@@ -748,7 +891,8 @@ class MenuManager:
                     config.guardar_configuracion(self.vol_musica, self.vol_efectos, self.controles,
                                                  idioma=i18n.idioma_actual(),
                                                  temblor=preferencias.temblor_activado(),
-                                                 cifras_dano=preferencias.cifras_dano_activadas())
+                                                 cifras_dano=preferencias.cifras_dano_activadas(),
+                                                 disparo_automatico=preferencias.disparo_automatico())
                     self.estado = "PRINCIPAL"
                 elif event.ui_element == self.btn_volver:
                     self._deshacer_cambios()
@@ -785,7 +929,7 @@ class MenuManager:
         if (self._pestana == "controles" and self._aviso_conflicto
                 and time.time() < self._aviso_conflicto_hasta):
             aviso = self.font_version.render(self._aviso_conflicto, True, (255, 120, 120))
-            self.pantalla.blit(aviso, (50, 497))
+            self.pantalla.blit(aviso, (50, 476))
 
         self.ui_manager.draw_ui(self.pantalla)
         pygame.display.flip()

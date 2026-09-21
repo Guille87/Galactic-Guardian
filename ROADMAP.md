@@ -61,6 +61,13 @@ está en [`CHANGELOG.md`](CHANGELOG.md).
 - **Hojas de sprites** — una animación puede ser una sola imagen con los
   fotogramas en una rejilla (`config.HOJAS`, `load_spritesheet` / `get_frames`);
   la explosión ya se carga así. Ver `[0.9.0]`.
+- **Guardado de partida** — punto de control del último nivel de la campaña alcanzado, con su
+  puntuación: *Continuar* / *Elegir nivel* (rejugar uno anterior) / *Nueva partida* al pulsar
+  Campaña; se apunta al terminar cada nivel y se conserva aunque pierdas o cierres el juego
+  (`src/core/guardado.py`). No guarda a mitad de nivel, y el sin fin no se guarda (solo asegura
+  las monedas). Ver `[Unreleased]`.
+- **Disparo automático** — opción en Opciones > Controles para que la nave dispare sola. Ver
+  `[Unreleased]`.
 - **Reequilibrio completo** — todo el poder de la nave sale del árbol de mejoras:
   ítems de la partida fuera, salud y daño en números reales (bala 10, salud 50),
   nave base nueva (velocidad 5, 4 disparos/s), árbol de **30 mejoras** (diez por
@@ -98,10 +105,6 @@ mucho algún icono suelto; lo que dependía de arte nuevo está en "Descartado".
 
 ## Backlog — con intención clara de hacerse
 
-- **Guardado de partida**: no a mitad de nivel, sino "partida en curso" que se
-  pueda cerrar y continuar más tarde — con autoguardado de seguridad en puntos
-  concretos (cambio de nivel, por ejemplo) para no perder progreso si el juego
-  crashea o se cierra sin querer.
 - **Partículas de impacto** (hoy solo hay explosión al morir, no al golpear) —
   dibujadas por código, sin assets.
 - **Intro / transiciones entre niveles** con narrativa ligera — el autor revisa

@@ -1,6 +1,6 @@
 import pygame
 
-from src.core import config
+from src.core import config, preferencias
 from src.core.i18n import t
 from src.ui.components.button import Boton
 
@@ -62,8 +62,9 @@ class InputHandler:
                     self.juego.disparando = False
 
         # Si no está pausado ni en la transición de fin de nivel y la bandera
-        # está activa, dispara.
-        if not self.juego.pausado and not self.juego.transicion_activa and self.juego.disparando:
+        # está activa (o el disparo automático está encendido), dispara.
+        if (not self.juego.pausado and not self.juego.transicion_activa
+                and (self.juego.disparando or preferencias.disparo_automatico())):
             self.juego.disparar()
 
         return True
