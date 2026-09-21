@@ -164,13 +164,69 @@ def test_con_la_nave_invulnerable_no_sale_cifra(juego, rm):
     assert not _cifras(juego)
 
 
-def test_el_choque_con_un_enemigo_saca_la_cifra_de_la_nave(juego, rm):
-    juego.jugador.invulnerable = False
+def _chocar(juego, rm):
     e = _enemigo_en(juego, rm, 0, 0)
     e.rect.center = juego.jugador.rect.center
     juego.collision_manager.actualizar(juego.tiempo_juego + settings.CONTACTO_COOLDOWN_MS + 1)
+    return e
+
+
+def test_el_choque_con_un_enemigo_saca_la_cifra_de_la_nave_y_la_del_enemigo(juego, rm):
+    juego.jugador.invulnerable = False
+    e = _chocar(juego, rm)
+    por_color = {c.color: c.valor for c in _cifras(juego)}
+    assert por_color[juego.effect_manager.COLOR_CIFRA_NAVE] == e.danio_escalado(settings.DANIO_CONTACTO)
+    assert por_color[juego.effect_manager.COLOR_CIFRA_ENEMIGO] == settings.DANIO_EMBESTIDA
+
+
+def test_con_la_nave_invulnerable_el_enemigo_que_embiste_muestra_su_dano_y_la_nave_no(juego, rm):
+    juego.jugador.invulnerable = True
+    e = _chocar(juego, rm)
     (c,) = _cifras(juego)
-    assert c.valor == e.danio_escalado(settings.DANIO_CONTACTO)
+    assert c.color == juego.effect_manager.COLOR_CIFRA_ENEMIGO and c.valor == settings.DANIO_EMBESTIDA
+    assert e.salud == e.salud_maxima - settings.DANIO_EMBESTIDA
+
+
+# --- El pop de entrada ----------------------------------------------------------------
+
+def test_la_cifra_nace_pequena_se_pasa_de_tamano_y_se_asienta():
+    c = CifraFlotante((300, 300), 30, (255, 255, 255))
+    base = c._base.get_width()
+    nacer = c.image.get_width()
+    assert nacer < base                                             # nace más pequeña
+    c.update(settings.CIFRA_POP_MS * 0.6 / 1000)                    # el punto de máximo
+    assert c.image.get_width() > base                               # se pasa de tamaño
+    c.update(settings.CIFRA_POP_MS / 1000)                          # pop terminado
+    assert c.image.get_width() == base                              # y se asienta en su tamaño
+
+
+def test_el_pop_no_mueve_el_centro_de_la_cifra():
+    c = CifraFlotante((300, 300), 30, (255, 255, 255))
+    x = c.rect.centerx
+    for _ in range(12):
+        c.update(1 / 60)
+        assert c.rect.centerx == x
+
+
+def test_sumar_repite_un_pop_suave():
+    c = CifraFlotante((300, 300), 10, (255, 255, 255))
+    c.update(settings.CIFRA_POP_MS / 1000 * 2)                      # pop ya terminado
+    base = c._base.get_width()
+    assert c.image.get_width() == base
+    c.sumar(10)
+    assert c.image.get_width() < c._base.get_width()                # vuelve a arrancar pequeña...
+    assert c.image.get_width() > c._base.get_width() * settings.CIFRA_POP_INICIO   # ...pero menos que la primera vez
+
+
+def test_la_cifra_dura_lo_que_dice_el_ajuste_aunque_haya_pop():
+    grupo = pygame.sprite.Group()
+    c = CifraFlotante((300, 300), 10, (255, 255, 255))
+    grupo.add(c)
+    for _ in range(int(settings.CIFRA_DURACION_MS / 1000 * 60) - 2):
+        c.update(1 / 60)
+    assert c.alive()
+    c.update(0.1)
+    assert not c.alive()
 
 
 def test_una_partida_larga_con_todo_el_arbol_dibuja_sin_fallar(juego):
@@ -272,3 +328,58 @@ def test_guardar_sin_tocarlo_conserva_lo_que_habia_y_no_pisa_el_temblor(menu, mo
     menu._abrir_opciones()
     _pulsar(menu, menu.btn_guardar)
     assert config.cargar_cifras_dano(ruta=ruta) is False and config.cargar_temblor(ruta=ruta) is False
+
+
+# --- La salud en cifras (HUD) --------------------------------------------------------------
+
+def _textos_hud(juego, monkeypatch):
+    frases = []
+    original = juego.ui_manager.fuente_pequena
+
+    class _Espia:
+        def render(self, texto, *a):
+            frases.append(texto)
+            return original.render(texto, *a)
+
+        def __getattr__(self, nombre):
+            return getattr(original, nombre)
+
+    monkeypatch.setattr(juego.ui_manager, "fuente_pequena", _Espia())
+    juego.dibujar()
+    return frases
+
+
+def test_el_hud_muestra_la_salud_en_cifras(juego, monkeypatch):
+    assert "SALUD: 50/50" in _textos_hud(juego, monkeypatch)
+
+
+def test_la_salud_del_hud_sigue_los_impactos_y_la_salud_maxima(juego, monkeypatch):
+    juego.jugador.salud_maxima = 150
+    juego.jugador.salud = 87
+    assert "SALUD: 87/150" in _textos_hud(juego, monkeypatch)
+
+
+def test_la_salud_con_decimales_por_la_regeneracion_se_redondea_hacia_arriba(juego, monkeypatch):
+    juego.jugador.salud = 12.2
+    assert "SALUD: 13/50" in _textos_hud(juego, monkeypatch)
+
+
+def test_la_salud_nunca_se_muestra_negativa(juego, monkeypatch):
+    juego.jugador.salud = -5
+    assert "SALUD: 0/50" in _textos_hud(juego, monkeypatch)
+
+
+def test_la_salud_baja_se_pinta_en_rojo(juego):
+    ui = juego.ui_manager
+    juego.jugador.salud = 10                                      # 20 %: por debajo del 30 %
+    juego.pantalla.fill((0, 0, 0))
+    juego.dibujar()
+    zona = juego.pantalla.subsurface((20, 38, 130, 16))
+    rojos = sum(1 for x in range(130) for y in range(16) if tuple(zona.get_at((x, y)))[:3] == ui.COLOR_SALUD_BAJA)
+    assert rojos > 20
+
+
+def test_el_texto_de_salud_esta_traducido():
+    from src.core import i18n
+    i18n.establecer_idioma("en")
+    assert i18n.t("hud.salud", n=5, max=50) == "HEALTH: 5/50"

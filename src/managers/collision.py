@@ -76,6 +76,8 @@ class CollisionManager:
                 self.enemigos_golpeados[enemigo] = ahora
                 self.reglas.manejar_impacto_jugador()
                 enemigo.salud -= settings.DANIO_EMBESTIDA
+                # también con la nave invulnerable: el enemigo se lleva el golpe igualmente
+                self.efectos.crear_cifra_dano(enemigo, enemigo.rect.midtop, settings.DANIO_EMBESTIDA)
 
             if enemigo.salud <= 0:
                 self._eliminar_enemigo(enemigo)

@@ -1,3 +1,5 @@
+import math
+
 import pygame
 
 from src.core import settings
@@ -7,6 +9,9 @@ from src.core.i18n import t
 class UIManager:
     """Capa Vista: HUD y overlays de texto. Recibe el `Juego` completo por diseño
     (solo lo lee); ver auditoría, item 14."""
+
+    SALUD_BAJA = 0.3                 # por debajo de esta fracción la salud se pinta en rojo
+    COLOR_SALUD_BAJA = (255, 90, 90)
 
     def __init__(self, juego):
         self.juego = juego
@@ -58,6 +63,18 @@ class UIManager:
         # Vidas arriba a la izquierda
         txt_vidas = self.fuente_pequena.render(t("hud.vidas", n=self.juego.jugador.vidas), True, color)
         pantalla.blit(txt_vidas, (20, 20))
+
+        # Salud en cifras, bajo las vidas: rojo cuando queda poca
+        jugador = self.juego.jugador
+        salud = math.ceil(max(0, jugador.salud))
+        if self.juego.pausado:
+            color_salud = color
+        elif salud <= jugador.salud_maxima * self.SALUD_BAJA:
+            color_salud = self.COLOR_SALUD_BAJA
+        else:
+            color_salud = self.COLOR_TEXTO
+        txt_salud = self.fuente_pequena.render(t("hud.salud", n=salud, max=jugador.salud_maxima), True, color_salud)
+        pantalla.blit(txt_salud, (20, 38))
 
     def _dibujar_combo(self, pantalla, y, pausado):
         """"COMBO ×n" con una barrita hacia el siguiente escalón. En ×1 no se

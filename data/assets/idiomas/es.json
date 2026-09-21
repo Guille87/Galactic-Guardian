@@ -68,6 +68,7 @@
   "victoria.nivel": "Nivel: {n}",
   "victoria.jugar_de_nuevo": "Jugar de nuevo",
   "hud.vidas": "VIDAS: {n}",
+  "hud.salud": "SALUD: {n}/{max}",
   "hud.oleada": "OLEADA {n}",
   "hud.combo": "COMBO x{n}",
   "hud.ataque": "Ataque",

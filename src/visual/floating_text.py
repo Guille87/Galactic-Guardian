@@ -9,6 +9,9 @@ class CifraFlotante(pygame.sprite.Sprite):
     Vive en `entity_manager.efectos`: se mueve con el `dt` del juego, así que se congela
     en pausa como el resto de efectos. Se dibuja con un borde oscuro para leerse sobre
     cualquier fondo. El texto se renderiza una vez (y otra si se le suma daño).
+
+    Entra con un "pop" (nace pequeña, se pasa de tamaño y se asienta en `CIFRA_POP_MS`) y
+    termina desvaneciéndose. Cada daño que se le suma repite un pop suave, como un contador.
     """
 
     _fuentes = {}
@@ -19,6 +22,8 @@ class CifraFlotante(pygame.sprite.Sprite):
         self.color = color
         self.tamano = tamano
         self.edad_ms = 0.0
+        self._pop_ms = 0.0                                   # tiempo desde el último pop
+        self._pop_inicio = settings.CIFRA_POP_INICIO
         self._x = float(centro[0])
         self._y = float(centro[1])
         self._dibujar()
@@ -39,12 +44,32 @@ class CifraFlotante(pygame.sprite.Sprite):
         for dx, dy in ((0, 1), (2, 1), (1, 0), (1, 2)):      # contorno de 1 px
             superficie.blit(borde, (dx, dy))
         superficie.blit(frente, (1, 1))
-        self.image = superficie
+        self._base = superficie
+        self._aplicar_escala()
+
+    def _escala(self):
+        """Escala del pop en este instante: crece hasta `CIFRA_POP_MAX` y se asienta en 1."""
+        p = self._pop_ms / settings.CIFRA_POP_MS
+        if p >= 1:
+            return 1.0
+        if p < 0.6:
+            return self._pop_inicio + (settings.CIFRA_POP_MAX - self._pop_inicio) * (p / 0.6)
+        return settings.CIFRA_POP_MAX - (settings.CIFRA_POP_MAX - 1.0) * ((p - 0.6) / 0.4)
+
+    def _aplicar_escala(self):
+        escala = self._escala()
+        if escala == 1.0:
+            self.image = self._base
+        else:
+            w, h = self._base.get_size()
+            self.image = pygame.transform.smoothscale(self._base, (max(1, round(w * escala)), max(1, round(h * escala))))
         self.rect = self.image.get_rect(center=(round(self._x), round(self._y)))
 
     def sumar(self, cantidad):
-        """Suma daño a una cifra recién creada (varias balas en el mismo golpe)."""
+        """Suma daño a una cifra recién creada (varias balas en el mismo golpe) y repite un pop suave."""
         self.valor += int(cantidad)
+        self._pop_ms = 0.0
+        self._pop_inicio = 0.85
         self._dibujar()
 
     def update(self, dt=0):
@@ -53,7 +78,8 @@ class CifraFlotante(pygame.sprite.Sprite):
             self.kill()
             return
         self._y -= settings.CIFRA_VELOCIDAD * dt
-        self.rect.center = (round(self._x), round(self._y))
+        self._pop_ms += dt * 1000
+        self._aplicar_escala()
         # opaca la primera mitad, luego se desvanece
         mitad = settings.CIFRA_DURACION_MS / 2
         if self.edad_ms > mitad:
