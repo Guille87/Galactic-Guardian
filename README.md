@@ -16,7 +16,7 @@ jefe de cada nivel.
 - **Progresión:** gana monedas jugando y gástalas en un árbol de 30 mejoras permanentes (ataque, defensa y utilidad) desde el menú: disparo doble y triple, más daño y cadencia, regeneración, botín... Toda la potencia de la nave sale de ahí.
 - **Cifras de daño:** cada impacto muestra el daño que hace (y el que recibes); se pueden apagar en Opciones.
 - **Combo de puntuación:** cada baja seguida sin que te den sube el multiplicador hasta ×5; el primer golpe lo rompe.
-- **Guardado de partida:** el juego apunta el último nivel (o oleada) al que has llegado y puedes continuar desde ahí aunque pierdas o cierres el juego.
+- **Guardado de partida:** la campaña apunta el último nivel al que has llegado y puedes continuar desde ahí, o elegir cualquiera de los anteriores, aunque pierdas o cierres el juego. El modo sin fin no se guarda.
 - **Tabla de puntuaciones** local, con entrada de nombre al conseguir un top 10.
 
 ## Cómo jugar

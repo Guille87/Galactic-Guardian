@@ -47,9 +47,11 @@ def _temblor_activado():
 
     preferencias.establecer_temblor(True)
     preferencias.establecer_cifras_dano(True)
+    preferencias.establecer_disparo_automatico(False)
     yield
     preferencias.establecer_temblor(True)
     preferencias.establecer_cifras_dano(True)
+    preferencias.establecer_disparo_automatico(False)
 
 
 @pytest.fixture(scope="session")

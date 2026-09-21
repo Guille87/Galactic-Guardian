@@ -9,13 +9,24 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ### Added
 
-- **Guardado de partida.** El juego apunta el último nivel de la campaña (o la última oleada del sin
-  fin) al que has llegado, con tu puntuación, y al pulsar **Campaña** o **Sin fin** puedes
-  elegir *Continuar (Nivel N)* o *Nueva partida*. Se guarda al terminar cada nivel o cambiar de
-  oleada y se conserva aunque pierdas todas las vidas o cierres el juego, para no tener que
-  rejugar los primeros niveles cuando ya estás avanzado. Continuar arranca el nivel con las vidas
-  y la salud de una partida nueva y sin combo. Solo se borra al empezar de cero o al completar
-  la campaña.
+- **Guardado de partida de la campaña.** El juego apunta el último nivel al que has llegado, con tu
+  puntuación, y al pulsar **Campaña** puedes elegir *Continuar (Nivel N)*, *Elegir nivel* o *Nueva
+  partida*. Se guarda al terminar cada nivel y se conserva aunque pierdas todas las vidas o cierres
+  el juego, para no tener que rejugar los primeros niveles cuando ya estás avanzado. Continuar
+  arranca el nivel con las vidas y la salud de una partida nueva y sin combo. **Elegir nivel**
+  permite rejugar de forma opcional cualquiera de los niveles del 1 al que llegaste (empiezan con 0
+  puntos y no hacen retroceder tu avance). Solo se borra al empezar de cero o al completar la
+  campaña.
+- **El sin fin no se guarda:** una vez empiezas, es hasta donde llegues. Para que no se pierda
+  lo ganado, las monedas de la puntuación se aseguran en cada cambio de oleada, además de al salir
+  al menú o cerrar el juego.
+- **Disparo automático** (Opciones > Controles): la nave dispara sola, sin pulsar ningún botón.
+  Viene apagado.
+
+### Changed
+
+- **Controles dispuestos como un mando** (Opciones > Controles): Arriba solo y centrado,
+  Izquierda y Derecha a los lados, Abajo solo y centrado debajo, y después Disparar y Pausa.
 
 ## [0.10.0] - 2026-09-21
 

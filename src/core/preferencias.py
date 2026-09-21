@@ -7,6 +7,7 @@ disco. No lee ni escribe la configuración por sí mismo.
 
 _temblor = True
 _cifras_dano = True
+_disparo_automatico = False
 
 
 def temblor_activado():
@@ -27,3 +28,13 @@ def cifras_dano_activadas():
 def establecer_cifras_dano(activas):
     global _cifras_dano
     _cifras_dano = bool(activas)
+
+
+def disparo_automatico():
+    """True si la nave dispara sola, sin pulsar ningún botón."""
+    return _disparo_automatico
+
+
+def establecer_disparo_automatico(activo):
+    global _disparo_automatico
+    _disparo_automatico = bool(activo)

@@ -54,7 +54,7 @@ HOJAS = {
 # --- LÓGICA DE PERSISTENCIA (OPCIONES DE USUARIO) ---
 
 def guardar_configuracion(volumen_musica, volumen_efectos, mapa_controles=None, idioma=None,
-                          temblor=None, cifras_dano=None, ruta=None):
+                          temblor=None, cifras_dano=None, disparo_automatico=None, ruta=None):
     config = configparser.ConfigParser()
     config['VOLUMEN'] = {
         'musica': str(volumen_musica),
@@ -72,6 +72,8 @@ def guardar_configuracion(volumen_musica, volumen_efectos, mapa_controles=None, 
             config['PANTALLA']['temblor'] = 'si' if temblor else 'no'
         if cifras_dano is not None:
             config['PANTALLA']['cifras_dano'] = 'si' if cifras_dano else 'no'
+    if disparo_automatico is not None:
+        config['JUEGO'] = {'disparo_automatico': 'si' if disparo_automatico else 'no'}
     with open(ruta or CONFIG_FILE, 'w') as configfile:
         config.write(configfile)
 
@@ -112,6 +114,18 @@ def cargar_temblor(ruta=None):
     except configparser.Error:
         return True
     return valor.strip().lower() != 'no'
+
+
+def cargar_disparo_automatico(ruta=None):
+    """True si el disparo automático está activado: por defecto **no** lo está (sin config, sin
+    la sección o con un valor que no es "si")."""
+    config = configparser.ConfigParser()
+    try:
+        config.read(ruta or CONFIG_FILE)
+        valor = config.get('JUEGO', 'disparo_automatico', fallback='no')
+    except configparser.Error:
+        return False
+    return valor.strip().lower() == 'si'
 
 
 def cargar_cifras_dano(ruta=None):
