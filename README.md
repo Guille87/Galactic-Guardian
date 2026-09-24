@@ -16,7 +16,7 @@
 | src/core/input.py                     |      139 |       30 |     78% |60-62, 102-109, 137-139, 149-150, 191-214 |
 | src/core/mejoras.py                   |       34 |        0 |    100% |           |
 | src/core/niveles.py                   |       13 |        0 |    100% |           |
-| src/core/novedades.py                 |        6 |        1 |     83% |        41 |
+| src/core/novedades.py                 |        6 |        1 |     83% |        47 |
 | src/core/paths.py                     |       25 |        3 |     88% |38, 50, 52 |
 | src/core/preferencias.py              |       20 |        0 |    100% |           |
 | src/core/progresion.py                |      104 |        4 |     96% |106-107, 125-126 |
