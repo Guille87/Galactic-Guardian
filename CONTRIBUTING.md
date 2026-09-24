@@ -139,14 +139,21 @@ el código, sin esperar a una release.
 2. En [`CHANGELOG.md`](CHANGELOG.md), mueve las entradas de *Unreleased* a una
    nueva sección `## [X.Y.Z] - AAAA-MM-DD` y actualiza los enlaces de comparación
    del pie.
-3. Etiqueta y sube:
+3. Si hay algo que merezca contárselo al jugador (no cada PATCH), añade una entrada al
+   **principio** de `HISTORIAL` en [`src/core/novedades.py`](src/core/novedades.py) (queda
+   de la más reciente a la más antigua) y sus claves `novedades.*` en `es.json`/`en.json`,
+   con un resumen en el tono del jugador (no el del CHANGELOG): la próxima vez que abra el
+   menú tras actualizar verá esa pantalla una única vez, y siempre puede volver a verla
+   (junto con las de versiones anteriores) pulsando el número de versión en el menú
+   principal. Sin entrada nueva, esta versión no tiene nada que anunciar.
+4. Etiqueta y sube:
 
    ```bash
    git tag vX.Y.Z
    git push origin vX.Y.Z
    ```
 
-4. Crea la *Release* en GitHub desde el tag, con las notas del CHANGELOG. Al
+5. Crea la *Release* en GitHub desde el tag, con las notas del CHANGELOG. Al
    **publicarla**, el workflow `build.yml` compila el ejecutable de Windows y
    adjunta `GalacticGuardian-vX.Y.Z-windows.zip` a la Release (unos minutos).
    Para relanzarlo contra un tag ya publicado: *Actions → Build → Run workflow*.

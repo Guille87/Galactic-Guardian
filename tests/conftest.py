@@ -48,10 +48,12 @@ def _temblor_activado():
     preferencias.establecer_temblor(True)
     preferencias.establecer_cifras_dano(True)
     preferencias.establecer_disparo_automatico(False)
+    preferencias.establecer_mostrar_fps(True)
     yield
     preferencias.establecer_temblor(True)
     preferencias.establecer_cifras_dano(True)
     preferencias.establecer_disparo_automatico(False)
+    preferencias.establecer_mostrar_fps(True)
 
 
 @pytest.fixture(scope="session")

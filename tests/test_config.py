@@ -112,3 +112,58 @@ def test_guardar_sin_efectos_no_escribe_esa_seccion(tmp_path):
     ruta = tmp_path / "cfg.ini"
     config.guardar_configuracion(0.3, 0.7, ruta=str(ruta))
     assert "PANTALLA" not in ruta.read_text()
+
+
+# --- version_vista (pantalla de novedades) -------------------------------------------
+
+def test_version_vista_sin_config_es_none(tmp_path):
+    assert config.cargar_version_vista(ruta=str(tmp_path / "no_existe.ini")) is None
+
+
+def test_version_vista_roundtrip(tmp_path):
+    ruta = str(tmp_path / "cfg.ini")
+    config.guardar_version_vista("0.12.0", ruta=ruta)
+    assert config.cargar_version_vista(ruta=ruta) == "0.12.0"
+
+
+def test_guardar_version_vista_no_toca_el_resto_del_archivo(tmp_path):
+    """A diferencia de `guardar_configuracion`, no reescribe todo el .ini."""
+    ruta = str(tmp_path / "cfg.ini")
+    config.guardar_configuracion(0.3, 0.7, idioma="en", temblor=False, ruta=ruta)
+    config.guardar_version_vista("0.12.0", ruta=ruta)
+    assert config.cargar_configuracion(ruta=ruta) == (0.3, 0.7)
+    assert config.cargar_idioma(ruta=ruta) == "en"
+    assert config.cargar_temblor(ruta=ruta) is False
+    assert config.cargar_version_vista(ruta=ruta) == "0.12.0"
+
+
+def test_guardar_configuracion_conserva_la_version_vista(tmp_path):
+    """Guardar desde Opciones no debe borrar lo que ya se marcó como visto."""
+    ruta = str(tmp_path / "cfg.ini")
+    config.guardar_version_vista("0.12.0", ruta=ruta)
+    config.guardar_configuracion(0.3, 0.7, temblor=True, ruta=ruta)
+    assert config.cargar_version_vista(ruta=ruta) == "0.12.0"
+
+
+# --- mostrar_fps -----------------------------------------------------------------
+
+def test_fps_roundtrip(tmp_path):
+    ruta = str(tmp_path / "cfg.ini")
+    config.guardar_configuracion(0.3, 0.7, mostrar_fps=False, ruta=ruta)
+    assert config.cargar_mostrar_fps(ruta=ruta) is False
+    config.guardar_configuracion(0.3, 0.7, mostrar_fps=True, ruta=ruta)
+    assert config.cargar_mostrar_fps(ruta=ruta) is True
+
+
+def test_fps_por_defecto_activados(tmp_path):
+    """Sin config, sin la sección o con un valor raro: activados (es lo que había)."""
+    assert config.cargar_mostrar_fps(ruta=str(tmp_path / "no_existe.ini")) is True
+    ruta = tmp_path / "raro.ini"
+    ruta.write_text("[PANTALLA]\nmostrar_fps = quiza\n")
+    assert config.cargar_mostrar_fps(ruta=str(ruta)) is True
+
+
+def test_guardar_sin_fps_no_escribe_esa_clave(tmp_path):
+    ruta = tmp_path / "cfg.ini"
+    config.guardar_configuracion(0.3, 0.7, ruta=str(ruta))
+    assert "mostrar_fps" not in ruta.read_text()

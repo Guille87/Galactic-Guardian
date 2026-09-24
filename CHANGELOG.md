@@ -7,6 +7,23 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+
+- **Pantalla de novedades:** tras actualizar a una versión con algo que contar, el menú la muestra una
+  única vez (desplazable con la rueda, la barra o arrastrando el texto, como en Mejoras).
+- **Historial de versiones:** un clic en el número de versión del menú principal lo abre, de la más
+  reciente a la más antigua.
+- **Mostrar FPS** (Opciones > Pantalla): interruptor para los fotogramas por segundo en partida (antes
+  siempre visibles). Viene encendido, como estaba.
+
+### Fixed
+
+- **Monedas repetidas al continuar una campaña guardada.** El resumen al abandonar la partida y las
+  pantallas de Game Over y victoria mostraban como "ganadas" todas las monedas cobradas en la sesión,
+  incluidas las que ya venían del guardado: al continuar una partida con puntos previos aparecía un
+  "+N" grande aunque no se hubiera ganado nada nuevo. Ahora descuentan lo que ya estaba cobrado al
+  continuar.
+
 ## [0.12.0] - 2026-09-24
 
 Más fácil progresar: monedas más generosas y mejor visibilidad de cuánto ganas.

@@ -5,7 +5,7 @@ import webbrowser
 import pygame
 import pygame_gui
 
-from src.core import config, controles, i18n, mejoras, paths, preferencias, settings, updates
+from src.core import config, controles, i18n, mejoras, novedades, paths, preferencias, settings, updates
 from src.core.progresion import BLOQUEADA, COMPRADA, DISPONIBLE, SIN_SALDO, Progresion
 from src.core.i18n import t
 from src.core.version import __version__
@@ -39,6 +39,11 @@ _MEJ_BARRA_X = 590              # barra de desplazamiento (a la derecha de la te
 _MEJ_BARRA_ANCHO = 6
 _MEJ_AVISO_MS = 2500            # cuánto dura un aviso de la pantalla
 _MEJ_ICONO = 28                 # lado del icono de un nodo (esquina superior derecha)
+
+# Pantalla "Novedades": un texto que se desplaza (rueda, barra o arrastre), igual que en
+# Mejoras pero sin nodos que comprar — reutiliza `_MEJ_PASO_RUEDA` / `_MEJ_BARRA_ANCHO`.
+_NOV_AREA = pygame.Rect(40, 150, 520, 525)      # zona visible del texto
+_NOV_BARRA_X = 572
 
 
 def _rect_mejora(rama_i, orden):
@@ -104,7 +109,7 @@ class MenuManager:
     """
 
     def __init__(self, pantalla, resource_manager, audio_manager, sistema_clasificacion,
-                 clasificacion_sin_fin=None, progresion=None, guardado=None):
+                 clasificacion_sin_fin=None, progresion=None, guardado=None, mostrar_novedades=False):
         self.pantalla = pantalla
         self.rm = resource_manager
         self.am = audio_manager
@@ -125,6 +130,17 @@ class MenuManager:
             m.id: _rect_mejora(i, orden)
             for i, rama in enumerate(mejoras.RAMAS) for orden, m in enumerate(mejoras.de_la_rama(rama))
         }
+        # Pantalla "Novedades" (ver `_abrir_novedades`): `mostrar_novedades` la pide la primera
+        # vez que `ejecutar()` corre en esta instancia (instalación actualizada, ver main.py);
+        # `_novedades_ya_mostradas` evita que un ida-y-vuelta al menú la vuelva a abrir.
+        self._mostrar_novedades_al_iniciar = mostrar_novedades
+        self._novedades_ya_mostradas = False
+        self._scroll_novedades = 0
+        self._arrastrando_barra_novedades = False
+        self._arrastre_novedades = None          # [pos, scroll inicial] mientras se arrastra el texto
+        self._novedades_layout = ([], 0)          # (líneas, alto del contenido); la rellena `_abrir_novedades`
+        self._historial_modo = False              # True = mostrando `novedades.HISTORIAL` entero
+        self._rect_version_menu = pygame.Rect(0, 0, 0, 0)   # lo fija `_crear_botones`
         self._modo_puntuaciones = settings.MODO_CAMPANA   # ranking que enseña la pantalla de Puntuaciones
         self._pestanas_puntuaciones = {}                  # modo -> Rect de su pestaña (lo rellena el dibujado)
         self.font_titulo = pygame.font.Font(None, 76)
@@ -137,7 +153,7 @@ class MenuManager:
         self.clock = pygame.time.Clock()
 
         # Estado inicial
-        self.estado = "PRINCIPAL"  # Posibles: PRINCIPAL, OPCIONES, PUNTUACIONES, MEJORAS
+        self.estado = "PRINCIPAL"  # Posibles: PRINCIPAL, OPCIONES, PUNTUACIONES, MEJORAS, NOVEDADES
         self.ejecutando = True
         self.resultado = None  # "JUGAR" | "JUGAR_SIN_FIN" | "SALIR"
 
@@ -205,13 +221,26 @@ class MenuManager:
         self.btn_restablecer_mejoras = Boton(t("mejoras.restablecer"), (255, 130, 0, 150), (255, 255, 255),
                                              150, 705, 200, 50, 10)
         self.btn_volver_mejoras = Boton(t("comun.volver"), (0, 0, 255, 128), (255, 255, 255), 450, 705, 200, 50, 10)
+        # Botón de la pantalla "Novedades"
+        self.btn_cerrar_novedades = Boton(t("novedades.cerrar"), (0, 0, 255, 128), (255, 255, 255),
+                                          cx, 705, 200, 50, 10)
+        # Rect de la versión del menú principal (esquina inferior derecha): un clic abre el
+        # historial de versiones. No se traduce, así que no hace falta rehacerlo por idioma,
+        # pero se recalcula aquí igualmente por simplicidad (se llama una sola vez por idioma).
+        txt_version = self.font_version.render(f"v{__version__}", True, (150, 150, 150))
+        self._rect_version_menu = txt_version.get_rect(bottomright=(settings.ANCHO - 8, settings.ALTO - 6))
 
     def ejecutar(self):
         """Bucle principal del menú. Devuelve el siguiente estado
         ("JUGAR"/"JUGAR_SIN_FIN"/"SALIR")."""
-        # Reinicio de estado por si volvemos desde una partida
+        # Reinicio de estado por si volvemos desde una partida. La pantalla de novedades, si toca
+        # mostrarla, se abre solo en la primera pasada de esta instancia (nunca al volver del juego).
         self.ejecutando = True
-        self.estado = "PRINCIPAL"
+        if self._mostrar_novedades_al_iniciar and not self._novedades_ya_mostradas:
+            self._abrir_novedades()
+            self._novedades_ya_mostradas = True
+        else:
+            self.estado = "PRINCIPAL"
         self.resultado = None
         self._sincronizar_estado()                         # por si Opciones se tocó desde la pausa
         if self._idioma_botones != i18n.idioma_actual():   # ídem el idioma
@@ -231,6 +260,8 @@ class MenuManager:
                 self._menu_puntuaciones()
             elif self.estado == "MEJORAS":
                 self._menu_mejoras()
+            elif self.estado == "NOVEDADES":
+                self._menu_novedades()
 
         return self.resultado or "SALIR"
 
@@ -263,6 +294,8 @@ class MenuManager:
                     if self._confirmar_salida():
                         self.ejecutando = False
                         self.resultado = "SALIR"
+                elif self._rect_version_menu.collidepoint(event.pos):
+                    self._abrir_historial()
 
         # Dibujado
         self.pantalla.blit(fondo, (0, 0))
@@ -278,12 +311,15 @@ class MenuManager:
         self.btn_puntos.dibujar(self.pantalla, self.font_estandar)
         self.btn_salir.dibujar(self.pantalla, self.font_estandar)
 
-        # Versión, esquina inferior derecha
-        txt_version = self.font_version.render(f"v{__version__}", True, (150, 150, 150))
-        self.pantalla.blit(
-            txt_version,
-            txt_version.get_rect(bottomright=(settings.ANCHO - 8, settings.ALTO - 6)),
-        )
+        # Versión, esquina inferior derecha: un clic abre el historial de versiones. Subrayada
+        # (y algo más clara al pasar el ratón por encima) para que se note que es un enlace.
+        sobre_version = self._rect_version_menu.collidepoint(pygame.mouse.get_pos())
+        color_version = (215, 215, 230) if sobre_version else (170, 170, 180)
+        txt_version = self.font_version.render(f"v{__version__}", True, color_version)
+        self.pantalla.blit(txt_version, self._rect_version_menu)
+        pygame.draw.line(self.pantalla, color_version,
+                         (self._rect_version_menu.left, self._rect_version_menu.bottom),
+                         (self._rect_version_menu.right, self._rect_version_menu.bottom))
         pygame.display.flip()
 
     def _empezar(self, modo):
@@ -445,6 +481,7 @@ class MenuManager:
             "temblor": preferencias.temblor_activado(),
             "cifras_dano": preferencias.cifras_dano_activadas(),
             "disparo_automatico": preferencias.disparo_automatico(),
+            "mostrar_fps": preferencias.mostrar_fps(),
         }
         self._preparar_ui_opciones()
 
@@ -461,6 +498,7 @@ class MenuManager:
         preferencias.establecer_temblor(inst["temblor"])
         preferencias.establecer_cifras_dano(inst["cifras_dano"])
         preferencias.establecer_disparo_automatico(inst["disparo_automatico"])
+        preferencias.establecer_mostrar_fps(inst["mostrar_fps"])
         if inst["idioma"] != i18n.idioma_actual():
             i18n.establecer_idioma(inst["idioma"])
             self._crear_botones()          # la UI de Opciones se rehace sola (`_idioma_ui`)
@@ -488,6 +526,7 @@ class MenuManager:
             self._actualizar_texto_control(accion)
         self._actualizar_boton_temblor()       # puede haberse cambiado desde otro `MenuManager`
         self._actualizar_boton_cifras()
+        self._actualizar_boton_fps()
         self._actualizar_boton_disparo_auto()
         self._mostrar_pestana(self._pestana)   # la UI puede venir con otra pestaña a la vista
 
@@ -660,8 +699,19 @@ class MenuManager:
                 text=t("opciones.cifras_ayuda"), manager=self.ui_manager,
             ),
         ]
+        self.btn_fps = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((50, 420), (500, 44)), text="", manager=self.ui_manager,
+        )
+        self._elementos_pestana["pantalla"] += [
+            self.btn_fps,
+            pygame_gui.elements.UILabel(
+                relative_rect=pygame.Rect((50, 474), (500, 22)),
+                text=t("opciones.fps_ayuda"), manager=self.ui_manager,
+            ),
+        ]
         self._actualizar_boton_temblor()
         self._actualizar_boton_cifras()
+        self._actualizar_boton_fps()
         self._actualizar_boton_disparo_auto()
 
         # Botones comunes (siempre visibles)
@@ -722,6 +772,16 @@ class MenuManager:
             self.btn_cifras.select()
         else:
             self.btn_cifras.unselect()
+
+    def _actualizar_boton_fps(self):
+        """Texto y marca del interruptor de los FPS en partida."""
+        activos = preferencias.mostrar_fps()
+        estado = t("comun.si") if activos else t("comun.no")
+        self.btn_fps.set_text(t("opciones.fps", estado=estado))
+        if activos:
+            self.btn_fps.select()
+        else:
+            self.btn_fps.unselect()
 
     def _marcar_idioma_actual(self):
         for boton, codigo in self._botones_idioma.items():
@@ -878,6 +938,10 @@ class MenuManager:
                 preferencias.establecer_cifras_dano(not preferencias.cifras_dano_activadas())
                 self._actualizar_boton_cifras()
 
+            elif event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element == self.btn_fps:
+                preferencias.establecer_mostrar_fps(not preferencias.mostrar_fps())
+                self._actualizar_boton_fps()
+
             elif event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element in self._acciones_por_boton:
                 self._empezar_reasignacion(self._acciones_por_boton[event.ui_element])
 
@@ -892,7 +956,8 @@ class MenuManager:
                                                  idioma=i18n.idioma_actual(),
                                                  temblor=preferencias.temblor_activado(),
                                                  cifras_dano=preferencias.cifras_dano_activadas(),
-                                                 disparo_automatico=preferencias.disparo_automatico())
+                                                 disparo_automatico=preferencias.disparo_automatico(),
+                                                 mostrar_fps=preferencias.mostrar_fps())
                     self.estado = "PRINCIPAL"
                 elif event.ui_element == self.btn_volver:
                     self._deshacer_cambios()
@@ -1210,6 +1275,185 @@ class MenuManager:
 
         self.btn_restablecer_mejoras.dibujar(self.pantalla, self.font_estandar)
         self.btn_volver_mejoras.dibujar(self.pantalla, self.font_estandar)
+        pygame.display.flip()
+
+    # ---------------------------------------------------------------- NOVEDADES
+    def _abrir_novedades(self):
+        """Novedades de la versión actual (ver `novedades.claves_version_actual`): la
+        ofrece `ejecutar()` una única vez tras actualizar. Cerrarla marca la versión como
+        vista (`_cerrar_novedades`)."""
+        self._historial_modo = False
+        self._abrir_pantalla_novedades()
+
+    def _abrir_historial(self):
+        """`novedades.HISTORIAL` entero, de la más reciente a la más antigua: se puede
+        abrir en cualquier momento con un clic en la versión del menú principal. A
+        diferencia de `_abrir_novedades`, cerrarla no toca `version_vista`."""
+        self._historial_modo = True
+        self._abrir_pantalla_novedades()
+
+    def _abrir_pantalla_novedades(self):
+        self._scroll_novedades = 0
+        self._arrastrando_barra_novedades = False
+        self._arrastre_novedades = None
+        self._novedades_layout = self._calcular_lineas_novedades(self._historial_modo)
+        self.estado = "NOVEDADES"
+
+    def _calcular_lineas_novedades(self, historial):
+        """`(líneas, alto)`: `líneas` es una lista de `(y de contenido, texto, es_cabecera)`,
+        una por línea envuelta de cada párrafo. En modo normal solo hay las claves de la
+        versión actual (`novedades.claves_version_actual`); en modo historial, todas las de
+        `novedades.HISTORIAL`, cada versión precedida de una cabecera "vX.Y.Z"."""
+        if historial:
+            entradas = novedades.HISTORIAL
+        else:
+            claves = novedades.claves_version_actual()
+            entradas = ((__version__, claves),) if claves else ()
+
+        lineas = []
+        y = 0
+        ancho = _NOV_AREA.width - 20
+        for version, claves in entradas:
+            if historial:
+                lineas.append((y, f"v{version}", True))
+                y += 34
+            for clave in claves:
+                texto = "• " + t(f"novedades.{clave}")
+                for linea in _ajustar_texto(self.font_version, texto, ancho):
+                    lineas.append((y, linea, False))
+                    y += 30
+                y += 16                                 # aire entre párrafos
+            if historial:
+                y += 10                                 # aire extra entre versiones
+        return lineas, max(0, y - (10 if historial else 16))
+
+    def _scroll_maximo_novedades(self):
+        return max(0, self._novedades_layout[1] - _NOV_AREA.height)
+
+    def _desplazar_novedades(self, pixeles):
+        self._scroll_novedades = max(0, min(self._scroll_maximo_novedades(), self._scroll_novedades + pixeles))
+
+    def _rect_barra_novedades(self):
+        """`(pista, agarrador)` de la barra de desplazamiento, o `None` si no hace falta."""
+        maximo = self._scroll_maximo_novedades()
+        if maximo <= 0:
+            return None
+        pista = pygame.Rect(_NOV_BARRA_X, _NOV_AREA.top, _MEJ_BARRA_ANCHO, _NOV_AREA.height)
+        alto = max(30, round(_NOV_AREA.height * _NOV_AREA.height / self._novedades_layout[1]))
+        y = pista.top + round((pista.height - alto) * self._scroll_novedades / maximo)
+        return pista, pygame.Rect(pista.left, y, pista.width, alto)
+
+    def _arrastrar_barra_novedades_a(self, y):
+        barra = self._rect_barra_novedades()
+        if barra is None:
+            return
+        pista, agarrador = barra
+        recorrido = pista.height - agarrador.height
+        fraccion = (y - agarrador.height / 2 - pista.top) / recorrido if recorrido else 0
+        self._scroll_novedades = max(0, min(self._scroll_maximo_novedades(), round(fraccion * self._scroll_maximo_novedades())))
+
+    def _clic_en_barra_novedades(self, pos):
+        barra = self._rect_barra_novedades()
+        if barra is None or not barra[0].inflate(14, 0).collidepoint(pos):
+            return False
+        if not barra[1].collidepoint(pos):
+            self._arrastrar_barra_novedades_a(pos[1])
+        self._arrastrando_barra_novedades = True
+        return True
+
+    def _evento_novedades(self, event):
+        """Rueda, barra lateral y teclas de desplazamiento (igual que en Mejoras)."""
+        if event.type == pygame.MOUSEWHEEL:
+            self._desplazar_novedades(-event.y * _MEJ_PASO_RUEDA)
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                self._desplazar_novedades(-_MEJ_PASO_RUEDA)
+            elif event.key == pygame.K_DOWN:
+                self._desplazar_novedades(_MEJ_PASO_RUEDA)
+            elif event.key == pygame.K_PAGEUP:
+                self._desplazar_novedades(-_NOV_AREA.height)
+            elif event.key == pygame.K_PAGEDOWN:
+                self._desplazar_novedades(_NOV_AREA.height)
+            elif event.key == pygame.K_HOME:
+                self._scroll_novedades = 0
+            elif event.key == pygame.K_END:
+                self._scroll_novedades = self._scroll_maximo_novedades()
+        elif event.type == pygame.MOUSEMOTION:
+            if self._arrastrando_barra_novedades:
+                self._arrastrar_barra_novedades_a(event.pos[1])
+            elif self._arrastre_novedades is not None and event.buttons[0]:
+                origen, scroll_inicial = self._arrastre_novedades
+                self._scroll_novedades = max(0, min(self._scroll_maximo_novedades(),
+                                                    scroll_inicial - (event.pos[1] - origen[1])))
+
+    def _clic_novedades(self, pos):
+        if self.btn_cerrar_novedades.clic_en_boton(pos):
+            self._cerrar_novedades()
+        elif self._clic_en_barra_novedades(pos):
+            pass
+        elif _NOV_AREA.collidepoint(pos):
+            self._arrastre_novedades = [pos, self._scroll_novedades]
+
+    def _cerrar_novedades(self):
+        """Vuelve al menú principal. En modo normal (no historial) marca la versión
+        actual como ya vista: no se volverá a ofrecer esta pantalla (salvo que suba de
+        versión otra vez); el historial se puede reabrir siempre, así que no la toca."""
+        self.estado = "PRINCIPAL"
+        if not self._historial_modo:
+            config.guardar_version_vista(__version__)
+
+    def _menu_novedades(self):
+        """Pantalla de novedades / historial: un texto desplazable (ver `_abrir_novedades`
+        y `_abrir_historial`)."""
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self._cerrar_novedades()
+                self.ejecutando = False
+                self.resultado = "SALIR"
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                self._cerrar_novedades()
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                self._clic_novedades(event.pos)
+            elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                self._arrastrando_barra_novedades = False
+                self._arrastre_novedades = None
+            else:
+                self._evento_novedades(event)
+
+        self.pantalla.blit(self.rm.get_image("imagen_fondo1"), (0, 0))
+        self.pantalla.blit(self._overlay_oscuro(), (0, 0))
+
+        titulo_txt = t("novedades.historial_titulo") if self._historial_modo else t("novedades.titulo")
+        titulo = self.font_titulo.render(titulo_txt, True, (255, 255, 255))
+        self.pantalla.blit(titulo, titulo.get_rect(center=(300, 65)))
+        y_pista = 112
+        if not self._historial_modo:
+            version_txt = self.font_estandar.render(f"v{__version__}", True, (255, 215, 0))
+            self.pantalla.blit(version_txt, version_txt.get_rect(center=(300, 112)))
+            y_pista = 138
+        if self._scroll_maximo_novedades() > 0:
+            pista = self.font_mini.render(t("mejoras.pista_desplazar"), True, (160, 160, 170))
+            self.pantalla.blit(pista, pista.get_rect(center=(300, y_pista)))
+
+        self.pantalla.set_clip(_NOV_AREA)
+        for y_contenido, texto, es_cabecera in self._novedades_layout[0]:
+            y_pantalla = _NOV_AREA.top + y_contenido - self._scroll_novedades
+            if _NOV_AREA.top - 34 <= y_pantalla <= _NOV_AREA.bottom:
+                if es_cabecera:
+                    surf = self.font_estandar.render(texto, True, (255, 215, 0))
+                else:
+                    surf = self.font_version.render(texto, True, (225, 225, 235))
+                self.pantalla.blit(surf, (_NOV_AREA.left + 10, y_pantalla))
+        self.pantalla.set_clip(None)
+
+        barra = self._rect_barra_novedades()
+        if barra is not None:
+            pista_barra, agarrador = barra
+            pygame.draw.rect(self.pantalla, (50, 50, 60), pista_barra, border_radius=3)
+            pygame.draw.rect(self.pantalla, (200, 200, 215) if self._arrastrando_barra_novedades
+                             else (140, 140, 160), agarrador, border_radius=3)
+
+        self.btn_cerrar_novedades.dibujar(self.pantalla, self.font_estandar)
         pygame.display.flip()
 
     def _clasificacion_de(self, modo):

@@ -123,7 +123,7 @@ class RenderManager:
             lineas.append(t("game_over.oleada", n=j.nivel))
         lineas.append(t("game_over.puntuacion", n=j.puntuacion))
         if j.progresion is not None:
-            lineas.append(t("game_over.monedas", n=j.monedas_cobradas, total=j.progresion.monedas))
+            lineas.append(t("game_over.monedas", n=j.monedas_ganadas, total=j.progresion.monedas))
         self._dibujar_estadisticas(lineas, j.pantalla_alto // 2 - 98)
 
         # Botones creados una sola vez y cacheados
@@ -197,7 +197,7 @@ class RenderManager:
                   t("nivel_completado.puntuacion", n=j.puntuacion),
                   t("nivel_completado.enemigos", n=j.enemigos_eliminados_nivel),
                   t("nivel_completado.tiempo", s=j.tiempo_juego / 1000)]
-        lineas += self._lineas_monedas("game_over.monedas", j.monedas_cobradas)
+        lineas += self._lineas_monedas("game_over.monedas", j.monedas_ganadas)
         self._dibujar_estadisticas(lineas, 260)
 
         if j.boton_menu_resumen is None:
@@ -246,7 +246,7 @@ class RenderManager:
             t("victoria.nivel", n=j.nivel),
         ]
         if j.progresion is not None:
-            lineas.append(t("victoria.monedas", n=j.monedas_cobradas, total=j.progresion.monedas))
+            lineas.append(t("victoria.monedas", n=j.monedas_ganadas, total=j.progresion.monedas))
         self._dibujar_estadisticas(lineas, 280)
 
         if j.boton_reintentar_final is None:

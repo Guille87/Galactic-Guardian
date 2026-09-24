@@ -123,6 +123,62 @@ def test_continuar_una_campana_guardada_cuenta_desde_lo_ya_cobrado(rm, audio, sc
     assert j.monedas_del_nivel == 5
 
 
+# --- Monedas ganadas en la partida (Continuar no debe repetir lo ya cobrado) ------------------
+
+def test_monedas_ganadas_de_una_partida_nueva_es_todo_lo_cobrado(rm, audio, scoreboard, progresion):
+    j = _juego(rm, audio, scoreboard, progresion)
+    j.puntuacion = 8 * P
+    j._cobrar_monedas()
+    assert j.monedas_ganadas == 8
+
+
+def test_continuar_una_campana_guardada_las_monedas_ganadas_empiezan_en_cero(rm, audio, scoreboard, progresion, tmp_path):
+    """Antes de este arreglo, el resumen al abandonar y Game Over/victoria mostraban TODO lo
+    cobrado en la partida (incluido lo ya cobrado antes de guardar), como si se acabara de
+    ganar: si el guardado tenía 10*P puntos, seguían enseñando "+10" nada más continuar."""
+    g = Guardado(ruta=str(tmp_path / "g.json"))
+    g.guardar_punto(3, 10 * P)
+    j = _juego(rm, audio, scoreboard, progresion, guardado=g, continuar=True)
+    assert j.monedas_ganadas == 0
+    j.puntuacion += 5 * P
+    j._cobrar_monedas()
+    assert j.monedas_ganadas == 5
+
+
+def test_el_resumen_al_abandonar_tras_continuar_no_repite_lo_ya_cobrado(rm, audio, scoreboard, progresion,
+                                                                        monkeypatch, tmp_path):
+    progresion.ingresar(10)                          # las 10 monedas del guardado, cobradas en su día
+    g = Guardado(ruta=str(tmp_path / "g.json"))
+    g.guardar_punto(3, 10 * P)
+    j = _juego(rm, audio, scoreboard, progresion, guardado=g, continuar=True)
+    j.puntuacion += 2 * P
+    _pausar_y_salir(j)
+    lineas = _lineas(j, monkeypatch)
+    assert "Monedas: +2 (total 12)" in lineas             # no "+10" (lo del guardado) ni "+12"
+
+
+def test_game_over_tras_continuar_no_repite_lo_ya_cobrado(rm, audio, scoreboard, progresion, monkeypatch, tmp_path):
+    progresion.ingresar(10)
+    g = Guardado(ruta=str(tmp_path / "g.json"))
+    g.guardar_punto(3, 10 * P)
+    j = _juego(rm, audio, scoreboard, progresion, guardado=g, continuar=True)
+    j.puntuacion += 3 * P
+    j._cobrar_monedas()
+    j.estado_game_over = True                        # como haría `juego_terminado`, sin el top-10
+    assert "Monedas: +3 (total 13)" in _lineas(j, monkeypatch)
+
+
+def test_victoria_tras_continuar_no_repite_lo_ya_cobrado(rm, audio, scoreboard, progresion, monkeypatch, tmp_path):
+    progresion.ingresar(10)
+    g = Guardado(ruta=str(tmp_path / "g.json"))
+    g.guardar_punto(3, 10 * P)
+    j = _juego(rm, audio, scoreboard, progresion, guardado=g, continuar=True)
+    j.puntuacion += 4 * P
+    j._cobrar_monedas()
+    j.estado_victoria_final = True
+    assert "Monedas: +4 (total 14)" in _lineas(j, monkeypatch)
+
+
 def test_sin_progresion_el_resumen_del_nivel_no_habla_de_monedas(rm, audio, scoreboard, monkeypatch):
     j = _juego(rm, audio, scoreboard, None)
     j.puntuacion = 500

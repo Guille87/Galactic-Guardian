@@ -2,7 +2,7 @@ import math
 
 import pygame
 
-from src.core import settings
+from src.core import preferencias, settings
 from src.core.i18n import t
 
 
@@ -40,7 +40,8 @@ class UIManager:
         if self.juego.jefe:
             self._dibujar_barra_salud_jefe(pantalla)
 
-        self._mostrar_fps(pantalla)
+        if preferencias.mostrar_fps():
+            self._mostrar_fps(pantalla)
         if settings.DEBUG:
             self._mostrar_tiempo_juego(pantalla)
 

@@ -54,7 +54,8 @@ HOJAS = {
 # --- LÓGICA DE PERSISTENCIA (OPCIONES DE USUARIO) ---
 
 def guardar_configuracion(volumen_musica, volumen_efectos, mapa_controles=None, idioma=None,
-                          temblor=None, cifras_dano=None, disparo_automatico=None, ruta=None):
+                          temblor=None, cifras_dano=None, disparo_automatico=None, mostrar_fps=None,
+                          ruta=None):
     config = configparser.ConfigParser()
     config['VOLUMEN'] = {
         'musica': str(volumen_musica),
@@ -66,14 +67,24 @@ def guardar_configuracion(volumen_musica, volumen_efectos, mapa_controles=None, 
         }
     if idioma is not None:
         config['IDIOMA'] = {'codigo': idioma}
-    if temblor is not None or cifras_dano is not None:
+    if temblor is not None or cifras_dano is not None or mostrar_fps is not None:
         config['PANTALLA'] = {}
         if temblor is not None:
             config['PANTALLA']['temblor'] = 'si' if temblor else 'no'
         if cifras_dano is not None:
             config['PANTALLA']['cifras_dano'] = 'si' if cifras_dano else 'no'
+        if mostrar_fps is not None:
+            config['PANTALLA']['mostrar_fps'] = 'si' if mostrar_fps else 'no'
+    juego = {}
     if disparo_automatico is not None:
-        config['JUEGO'] = {'disparo_automatico': 'si' if disparo_automatico else 'no'}
+        juego['disparo_automatico'] = 'si' if disparo_automatico else 'no'
+    # `version_vista` (pantalla de novedades) no es una opción de esta pantalla: se conserva
+    # tal cual estuviera, para que Guardar no la borre (esta función reescribe el archivo entero).
+    version_vista = cargar_version_vista(ruta)
+    if version_vista is not None:
+        juego['version_vista'] = version_vista
+    if juego:
+        config['JUEGO'] = juego
     with open(ruta or CONFIG_FILE, 'w') as configfile:
         config.write(configfile)
 
@@ -116,6 +127,18 @@ def cargar_temblor(ruta=None):
     return valor.strip().lower() != 'no'
 
 
+def cargar_mostrar_fps(ruta=None):
+    """True si se muestran los FPS en partida: lo está por defecto (sin config, sin la
+    sección o con un valor que no es "no")."""
+    config = configparser.ConfigParser()
+    try:
+        config.read(ruta or CONFIG_FILE)
+        valor = config.get('PANTALLA', 'mostrar_fps', fallback='si')
+    except configparser.Error:
+        return True
+    return valor.strip().lower() != 'no'
+
+
 def cargar_disparo_automatico(ruta=None):
     """True si el disparo automático está activado: por defecto **no** lo está (sin config, sin
     la sección o con un valor que no es "si")."""
@@ -138,6 +161,31 @@ def cargar_cifras_dano(ruta=None):
     except configparser.Error:
         return True
     return valor.strip().lower() != 'no'
+
+
+def cargar_version_vista(ruta=None):
+    """Última versión para la que ya se mostró la pantalla de novedades, o `None` si no hay
+    ninguna guardada (instalación nueva, o `config.ini` de antes de que existiera esta clave)."""
+    config = configparser.ConfigParser()
+    try:
+        config.read(ruta or CONFIG_FILE)
+        return config.get('JUEGO', 'version_vista', fallback=None)
+    except configparser.Error:
+        return None
+
+
+def guardar_version_vista(version, ruta=None):
+    """Marca `version` como ya vista (pantalla de novedades). A diferencia de
+    `guardar_configuracion`, hace una lectura-modificación-escritura: no reescribe el resto
+    del archivo, porque se llama fuera del flujo de Guardar de Opciones."""
+    ruta = ruta or CONFIG_FILE
+    config = configparser.ConfigParser()
+    config.read(ruta)
+    if not config.has_section('JUEGO'):
+        config['JUEGO'] = {}
+    config['JUEGO']['version_vista'] = version
+    with open(ruta, 'w') as configfile:
+        config.write(configfile)
 
 
 def cargar_controles(ruta=None):

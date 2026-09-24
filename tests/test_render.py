@@ -60,6 +60,23 @@ def test_render_hud_con_jefe(juego, rm):
     juego.ui_manager.dibujar_interfaz(pygame.display.get_surface())
 
 
+def test_fps_se_dibuja_por_defecto(juego, monkeypatch):
+    llamado = []
+    monkeypatch.setattr(juego.ui_manager, "_mostrar_fps", lambda pantalla: llamado.append(1))
+    juego.ui_manager.dibujar_interfaz(pygame.display.get_surface())
+    assert llamado == [1]
+
+
+def test_fps_no_se_dibuja_si_esta_desactivado(juego, monkeypatch):
+    from src.core import preferencias
+
+    preferencias.establecer_mostrar_fps(False)
+    llamado = []
+    monkeypatch.setattr(juego.ui_manager, "_mostrar_fps", lambda pantalla: llamado.append(1))
+    juego.ui_manager.dibujar_interfaz(pygame.display.get_surface())
+    assert llamado == []
+
+
 def test_seleccion_nivel_incluye_el_siguiente_ademas_de_los_superados(juego):
     juego.nivel = 3
     juego.mostrando_seleccion_nivel = True

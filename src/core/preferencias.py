@@ -8,6 +8,7 @@ disco. No lee ni escribe la configuración por sí mismo.
 _temblor = True
 _cifras_dano = True
 _disparo_automatico = False
+_mostrar_fps = True
 
 
 def temblor_activado():
@@ -38,3 +39,13 @@ def disparo_automatico():
 def establecer_disparo_automatico(activo):
     global _disparo_automatico
     _disparo_automatico = bool(activo)
+
+
+def mostrar_fps():
+    """True si se muestran los FPS en partida."""
+    return _mostrar_fps
+
+
+def establecer_mostrar_fps(activos):
+    global _mostrar_fps
+    _mostrar_fps = bool(activos)
