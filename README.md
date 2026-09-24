@@ -4,20 +4,21 @@
 
 | Name                                  |    Stmts |     Miss |   Cover |   Missing |
 |-------------------------------------- | -------: | -------: | ------: | --------: |
-| main.py                               |       93 |       68 |     27% |49-86, 90-161 |
+| main.py                               |       99 |       74 |     25% |49-86, 90-172 |
 | src/core/audio.py                     |       40 |        0 |    100% |           |
 | src/core/combo.py                     |       22 |        0 |    100% |           |
-| src/core/config.py                    |       82 |        2 |     98% |   102-103 |
+| src/core/config.py                    |      114 |        6 |     95% |113-114, 137-138, 173-174 |
 | src/core/controles.py                 |       10 |        0 |    100% |           |
-| src/core/engine.py                    |      355 |       11 |     97% |494-497, 566, 585-595 |
+| src/core/engine.py                    |      362 |       11 |     97% |499-502, 580, 599-609 |
 | src/core/escalado.py                  |       15 |        0 |    100% |           |
 | src/core/guardado.py                  |       68 |        6 |     91% |62-63, 75-76, 97-98 |
 | src/core/i18n.py                      |       57 |       16 |     72% |44-51, 56-63 |
 | src/core/input.py                     |      139 |       30 |     78% |60-62, 102-109, 137-139, 149-150, 191-214 |
 | src/core/mejoras.py                   |       34 |        0 |    100% |           |
 | src/core/niveles.py                   |       13 |        0 |    100% |           |
+| src/core/novedades.py                 |        6 |        1 |     83% |        41 |
 | src/core/paths.py                     |       25 |        3 |     88% |38, 50, 52 |
-| src/core/preferencias.py              |       15 |        0 |    100% |           |
+| src/core/preferencias.py              |       20 |        0 |    100% |           |
 | src/core/progresion.py                |      104 |        4 |     96% |106-107, 125-126 |
 | src/core/resources.py                 |       81 |        4 |     95% |122, 128, 138, 141 |
 | src/core/settings.py                  |       53 |        0 |    100% |           |
@@ -36,8 +37,8 @@
 | src/managers/render.py                |      182 |        1 |     99% |       282 |
 | src/managers/waves.py                 |       48 |        0 |    100% |           |
 | src/ui/components/button.py           |       40 |        6 |     85% |     34-39 |
-| src/ui/hud.py                         |      149 |       13 |     91% |129, 215-233 |
-| src/ui/menu.py                        |      815 |       28 |     97% |228-233, 243-244, 258, 456, 755, 795, 821, 943-959, 1010, 1081, 1244-1245 |
+| src/ui/hud.py                         |      150 |       13 |     91% |130, 216-234 |
+| src/ui/menu.py                        |      990 |       52 |     95% |258, 260, 262, 274-275, 289, 493, 815, 855, 881, 1008-1024, 1075, 1146, 1347-1353, 1359-1362, 1369-1380, 1383, 1393, 1418-1419, 1488-1489 |
 | src/ui/scoreboard.py                  |       45 |        2 |     96% |     58-59 |
 | src/visual/background.py              |       22 |        1 |     95% |        30 |
 | src/visual/explosions.py              |       20 |        0 |    100% |           |
@@ -45,7 +46,7 @@
 | src/visual/flash\_constant.py         |       11 |        0 |    100% |           |
 | src/visual/floating\_text.py          |       62 |        0 |    100% |           |
 | src/visual/screen\_shake.py           |       21 |        0 |    100% |           |
-| **TOTAL**                             | **3272** |  **219** | **93%** |           |
+| **TOTAL**                             | **3504** |  **254** | **93%** |           |
 
 
 ## Setup coverage badge
