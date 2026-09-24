@@ -7,6 +7,11 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-09-24
+
+Más fácil progresar: monedas más generosas y mejor visibilidad de cuánto ganas.
+Sin cambios incompatibles con partidas ni configuración anteriores.
+
 ### Added
 
 - **Monedas en el resumen de cada nivel:** al terminar un nivel se muestran las monedas que has ganado en
@@ -552,7 +557,8 @@ puesta a punto del repositorio (licencia, tests, integración continua, document
   los grupos tipados y `groupcollide`).
 - `__init__.py` vacío en la raíz del repositorio.
 
-[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.8.0...v0.9.0
