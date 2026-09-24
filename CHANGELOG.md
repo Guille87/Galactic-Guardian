@@ -7,12 +7,17 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-09-25
+
+Te cuenta lo nuevo al actualizar y deja ver el historial de versiones cuando quieras.
+Sin cambios incompatibles con partidas ni configuración anteriores.
+
 ### Added
 
 - **Pantalla de novedades:** tras actualizar a una versión con algo que contar, el menú la muestra una
   única vez (desplazable con la rueda, la barra o arrastrando el texto, como en Mejoras).
-- **Historial de versiones:** un clic en el número de versión del menú principal lo abre, de la más
-  reciente a la más antigua.
+- **Historial de versiones:** un clic en el número de versión del menú principal (ahora subrayado) lo
+  abre, de la más reciente a la más antigua.
 - **Mostrar FPS** (Opciones > Pantalla): interruptor para los fotogramas por segundo en partida (antes
   siempre visibles). Viene encendido, como estaba.
 
@@ -574,7 +579,8 @@ puesta a punto del repositorio (licencia, tests, integración continua, document
   los grupos tipados y `groupcollide`).
 - `__init__.py` vacío en la raíz del repositorio.
 
-[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/Guille87/Galactic-Guardian/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/Guille87/Galactic-Guardian/compare/v0.9.0...v0.10.0

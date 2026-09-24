@@ -16,6 +16,12 @@ from src.core.version import __version__
 # Claves de texto `novedades.<clave>` de cada versión, en el orden en que se muestran
 # (únicas entre sí: no hace falta que lo sean solo dentro de su versión).
 HISTORIAL = (
+    ("0.13.0", (
+        "pantalla_novedades",
+        "historial_versiones",
+        "mostrar_fps",
+        "arreglo_monedas_continuar",
+    )),
     ("0.12.0", (
         "monedas_resumen",
         "resumen_salida",
