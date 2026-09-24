@@ -9,11 +9,11 @@
 | src/core/combo.py                     |       22 |        0 |    100% |           |
 | src/core/config.py                    |       82 |        2 |     98% |   102-103 |
 | src/core/controles.py                 |       10 |        0 |    100% |           |
-| src/core/engine.py                    |      342 |       11 |     97% |488-491, 547, 566-576 |
+| src/core/engine.py                    |      355 |       11 |     97% |494-497, 566, 585-595 |
 | src/core/escalado.py                  |       15 |        0 |    100% |           |
 | src/core/guardado.py                  |       68 |        6 |     91% |62-63, 75-76, 97-98 |
 | src/core/i18n.py                      |       57 |       16 |     72% |44-51, 56-63 |
-| src/core/input.py                     |      135 |       39 |     71% |60-62, 102-109, 129-144, 185-208 |
+| src/core/input.py                     |      139 |       30 |     78% |60-62, 102-109, 137-139, 149-150, 191-214 |
 | src/core/mejoras.py                   |       34 |        0 |    100% |           |
 | src/core/niveles.py                   |       13 |        0 |    100% |           |
 | src/core/paths.py                     |       25 |        3 |     88% |38, 50, 52 |
@@ -33,7 +33,7 @@
 | src/managers/collision.py             |       53 |        0 |    100% |           |
 | src/managers/effects.py               |       55 |        0 |    100% |           |
 | src/managers/entities.py              |       58 |        1 |     98% |        83 |
-| src/managers/render.py                |      158 |        1 |     99% |       245 |
+| src/managers/render.py                |      182 |        1 |     99% |       282 |
 | src/managers/waves.py                 |       48 |        0 |    100% |           |
 | src/ui/components/button.py           |       40 |        6 |     85% |     34-39 |
 | src/ui/hud.py                         |      149 |       13 |     91% |129, 215-233 |
@@ -45,7 +45,7 @@
 | src/visual/flash\_constant.py         |       11 |        0 |    100% |           |
 | src/visual/floating\_text.py          |       62 |        0 |    100% |           |
 | src/visual/screen\_shake.py           |       21 |        0 |    100% |           |
-| **TOTAL**                             | **3231** |  **228** | **93%** |           |
+| **TOTAL**                             | **3272** |  **219** | **93%** |           |
 
 
 ## Setup coverage badge
