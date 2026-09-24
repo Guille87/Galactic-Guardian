@@ -18,9 +18,9 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ### Changed
 
-- **Más monedas:** ahora ganas **1 moneda cada 40 puntos** (antes 70). Un nivel 1 perfecto sin mejoras
-  (~3100 puntos) da ~77 monedas en vez de ~44. La campaña pasa a llevar unas 12 partidas a un jugador
-  medio (antes ~20) y comprar todo el árbol, unas 37 (antes ~62).
+- **Más monedas:** ahora ganas **1 moneda cada 25 puntos** (antes 70). Un nivel 1 perfecto sin mejoras
+  (~3100 puntos) da ~124 monedas en vez de ~44. La campaña pasa a llevar unas 9 partidas a un jugador
+  medio (antes ~20) y comprar todo el árbol, unas 24 (antes ~62).
 
 ## [0.11.0] - 2026-09-21
 

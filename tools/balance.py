@@ -433,7 +433,7 @@ def main(argv=None):
     ap.add_argument("--perfil", default="medio", choices=[*PERFILES, "todos"])
     ap.add_argument("--builds", default="0,25,50,75,100", help="porcentaje del coste del árbol, separados por comas")
     ap.add_argument("--niveles", action="store_true", help="detalle por fase de cada nivel")
-    ap.add_argument("--objetivo", type=int, default=12, help="partidas que debería llevar completar la campaña")
+    ap.add_argument("--objetivo", type=int, default=9, help="partidas que debería llevar completar la campaña")
     args = ap.parse_args(argv)
 
     perfiles = list(PERFILES.values()) if args.perfil == "todos" else [PERFILES[args.perfil]]

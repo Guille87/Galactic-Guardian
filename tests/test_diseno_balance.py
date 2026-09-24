@@ -118,9 +118,9 @@ def test_el_nivel_5_exige_mejoras():
     assert not jugar(_nave(0), PERFILES["habil"], M).victoria
 
 
-def test_el_perfil_medio_completa_la_campana_en_unas_12_partidas():
+def test_el_perfil_medio_completa_la_campana_en_unas_9_partidas():
     n = progresion(PERFILES["medio"], M).partidas_hasta_victoria
-    assert 10 <= n <= 14, n
+    assert 7 <= n <= 11, n
 
 
 def test_mejor_jugador_completa_antes():

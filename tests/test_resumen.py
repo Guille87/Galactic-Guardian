@@ -38,13 +38,13 @@ def _terminar_nivel(j):
 
 # --- La economía -----------------------------------------------------------------------------
 
-def test_una_moneda_cada_40_puntos():
-    assert settings.MONEDAS_PUNTOS == 40
+def test_una_moneda_cada_25_puntos():
+    assert settings.MONEDAS_PUNTOS == 25
 
 
-def test_un_nivel_1_perfecto_sin_mejoras_da_unas_75_monedas():
-    """~3100 puntos: la cuenta del autor (3100 / 40 = 77)."""
-    assert 3100 // settings.MONEDAS_PUNTOS == 77
+def test_un_nivel_1_perfecto_sin_mejoras_da_unas_120_monedas():
+    """~3100 puntos: la cuenta del autor (3100 / 25 = 124)."""
+    assert 3100 // settings.MONEDAS_PUNTOS == 124
 
 
 # --- Monedas del nivel ---------------------------------------------------------------------------
