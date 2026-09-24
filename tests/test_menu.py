@@ -1059,3 +1059,207 @@ def test_menu_principal_con_aviso_de_actualizacion_se_dibuja(menu):
     menu.actualizaciones.resultado = {"version": "9.9.9", "url": "http://d", "instalador_url": None,
                                       "instalador_sha256": None}
     menu._menu_principal()          # no debe lanzar excepción
+
+
+# --- Pantalla de novedades ----------------------------------------------------
+
+def test_ejecutar_sin_novedades_pendientes_va_directo_al_principal(menu):
+    menu._menu_principal = lambda: setattr(menu, "ejecutando", False)
+    menu.ejecutar()
+    assert menu.estado == "PRINCIPAL"
+
+
+def test_ejecutar_con_novedades_pendientes_abre_esa_pantalla_una_vez(rm, audio, scoreboard):
+    menu = MenuManager(pygame.display.get_surface(), rm, audio, scoreboard, mostrar_novedades=True)
+    menu._menu_novedades = lambda: setattr(menu, "ejecutando", False)
+    menu.ejecutar()
+    assert menu.estado == "NOVEDADES"
+
+    menu._menu_principal = lambda: setattr(menu, "ejecutando", False)
+    menu.ejecutar()                                        # segunda vuelta: ya no se repite
+    assert menu.estado == "PRINCIPAL"
+
+
+def test_cerrar_novedades_marca_la_version_actual_como_vista(menu, monkeypatch, tmp_path):
+    from src.core import config
+    from src.core.version import __version__
+
+    ruta = str(tmp_path / "cfg.ini")
+    monkeypatch.setattr("src.core.config.CONFIG_FILE", ruta)
+    menu._abrir_novedades()
+    menu._cerrar_novedades()
+    assert menu.estado == "PRINCIPAL"
+    assert config.cargar_version_vista(ruta=ruta) == __version__
+
+
+def test_boton_cerrar_novedades_marca_como_vista(menu, monkeypatch, tmp_path):
+    from src.core import config
+    from src.core.version import __version__
+
+    ruta = str(tmp_path / "cfg.ini")
+    monkeypatch.setattr("src.core.config.CONFIG_FILE", ruta)
+    menu._abrir_novedades()
+    pygame.event.post(pygame.event.Event(
+        pygame.MOUSEBUTTONDOWN, button=1, pos=menu.btn_cerrar_novedades.rect.center))
+    menu._menu_novedades()
+    assert menu.estado == "PRINCIPAL"
+    assert config.cargar_version_vista(ruta=ruta) == __version__
+
+
+def test_escape_cierra_las_novedades(menu, monkeypatch, tmp_path):
+    monkeypatch.setattr("src.core.config.CONFIG_FILE", str(tmp_path / "cfg.ini"))
+    menu._abrir_novedades()
+    pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_ESCAPE))
+    menu._menu_novedades()
+    assert menu.estado == "PRINCIPAL"
+
+
+def test_novedades_se_dibujan_sin_lanzar_excepcion(menu):
+    menu._abrir_novedades()
+    menu._menu_novedades()
+    assert menu._novedades_layout[0]     # hay contenido (novedades.CLAVES no está vacía)
+
+
+def test_novedades_se_pueden_desplazar_con_la_rueda(menu):
+    menu._abrir_novedades()
+    # Fuerza contenido más largo que la zona visible para que haya scroll que hacer.
+    from src.ui import menu as modulo_menu
+    menu._novedades_layout = ([(y, "línea", False) for y in range(0, 2000, 30)], 2000)
+    pygame.event.post(pygame.event.Event(pygame.MOUSEWHEEL, y=-1, x=0))
+    menu._menu_novedades()
+    assert menu._scroll_novedades == modulo_menu._MEJ_PASO_RUEDA
+
+
+def test_novedades_no_se_desplaza_mas_alla_del_contenido(menu):
+    menu._abrir_novedades()
+    menu._novedades_layout = ([(0, "línea única", False)], 20)     # cabe entero: sin scroll posible
+    pygame.event.post(pygame.event.Event(pygame.MOUSEWHEEL, y=-1, x=0))
+    menu._menu_novedades()
+    assert menu._scroll_novedades == 0
+
+
+def test_novedades_arrastrando_el_texto_desplaza(menu):
+    from src.ui import menu as modulo_menu
+
+    menu._abrir_novedades()
+    menu._novedades_layout = ([(y, "línea", False) for y in range(0, 2000, 30)], 2000)
+    origen = modulo_menu._NOV_AREA.center
+    pygame.event.post(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=origen))
+    menu._menu_novedades()
+    pygame.event.post(pygame.event.Event(
+        pygame.MOUSEMOTION, pos=(origen[0], origen[1] - 100), buttons=(1, 0, 0)))
+    menu._menu_novedades()
+    assert menu._scroll_novedades == 100
+
+
+def test_quit_en_novedades_tambien_marca_la_version_vista(menu, monkeypatch, tmp_path):
+    from src.core import config
+    from src.core.version import __version__
+
+    ruta = str(tmp_path / "cfg.ini")
+    monkeypatch.setattr("src.core.config.CONFIG_FILE", ruta)
+    menu._abrir_novedades()
+    pygame.event.post(pygame.event.Event(pygame.QUIT))
+    menu._menu_novedades()
+    assert menu.ejecutando is False and menu.resultado == "SALIR"
+    assert config.cargar_version_vista(ruta=ruta) == __version__
+
+
+def test_una_menumanager_sin_novedades_no_toca_config_ini(rm, audio, scoreboard, monkeypatch, tmp_path):
+    """Construir el `MenuManager` de la pausa (sin `mostrar_novedades`) no debe
+    escribir nada en `config.ini` por su cuenta."""
+    ruta = tmp_path / "cfg.ini"
+    monkeypatch.setattr("src.core.config.CONFIG_FILE", str(ruta))
+    MenuManager(pygame.display.get_surface(), rm, audio, scoreboard)
+    assert not ruta.exists()
+
+
+# --- Historial de versiones ----------------------------------------------------
+
+def test_clic_en_la_version_abre_el_historial(menu):
+    pygame.event.post(pygame.event.Event(
+        pygame.MOUSEBUTTONDOWN, button=1, pos=menu._rect_version_menu.center))
+    menu._menu_principal()
+    assert menu.estado == "NOVEDADES" and menu._historial_modo is True
+
+
+def test_el_historial_tiene_una_cabecera_por_version(menu):
+    from src.core import novedades
+
+    menu._abrir_historial()
+    cabeceras = [texto for _, texto, es_cabecera in menu._novedades_layout[0] if es_cabecera]
+    assert cabeceras == [f"v{version}" for version, _ in novedades.HISTORIAL]
+
+
+def test_el_historial_no_esta_vacio(menu):
+    menu._abrir_historial()
+    menu._menu_novedades()          # no debe lanzar excepción
+    assert menu._novedades_layout[0]
+
+
+def test_cerrar_el_historial_no_toca_la_version_vista(menu, monkeypatch, tmp_path):
+    from src.core import config
+
+    ruta = str(tmp_path / "cfg.ini")
+    monkeypatch.setattr("src.core.config.CONFIG_FILE", ruta)
+    menu._abrir_historial()
+    menu._cerrar_novedades()
+    assert menu.estado == "PRINCIPAL"
+    assert config.cargar_version_vista(ruta=ruta) is None
+
+
+def test_novedades_normales_no_muestran_cabeceras(menu):
+    menu._abrir_novedades()
+    assert all(not es_cabecera for _, _, es_cabecera in menu._novedades_layout[0])
+
+
+def test_historial_en_ingles_no_rompe(menu):
+    i18n.establecer_idioma("en")
+    menu._abrir_historial()
+    menu._menu_novedades()          # no debe lanzar excepción
+
+
+# --- Interruptor de los FPS en partida (pestaña Pantalla) ----------------------
+
+def _boton_fps(menu):
+    _ir_a_pestana(menu, "pantalla")
+    return menu.btn_fps
+
+
+def test_pestana_pantalla_muestra_el_interruptor_de_fps_activado_por_defecto(menu):
+    menu._abrir_opciones()
+    boton = _boton_fps(menu)
+    assert boton.text == "Mostrar FPS: Sí" and boton.is_selected
+
+
+def test_pulsar_el_interruptor_de_fps_apaga_y_enciende_al_instante(menu):
+    from src.core import preferencias
+
+    menu._abrir_opciones()
+    _click(menu, _boton_fps(menu))
+    assert preferencias.mostrar_fps() is False
+    assert menu.btn_fps.text == "Mostrar FPS: No" and not menu.btn_fps.is_selected
+    _click(menu, menu.btn_fps)
+    assert preferencias.mostrar_fps() is True
+
+
+def test_volver_descarta_el_cambio_de_fps(menu):
+    from src.core import preferencias
+
+    menu._abrir_opciones()
+    _click(menu, _boton_fps(menu))
+    assert preferencias.mostrar_fps() is False
+    _click(menu, menu.btn_volver)
+    assert preferencias.mostrar_fps() is True
+
+
+def test_guardar_confirma_fps_en_la_sesion_y_en_disco(menu, monkeypatch, tmp_path):
+    from src.core import config, preferencias
+
+    ruta = str(tmp_path / "cfg.ini")
+    monkeypatch.setattr("src.core.config.CONFIG_FILE", ruta)
+    menu._abrir_opciones()
+    _click(menu, _boton_fps(menu))
+    _click(menu, menu.btn_guardar)
+    assert preferencias.mostrar_fps() is False
+    assert config.cargar_mostrar_fps(ruta=ruta) is False

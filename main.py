@@ -7,10 +7,10 @@ from src.ui.menu import MenuManager
 from src.core.engine import Juego
 from src.core.audio import AudioManager
 from src.core.resources import ResourceManager
-from src.core import i18n, preferencias, settings
+from src.core import i18n, novedades, preferencias, settings
 from src.core.config import (RECURSOS, MUSICA, SONIDOS, HOJAS, DIR_ASSETS, cargar_configuracion,
                              cargar_temblor, cargar_cifras_dano, cargar_disparo_automatico,
-                             cargar_idioma)
+                             cargar_mostrar_fps, cargar_idioma, cargar_version_vista, guardar_version_vista)
 from src.core.version import __version__
 from src.core.progresion import Progresion
 from src.core.guardado import Guardado
@@ -117,6 +117,17 @@ def main():
     preferencias.establecer_temblor(cargar_temblor())
     preferencias.establecer_cifras_dano(cargar_cifras_dano())
     preferencias.establecer_disparo_automatico(cargar_disparo_automatico())
+    preferencias.establecer_mostrar_fps(cargar_mostrar_fps())
+
+    # Pantalla de "novedades" (ver src/core/novedades.py): se ofrece una única vez, la primera
+    # vez que se abre el menú tras actualizar desde una versión anterior. En una instalación
+    # nueva no hay nada que anunciar: se guarda la versión actual como ya vista sin mostrar nada.
+    version_vista = cargar_version_vista()
+    if version_vista is None:
+        guardar_version_vista(__version__)
+        mostrar_novedades = False
+    else:
+        mostrar_novedades = version_vista != __version__ and bool(novedades.claves_version_actual())
 
     # Un único AudioManager compartido entre el menú y la partida
     audio_manager = AudioManager(resource_manager, vol_musica, vol_efectos)
@@ -134,7 +145,7 @@ def main():
 
     # El menú es persistente; se reutiliza cada vez que se vuelve a él
     menu = MenuManager(pantalla, resource_manager, audio_manager, sistema_clasificacion,
-                       clasificacion_sin_fin, progresion, guardado)
+                       clasificacion_sin_fin, progresion, guardado, mostrar_novedades=mostrar_novedades)
 
     # --- Máquina de estados de alto nivel ---
     # Cada pantalla (menú / juego) devuelve el siguiente estado en lugar de

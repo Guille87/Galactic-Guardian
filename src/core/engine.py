@@ -39,6 +39,8 @@ class Juego:
         self.bonus = progresion.bonus() if progresion else Bonus()
         self.monedas_cobradas = 0   # monedas de esta partida ya ingresadas
         self.monedas_inicio_nivel = 0   # `monedas_cobradas` al empezar el nivel en curso (para el resumen)
+        self.monedas_inicio_partida = 0   # `monedas_cobradas` al abrir esta partida (para Game Over / victoria /
+                                          # el resumen al abandonar): descuenta lo ya cobrado en una sesión anterior
         # Punto de control de la campaña (ver `guardado.py`; el sin fin no se guarda). Con
         # `continuar`, la partida arranca en el nivel guardado y con su puntuación (vidas y
         # salud, las de partida nueva). `nivel_inicial` permite empezar en un nivel anterior
@@ -61,6 +63,7 @@ class Juego:
                 self.nivel, self.puntuacion = nivel_inicial, 0
             self.monedas_cobradas = self._monedas_de(self.puntuacion)   # esos puntos ya se cobraron en su día
             self.monedas_inicio_nivel = self.monedas_cobradas
+            self.monedas_inicio_partida = self.monedas_cobradas
         self.pausado = False
         self.estado_game_over = False
         self.pidiendo_nombre = False
@@ -227,6 +230,8 @@ class Juego:
         self.transicion_tiempo_fase = 0.0
         self.background.velocidad = settings.FONDO_VELOCIDAD_NORMAL
         self.monedas_inicio_nivel = self.monedas_cobradas      # el resumen del nivel cuenta desde aquí
+        if not avance_nivel:
+            self.monedas_inicio_partida = self.monedas_cobradas   # nueva partida: la sesión también arranca de cero
 
         # Resetear el WaveManager para que el jefe pueda volver a salir en el siguiente nivel
         self.wave_manager.jefe_generado = False
@@ -514,6 +519,15 @@ class Juego:
         """Monedas ganadas en el nivel en curso (o en el que se acaba de terminar): las que da la
         puntuación conseguida en él, con el % de la mejora "Botín" ya aplicado."""
         return self.monedas_cobradas - self.monedas_inicio_nivel
+
+    @property
+    def monedas_ganadas(self):
+        """Monedas ganadas en esta partida: desde que se abrió o, si se continuó una campaña
+        guardada, desde que se continuó (`monedas_inicio_partida`) — no las que ya se habían
+        cobrado en una sesión anterior. A diferencia de `monedas_del_nivel`, no se reinicia en
+        cada avance de nivel: la usan el resumen al abandonar y las pantallas de Game Over y
+        victoria, que resumen la sesión entera, no solo el nivel en curso."""
+        return self.monedas_cobradas - self.monedas_inicio_partida
 
     def mostrar_resumen_salida(self):
         """El jugador abandona la partida desde la pausa: se aseguran las monedas y se muestra un
