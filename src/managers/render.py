@@ -27,7 +27,7 @@ class RenderManager:
         # las entidades del mundo.
         j = self.juego
         overlay_propio = (j.estado_game_over or j.pidiendo_nombre or j.estado_nivel_completado
-                          or j.mostrando_seleccion_nivel or j.estado_victoria_final)
+                          or j.mostrando_seleccion_nivel or j.estado_victoria_final or j.estado_resumen_salida)
 
         # --- Camino rápido: PAUSA real (escena estática) ---
         pausa_real = j.pausado and not overlay_propio
@@ -62,6 +62,8 @@ class RenderManager:
             self._dibujar_pantalla_seleccion_nivel()
         elif j.estado_victoria_final:
             self._dibujar_pantalla_victoria_final()
+        elif j.estado_resumen_salida:
+            self._dibujar_pantalla_resumen_salida()
 
         pygame.display.flip()
 
@@ -154,19 +156,54 @@ class RenderManager:
         titulo = self.font_game_over.render(t("nivel_completado.titulo", n=j.nivel), True, (255, 215, 0))
         self.pantalla.blit(titulo, titulo.get_rect(center=(cx, 180)))
 
-        self._dibujar_estadisticas([
+        lineas = [
             t("nivel_completado.puntuacion", n=j.puntuacion),
             t("nivel_completado.enemigos", n=j.enemigos_eliminados_nivel),
             t("nivel_completado.tiempo", s=j.tiempo_juego / 1000),
-        ], 280)
+        ]
+        lineas += self._lineas_monedas("nivel_completado.monedas", j.monedas_del_nivel)
+        self._dibujar_estadisticas(lineas, 280)
 
         if j.boton_continuar is None:
             j.boton_continuar = Boton(t("nivel_completado.continuar"), (0, 255, 0, 150), (255, 255, 255),
-                                      cx, 480, 220, 50, radio_borde=10)
+                                      cx, 520, 220, 50, radio_borde=10)
             j.boton_elegir_nivel = Boton(t("nivel_completado.elegir_nivel"), (0, 150, 255, 150), (255, 255, 255),
-                                         cx, 550, 220, 50, radio_borde=10)
+                                         cx, 590, 220, 50, radio_borde=10)
         j.boton_continuar.dibujar(self.pantalla, self.font_botones)
         j.boton_elegir_nivel.dibujar(self.pantalla, self.font_botones)
+
+    def _lineas_monedas(self, clave, ganadas):
+        """Líneas de monedas de un resumen: las ganadas (con el total que tienes) y, si hay una
+        mejora de botín, cuánto suma. Sin progresión, ninguna."""
+        j = self.juego
+        if j.progresion is None:
+            return []
+        lineas = [t(clave, n=ganadas, total=j.progresion.monedas)]
+        if j.bonus.monedas_pct > 0:
+            lineas.append(t("resumen.botin", pct=round(j.bonus.monedas_pct * 100)))
+        return lineas
+
+    def _dibujar_pantalla_resumen_salida(self):
+        """Resumen al abandonar la partida desde la pausa: dónde estabas, la puntuación, lo que
+        has eliminado, el tiempo y las monedas ganadas (ya aseguradas)."""
+        j = self.juego
+        self.pantalla.blit(j.background.img1, (0, 0))
+        cx = j.pantalla_ancho // 2
+
+        titulo = self.font_game_over.render(t("resumen.titulo"), True, (255, 255, 255))
+        self.pantalla.blit(titulo, titulo.get_rect(center=(cx, 180)))
+
+        lineas = [t("resumen.oleada" if j.modo == settings.MODO_SIN_FIN else "resumen.nivel", n=j.nivel),
+                  t("nivel_completado.puntuacion", n=j.puntuacion),
+                  t("nivel_completado.enemigos", n=j.enemigos_eliminados_nivel),
+                  t("nivel_completado.tiempo", s=j.tiempo_juego / 1000)]
+        lineas += self._lineas_monedas("game_over.monedas", j.monedas_cobradas)
+        self._dibujar_estadisticas(lineas, 260)
+
+        if j.boton_menu_resumen is None:
+            j.boton_menu_resumen = Boton(t("comun.menu"), (0, 150, 255, 150), (255, 255, 255),
+                                         cx, 560, 220, 50, radio_borde=10)
+        j.boton_menu_resumen.dibujar(self.pantalla, self.font_botones)
 
     def _dibujar_pantalla_seleccion_nivel(self):
         """Elegir nivel: los ya superados en esta partida, más el siguiente

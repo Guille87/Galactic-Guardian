@@ -7,6 +7,21 @@ y el proyecto sigue el [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+
+- **Monedas en el resumen de cada nivel:** al terminar un nivel se muestran las monedas que has ganado en
+  él (calculadas de tu puntuación, con el bonus de las mejoras de botín ya aplicado), el total que tienes y,
+  si tienes botín, cuánto suma.
+- **Resumen al abandonar:** si sales por tu cuenta desde la pausa (Salir → Sí) ya no vuelves de golpe al
+  menú: se muestra una pantalla con el nivel u oleada, la puntuación, los enemigos destruidos, el tiempo y
+  las monedas ganadas (que se aseguran en ese momento).
+
+### Changed
+
+- **Más monedas:** ahora ganas **1 moneda cada 25 puntos** (antes 70). Un nivel 1 perfecto sin mejoras
+  (~3100 puntos) da ~124 monedas en vez de ~44. La campaña pasa a llevar unas 9 partidas a un jugador
+  medio (antes ~20) y comprar todo el árbol, unas 24 (antes ~62).
+
 ## [0.11.0] - 2026-09-21
 
 Llega el **guardado de la campaña**: ya no hace falta empezar siempre desde el nivel 1.

@@ -67,7 +67,7 @@ CIFRAS_MAX = 40             # tope de cifras a la vez (con mucha cadencia y bala
 COMBO_UMBRALES = (10, 25, 50, 90)
 
 # --- Progresión entre partidas (ver src/core/progresion.py y mejoras.py) ---
-MONEDAS_PUNTOS = 70    # 1 moneda por cada tantos puntos de la partida (ver tools/balance.py)
+MONEDAS_PUNTOS = 25    # 1 moneda por cada tantos puntos de la partida (ver tools/balance.py)
 
 # --- Curación (sin ítems que la den) ---
 SIN_FIN_CURACION_OLEADA = 0.4   # fracción de la salud máxima que se recupera al cambiar de oleada

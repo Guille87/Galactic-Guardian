@@ -75,7 +75,7 @@ class InputHandler:
         # transición de cierre de nivel tampoco admite teclado: la nave va sola.
         if (self.juego.estado_game_over or self.juego.estado_nivel_completado
                 or self.juego.mostrando_seleccion_nivel or self.juego.estado_victoria_final
-                or self.juego.transicion_activa):
+                or self.juego.estado_resumen_salida or self.juego.transicion_activa):
             return
 
         if tecla == pygame.K_ESCAPE or tecla == self.mapa_teclas["pausa"]:
@@ -108,6 +108,13 @@ class InputHandler:
                     return False
             return True  # Evento consumido
 
+        if self.juego.estado_resumen_salida:
+            if evento.button == 1 and self.juego.boton_menu_resumen \
+                    and self.juego.boton_menu_resumen.clic_en_boton(evento.pos):
+                self.juego.volver_al_menu()
+                return False
+            return True
+
         if self.juego.estado_nivel_completado:
             return self._clic_nivel_completado(evento)
 
@@ -133,8 +140,7 @@ class InputHandler:
                 elif self.juego.boton_salir.clic_en_boton(evento.pos):
                     decision = self.mostrar_confirmacion_salida()
                     if decision == "MENU":
-                        self.juego.volver_al_menu()
-                        return False
+                        self.juego.mostrar_resumen_salida()      # resumen antes de volver al menú
                     elif decision == "SALIR":
                         self.juego.salir_del_juego()
                         return False
